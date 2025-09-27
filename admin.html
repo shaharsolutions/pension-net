@@ -36,14 +36,8 @@
       border-collapse: collapse;
       width: 100%;
       min-width: 1200px;
-      border-radius: 12px;
       border: 1px solid #ccc;
     }
-
-    table thead tr:first-child th {
-      border-top: 1px solid #ccc;
-    }
-
 
     th, td {
       padding: 10px;
@@ -56,101 +50,16 @@
       font-weight: bold;
     }
 
-    input[type="text"] {
-      width: 95%;
-      box-sizing: border-box;
-      padding: 4px 8px;
-    }
-
-    input[type="text"][data-index] {
-      width: 95%;
-      box-sizing: border-box;
-      padding: 8px 10px;
-      font-size: 12px;
-    }
-
-    select {
-      padding: 6px 8px;
-      min-width: 110px;
-      width: 100%;
-      direction: rtl;
-      text-align: center;
-      text-align-last: center;
-    }
-
-    input[type="text"].admin-note {
-      min-height: 40px;
-      font-size: 12px;
-      padding: 8px;
-      resize: vertical;
-      overflow: auto;
-    }
-
-    textarea.admin-note {
-      width: 100%;
-      max-width: 300px;
-      overflow-x: auto;
-      overflow-y: auto;
-      resize: none;
-      font-size: 12px;
-      padding: 8px;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-      height: auto;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      word-break: break-word;
-      word-wrap: break-word;
-      cols: 50;
-      rows: 2;
-    }
-
     textarea.admin-note {
       display: block;
       width: 80ch;
       max-width: 100%;
       font-family: monospace;
+      font-size: 12px;
+      padding: 8px;
+      resize: vertical;
       white-space: pre-wrap;
-      word-wrap: break-word;
       overflow-wrap: break-word;
-    }
-
-    textarea.admin-note::after {
-      content: '';
-      display: block;
-      width: 100%;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .manager-note-column {
-      min-width: 50px;
-      max-width: 300px;
-      width: 50px;
-    }
-
-    #currentDogsContainer {
-      margin: 20px auto;
-      max-width: 1200px;
-      background: #fff;
-      padding: 16px 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    #currentDogsContainer h3 {
-      margin-top: 0;
-      font-size: 20px;
-    }
-
-    #currentDogsList {
-      list-style-type: disc;
-      padding-right: 20px;
-    }
-
-    .wide-date-column {
-      min-width: 140px;
-      white-space: nowrap;
     }
 
     .status-approved {
@@ -163,137 +72,95 @@
       font-weight: bold;
     }
 
-    /* --- Loading animation for save button --- */
+    /* מצבי כפתור ושורת סטטוס */
     #saveButton.loading {
       background: #FF9800 !important;
       color: white;
-      position: relative;
-      overflow: hidden;
     }
-    
-    #saveButton.loading::after {
-      content: "⏳ שומר...";
-      animation: pulse 1.5s infinite;
-    }
-    
     #saveButton.success {
       background: #4CAF50 !important;
       color: white;
     }
-    
     #saveStatus.success {
       color: #4CAF50;
     }
-    
     #saveStatus.error {
       color: #f44336;
-    }
-    
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.7; }
-      100% { opacity: 1; }
-    }
-
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-
-    @media (max-width: 600px) {
-      header {
-        font-size: 20px;
-        padding: 16px;
-      }
-
-      .container {
-        padding: 16px;
-      }
-
-      table {
-        font-size: 14px;
-      }
     }
   </style>
 </head>
 <body>
   <header>מערכת ניהול פנסיון כלבים</header>
 
-  <div id="currentDogsContainer">
+  <div id="currentDogsContainer" class="container">
     <h3>כלבים שנמצאים כעת בפנסיון</h3>
     <ul id="currentDogsList"></ul>
   </div>
 
-  <!-- כפתור שמירה גלובלי -->
-  <div style="position: sticky; top: 20px; z-index: 100; text-align: center; margin: 20px 0; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);">
-    <button id="saveButton" style="background: #4CAF50; color: white; border: none; padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(76,175,80,0.3);">
-      💾 שמירת כל השינויים
-    </button>
-    <div id="saveStatus" style="margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
-  </div>
-
   <div class="container">
-  <h3>הזמנות</h3>
-  <table id="futureOrdersTable">
-    <thead>
-      <tr>
-        <th>מועד הזמנה</th>
-        <th>שם הבעלים</th>
-        <th>טלפון</th>
-        <th class="wide-date-column">כניסה</th>
-        <th class="wide-date-column">יציאה</th>
-        <th>שם הכלב</th>
-        <th>גיל</th>
-        <th>גזע</th>
-        <th>הערות</th>
-        <th>מסורס / מעוקרת</th>
-        <th>סטטוס</th>
-        <th class="manager-note-column">הערות מנהל</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<div class="container" id="historyTableContainer">
-  <h3>היסטוריית הזמנות</h3>
-  <div style="margin-bottom:12px;">
-    <label for="historySearchInput" style="font-weight:bold;">חיפוש בהיסטוריית ההזמנות:</label>
-    <input type="text" id="historySearchInput" placeholder="הקלד לחיפוש..." style="margin-top:4px; margin-bottom:8px; max-width:300px;">
-  </div>
-  <div id="pastOrdersTableWrapper">
-    <table id="pastOrdersTable">
+    <h3>הזמנות</h3>
+    <table id="futureOrdersTable">
       <thead>
         <tr>
           <th>מועד הזמנה</th>
           <th>שם הבעלים</th>
           <th>טלפון</th>
-          <th class="wide-date-column">כניסה</th>
-          <th class="wide-date-column">יציאה</th>
+          <th>כניסה</th>
+          <th>יציאה</th>
           <th>שם הכלב</th>
           <th>גיל</th>
           <th>גזע</th>
           <th>הערות</th>
           <th>מסורס / מעוקרת</th>
           <th>סטטוס</th>
-          <th class="manager-note-column">הערות מנהל</th>
+          <th>הערות מנהל</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+    <div style="text-align:center; margin-top:20px">
+      <button id="saveButton" 
+              style="background:#4CAF50; color:white; border:none; padding:15px 40px; font-size:18px; font-weight:bold; border-radius:8px; cursor:pointer; transition:all 0.3s; box-shadow:0 4px 12px rgba(76,175,80,0.3);">
+        💾 שמירת כל השינויים
+      </button>
+      <div id="saveStatus" style="margin-top:10px; font-size:14px; font-weight:bold;"></div>
+    </div>
   </div>
-  <div id="historyPagination" style="text-align:center; margin-top:16px;"></div>
-</div>
+
+  <div class="container">
+    <h3>היסטוריית הזמנות</h3>
+    <input type="text" id="historySearchInput" placeholder="חיפוש בהיסטוריית ההזמנות..." style="margin-bottom:8px; max-width:300px;">
+    <table id="pastOrdersTable">
+      <thead>
+        <tr>
+          <th>מועד הזמנה</th>
+          <th>שם הבעלים</th>
+          <th>טלפון</th>
+          <th>כניסה</th>
+          <th>יציאה</th>
+          <th>שם הכלב</th>
+          <th>גיל</th>
+          <th>גזע</th>
+          <th>הערות</th>
+          <th>מסורס / מעוקרת</th>
+          <th>סטטוס</th>
+          <th>הערות מנהל</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="historyPagination" style="text-align:center; margin-top:16px;"></div>
+  </div>
 
   <script>
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxt9zQ10Gnb0NoJujKItkoO8z_Rnb_bJ_1ancMtaPwHeby0gwn68cJZyOzdvh7uM2FD6w/exec";
+
     function formatDateTime(dateStr) {
       if (!dateStr) return '';
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr;
       const pad = (n) => n.toString().padStart(2, '0');
-      // Use a non-breaking space (\u00A0) between date and time
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}\u00A0${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     function formatDateOnly(dateStr) {
@@ -301,407 +168,147 @@
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr;
       const pad = (n) => n.toString().padStart(2, '0');
-      const dayName = d.toLocaleDateString('he-IL', { weekday: 'long' });
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} (${dayName})`;
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
     }
 
-    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxt9zQ10Gnb0NoJujKItkoO8z_Rnb_bJ_1ancMtaPwHeby0gwn68cJZyOzdvh7uM2FD6w/exec';
-
-    fetch(SHEET_URL)
+    // טעינת נתונים ראשונית
+    fetch(SHEET_URL, { method:"GET", mode:"cors" })
       .then(res => res.json())
       .then(data => {
-        const futureTbody = document.querySelector("#futureOrdersTable tbody");
-        const pastTbody = document.querySelector("#pastOrdersTable tbody");
+        renderFutureOrders(data);
+        renderHistory(data);
+        renderCurrentDogs(data);
+      });
 
-        // סינון ההזמנות הפעילות (מאושר) ומיון לפי checkOut
-        const now = new Date();
-        // פעיל: הזמנות עתידיות (checkOut>=now)
-        const futureOrders = data.map((row, index) => ({...row, _index: index})).filter(row => {
-          const checkOut = new Date(row.checkOut);
-          return checkOut >= now;
-        });
-        // פעיל ומאושר בלבד
-        const activeOrders = futureOrders.filter(order => order.status === 'מאושר');
-        activeOrders.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
-        // כל שאר ההזמנות העתידיות (לא מאושר)
-        const otherFutureOrders = futureOrders.filter(order => order.status !== 'מאושר');
-        // הצג קודם את הפעילות המאושרות, אח"כ את כל השאר
-        const orderedFuture = [...activeOrders, ...otherFutureOrders];
-        orderedFuture.forEach(row => {
-          let tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${formatDateTime(row.orderDate)}</td>
-            <td>${row.ownerName || ''}</td>
-            <td>${row.phone || ''}</td>
-            <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
-            <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
-            <td>${row.dogName || ''}</td>
-            <td>${row.dogAge || ''}</td>
-            <td>${row.dogBreed || ''}</td>
-            <td>${row.notes || ''}</td>
-            <td>${row.neutered || ''}</td>
-            <td>
-              <select data-index="${row._index}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
-                <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
-                <option value="מאושר" ${row.status === "מאושר" ? "selected" : ""}>מאושר</option>
-                <option value="בוטל" ${row.status === "בוטל" ? "selected" : ""}>בוטל</option>
-              </select>
-            </td>
-            <td class="manager-note-column">
-              <textarea class="admin-note" data-index="${row._index}" cols="50" rows="2">${row.adminNote || ''}</textarea>
-            </td>
-          `;
-          futureTbody.appendChild(tr);
-        });
-        // --- היסטוריית הזמנות עם חיפוש ודפדוף ---
-        // Store history data for search/pagination
-        window.pastOrdersRawData = [];
-        data.forEach((row, index) => {
-          const checkOut = new Date(row.checkOut);
-          if (checkOut < now) {
-            window.pastOrdersRawData.push({
-              index,
-              orderDate: row.orderDate,
-              ownerName: row.ownerName || '',
-              phone: row.phone || '',
-              checkIn: row.checkIn,
-              checkOut: row.checkOut,
-              dogName: row.dogName || '',
-              dogAge: row.dogAge || '',
-              dogBreed: row.dogBreed || '',
-              notes: row.notes || '',
-              neutered: row.neutered || '',
-              status: row.status || '',
-              adminNote: row.adminNote || ''
-            });
-          }
-        });
-        renderPastOrdersTable();
-    // ========== פונקציות חיפוש ודפדוף עבור היסטוריית הזמנות ==========
-    const HISTORY_ROWS_PER_PAGE = 10;
-    window.pastOrdersSearchTerm = '';
-    window.pastOrdersCurrentPage = 1;
-
-    function filterPastOrdersData() {
-      if (!window.pastOrdersRawData) return [];
-      const term = (window.pastOrdersSearchTerm || '').trim();
-      if (!term) return window.pastOrdersRawData.slice();
-      const lowerTerm = term.toLowerCase();
-      return window.pastOrdersRawData.filter(row =>
-        Object.values(row).some(val =>
-          (val + '').toLowerCase().includes(lowerTerm)
-        )
-      );
-    }
-
-    function renderPastOrdersTable() {
-      const tbody = document.querySelector('#pastOrdersTable tbody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      const filtered = filterPastOrdersData();
-      const totalRows = filtered.length;
-      const maxPage = Math.max(1, Math.ceil(totalRows / HISTORY_ROWS_PER_PAGE));
-      // Clamp current page
-      if (window.pastOrdersCurrentPage > maxPage) window.pastOrdersCurrentPage = maxPage;
-      if (window.pastOrdersCurrentPage < 1) window.pastOrdersCurrentPage = 1;
-      const startIdx = (window.pastOrdersCurrentPage - 1) * HISTORY_ROWS_PER_PAGE;
-      const pageRows = filtered.slice(startIdx, startIdx + HISTORY_ROWS_PER_PAGE);
-      pageRows.forEach(row => {
-        let tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${formatDateTime(row.orderDate)}</td>
-          <td>${row.ownerName}</td>
-          <td>${row.phone}</td>
-          <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
-          <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
-          <td>${row.dogName}</td>
-          <td>${row.dogAge}</td>
-          <td>${row.dogBreed}</td>
-          <td>${row.notes}</td>
-          <td>${row.neutered}</td>
-          <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
-          <td class="manager-note-column">
-            <textarea class="admin-note" data-index="${row.index}" cols="50" rows="2">${row.adminNote}</textarea>
+    function renderFutureOrders(data){
+      const tbody = document.querySelector("#futureOrdersTable tbody");
+      tbody.innerHTML = "";
+      const now = new Date();
+      const orders = data.map((row, i)=>({...row,_index:i})).filter(r=>new Date(r.checkOut)>=now);
+      orders.forEach(r=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML=`
+          <td>${formatDateTime(r.orderDate)}</td>
+          <td>${r.ownerName||''}</td>
+          <td>${r.phone||''}</td>
+          <td>${formatDateOnly(r.checkIn)}</td>
+          <td>${formatDateOnly(r.checkOut)}</td>
+          <td>${r.dogName||''}</td>
+          <td>${r.dogAge||''}</td>
+          <td>${r.dogBreed||''}</td>
+          <td>${r.notes||''}</td>
+          <td>${r.neutered||''}</td>
+          <td>
+            <select data-index="${r._index}">
+              <option value="ממתין" ${r.status==="ממתין"?"selected":""}>ממתין</option>
+              <option value="מאושר" ${r.status==="מאושר"?"selected":""}>מאושר</option>
+              <option value="בוטל" ${r.status==="בוטל"?"selected":""}>בוטל</option>
+            </select>
           </td>
+          <td><textarea class="admin-note" data-index="${r._index}">${r.adminNote||''}</textarea></td>
         `;
         tbody.appendChild(tr);
       });
-      renderPastOrdersPagination(totalRows, window.pastOrdersCurrentPage, maxPage);
-      // Auto-resize textareas
-      document.querySelectorAll('#pastOrdersTable textarea.admin-note').forEach(textarea => {
-        const adjustWidth = () => {
-          textarea.style.width = '80ch';
-          textarea.style.height = 'auto';
-          textarea.style.height = textarea.scrollHeight + 'px';
-        };
-        adjustWidth();
-        textarea.addEventListener('input', adjustWidth);
-        textarea.setAttribute('maxlength', '500');
-        textarea.style.wordBreak = 'break-word';
-        textarea.style.whiteSpace = 'pre-wrap';
-        textarea.style.overflowWrap = 'break-word';
+    }
+
+    function renderHistory(data){
+      const tbody = document.querySelector("#pastOrdersTable tbody");
+      tbody.innerHTML = "";
+      const now = new Date();
+      data.forEach((r,i)=>{
+        if(new Date(r.checkOut)<now){
+          const tr=document.createElement("tr");
+          tr.innerHTML=`
+            <td>${formatDateTime(r.orderDate)}</td>
+            <td>${r.ownerName||''}</td>
+            <td>${r.phone||''}</td>
+            <td>${formatDateOnly(r.checkIn)}</td>
+            <td>${formatDateOnly(r.checkOut)}</td>
+            <td>${r.dogName||''}</td>
+            <td>${r.dogAge||''}</td>
+            <td>${r.dogBreed||''}</td>
+            <td>${r.notes||''}</td>
+            <td>${r.neutered||''}</td>
+            <td>${r.status||''}</td>
+            <td><textarea class="admin-note" data-index="${i}">${r.adminNote||''}</textarea></td>
+          `;
+          tbody.appendChild(tr);
+        }
       });
     }
 
-    function renderPastOrdersPagination(totalRows, currentPage, maxPage) {
-      const pagDiv = document.getElementById('historyPagination');
-      if (!pagDiv) return;
-      pagDiv.innerHTML = '';
-      if (maxPage <= 1) return;
-      const prevBtn = document.createElement('button');
-      prevBtn.textContent = 'הקודם';
-      prevBtn.disabled = currentPage === 1;
-      prevBtn.style.margin = '0 8px';
-      prevBtn.onclick = function() {
-        window.pastOrdersCurrentPage = Math.max(1, window.pastOrdersCurrentPage - 1);
-        renderPastOrdersTable();
-      };
-      const nextBtn = document.createElement('button');
-      nextBtn.textContent = 'הבא';
-      nextBtn.disabled = currentPage === maxPage;
-      nextBtn.style.margin = '0 8px';
-      nextBtn.onclick = function() {
-        window.pastOrdersCurrentPage = Math.min(maxPage, window.pastOrdersCurrentPage + 1);
-        renderPastOrdersTable();
-      };
-      const infoSpan = document.createElement('span');
-      infoSpan.textContent = `עמוד ${currentPage} מתוך ${maxPage}`;
-      infoSpan.style.margin = '0 14px';
-      pagDiv.appendChild(prevBtn);
-      pagDiv.appendChild(infoSpan);
-      pagDiv.appendChild(nextBtn);
+    function renderCurrentDogs(data){
+      const ul=document.getElementById("currentDogsList");
+      ul.innerHTML="";
+      const now=new Date();
+      data.filter(r=>{
+        return r.status==="מאושר" && new Date(r.checkIn)<=now && new Date(r.checkOut)>=now;
+      }).forEach(r=>{
+        const li=document.createElement("li");
+        li.textContent=`${r.dogName||'ללא שם'} (${r.ownerName||'ללא בעלים'})`;
+        ul.appendChild(li);
+      });
     }
 
-    // חיבור שדה החיפוש
-    document.addEventListener('DOMContentLoaded', function() {
-      const searchInput = document.getElementById('historySearchInput');
-      if (searchInput) {
-        searchInput.addEventListener('input', function() {
-          window.pastOrdersSearchTerm = searchInput.value;
-          window.pastOrdersCurrentPage = 1;
-          renderPastOrdersTable();
-        });
+    // שמירת נתונים
+    document.getElementById('saveButton').addEventListener('click', async ()=>{
+      const saveBtn=document.getElementById('saveButton');
+      const saveStatus=document.getElementById('saveStatus');
+      saveBtn.classList.add('loading');
+      saveStatus.textContent='⏳ שומר נתונים...';
+      saveStatus.className='';
+
+      try {
+        // שמירת טבלת ההזמנות
+        const futureRows=document.querySelectorAll('#futureOrdersTable tbody tr');
+        for(const row of futureRows){
+          const index=row.querySelector('select').dataset.index;
+          const status=row.querySelector('select').value;
+          const adminNote=row.querySelector('textarea').value;
+          await fetch(SHEET_URL,{
+            method:"POST",
+            mode:"cors",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({mode:"update",index,status,adminNote})
+          });
+        }
+        // שמירת הערות היסטוריה
+        const historyRows=document.querySelectorAll('#pastOrdersTable tbody tr');
+        for(const row of historyRows){
+          const index=row.querySelector('textarea').dataset.index;
+          const adminNote=row.querySelector('textarea').value;
+          await fetch(SHEET_URL,{
+            method:"POST",
+            mode:"cors",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({mode:"update",index,adminNote})
+          });
+        }
+
+        saveBtn.classList.remove('loading');
+        saveBtn.classList.add('success');
+        saveStatus.textContent='✅ השינויים נשמרו בהצלחה!';
+        saveStatus.className='success';
+
+        // רענון
+        const refreshed=await fetch(SHEET_URL,{method:"GET",mode:"cors"}).then(r=>r.json());
+        renderFutureOrders(refreshed);
+        renderHistory(refreshed);
+        renderCurrentDogs(refreshed);
+
+      } catch(err){
+        console.error(err);
+        saveBtn.classList.remove('loading');
+        saveStatus.textContent='❌ אירעה שגיאה בשמירה';
+        saveStatus.className='error';
+      } finally {
+        setTimeout(()=>{
+          saveStatus.textContent='';
+          saveStatus.className='';
+          saveBtn.classList.remove('success');
+        },4000);
       }
     });
-
-        const currentDogs = data.filter(row => {
-          const now = new Date();
-          const checkIn = new Date(row.checkIn);
-          const checkOut = new Date(row.checkOut);
-          return row.status === "מאושר" && checkIn <= now && checkOut >= now;
-        });
-
-        const dogsList = document.getElementById('currentDogsList');
-        currentDogs.forEach(row => {
-          const li = document.createElement('li');
-          li.textContent = `${row.dogName || 'ללא שם'} (${row.ownerName || 'ללא בעלים'})`;
-          dogsList.appendChild(li);
-        });
-
-        document.querySelectorAll('textarea.admin-note').forEach(textarea => {
-          const adjustWidth = () => {
-            textarea.style.width = '80ch';
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-          };
-
-          adjustWidth();
-          textarea.addEventListener('input', adjustWidth);
-
-          textarea.setAttribute('maxlength', '500');
-          textarea.style.wordBreak = 'break-word';
-          textarea.style.whiteSpace = 'pre-wrap';
-          textarea.style.overflowWrap = 'break-word';
-        });
-
-        document.getElementById('saveButton').addEventListener('click', async () => {
-          const saveBtn = document.getElementById('saveButton');
-          const saveStatus = document.getElementById('saveStatus');
-          
-          // הצגת מצב טעינה
-          saveBtn.classList.add('loading');
-          saveBtn.disabled = true;
-          saveStatus.textContent = 'שומר נתונים...';
-          saveStatus.className = '';
-          
-          try {
-            // שמירת הזמנות עתידיות
-            const futureRows = document.querySelectorAll('#futureOrdersTable tbody tr');
-            for (const row of futureRows) {
-              const index = row.querySelector('select')?.dataset?.index;
-              const status = row.querySelector('select')?.value;
-              const adminNote = row.querySelector('textarea.admin-note')?.value;
-
-              await fetch(SHEET_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                  mode: "update",
-                  index,
-                  status,
-                  adminNote
-                })
-              });
-
-              const select = row.querySelector('select');
-              select.classList.remove('status-approved', 'status-cancelled');
-              if (status === 'מאושר') select.classList.add('status-approved');
-              if (status === 'בוטל') select.classList.add('status-cancelled');
-            }
-
-            // שמירת הערות מנהל מהיסטוריה
-            const historyRows = document.querySelectorAll('#pastOrdersTable tbody tr');
-            for (const row of historyRows) {
-              const textarea = row.querySelector('textarea.admin-note');
-              if (textarea) {
-                const index = textarea.dataset.index;
-                const adminNote = textarea.value;
-                
-                await fetch(SHEET_URL, {
-                  method: "POST",
-                  body: JSON.stringify({
-                    mode: "update",
-                    index,
-                    adminNote
-                  })
-                });
-              }
-            }
-
-            // הצגת הודעת הצלחה
-            saveStatus.textContent = '✅ כל השינויים נשמרו בהצלחה!';
-            saveStatus.className = 'success';
-            
-            // רענון הנתונים
-            saveStatus.textContent = '🔄 מעדכן נתונים...';
-            const refreshedData = await fetch(SHEET_URL).then(res => res.json());
-            
-            // עדכון רשימת הכלבים בפנסיון
-            updateCurrentDogsList(refreshedData);
-            
-            // עדכון הטבלאות
-            updateFutureOrdersTable(refreshedData);
-            updateHistoryData(refreshedData);
-            renderPastOrdersTable();
-            
-            saveStatus.textContent = '✅ הנתונים עודכנו בהצלחה!';
-            
-          } catch (error) {
-            console.error('שגיאה בשמירה:', error);
-            saveStatus.textContent = '❌ אירעה שגיאה בשמירה';
-            saveStatus.className = 'error';
-          } finally {
-            // החזרת הכפתור למצב רגיל
-            saveBtn.classList.remove('loading');
-            saveBtn.disabled = false;
-            
-            // הסתרת ההודעה לאחר 4 שניות
-            setTimeout(() => {
-              saveStatus.textContent = '';
-              saveStatus.className = '';
-            }, 4000);
-          }
-        });
-        
-        // פונקציות עזר לעדכון הנתונים
-        function updateCurrentDogsList(data) {
-          const currentDogs = data.filter(row => {
-            const now = new Date();
-            const checkIn = new Date(row.checkIn);
-            const checkOut = new Date(row.checkOut);
-            return row.status === "מאושר" && checkIn <= now && checkOut >= now;
-          });
-
-          const dogsList = document.getElementById('currentDogsList');
-          dogsList.innerHTML = '';
-          currentDogs.forEach(row => {
-            const li = document.createElement('li');
-            li.textContent = `${row.dogName || 'ללא שם'} (${row.ownerName || 'ללא בעלים'})`;
-            dogsList.appendChild(li);
-          });
-        }
-        
-        function updateFutureOrdersTable(data) {
-          const futureTbody = document.querySelector("#futureOrdersTable tbody");
-          futureTbody.innerHTML = '';
-
-          const now = new Date();
-          const futureOrders = data.map((row, index) => ({...row, _index: index})).filter(row => {
-            const checkOut = new Date(row.checkOut);
-            return checkOut >= now;
-          });
-          const activeOrders = futureOrders.filter(order => order.status === 'מאושר');
-          activeOrders.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
-          const otherFutureOrders = futureOrders.filter(order => order.status !== 'מאושר');
-          const orderedFuture = [...activeOrders, ...otherFutureOrders];
-          
-          orderedFuture.forEach(row => {
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${formatDateTime(row.orderDate)}</td>
-              <td>${row.ownerName || ''}</td>
-              <td>${row.phone || ''}</td>
-              <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
-              <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
-              <td>${row.dogName || ''}</td>
-              <td>${row.dogAge || ''}</td>
-              <td>${row.dogBreed || ''}</td>
-              <td>${row.notes || ''}</td>
-              <td>${row.neutered || ''}</td>
-              <td>
-                <select data-index="${row._index}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
-                  <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
-                  <option value="מאושר" ${row.status === "מאושר" ? "selected" : ""}>מאושר</option>
-                  <option value="בוטל" ${row.status === "בוטל" ? "selected" : ""}>בוטל</option>
-                </select>
-              </td>
-              <td class="manager-note-column">
-                <textarea class="admin-note" data-index="${row._index}" cols="50" rows="2">${row.adminNote || ''}</textarea>
-              </td>
-            `;
-            futureTbody.appendChild(tr);
-          });
-          
-          // עדכון textarea
-          document.querySelectorAll('#futureOrdersTable textarea.admin-note').forEach(textarea => {
-            const adjustWidth = () => {
-              textarea.style.width = '80ch';
-              textarea.style.height = 'auto';
-              textarea.style.height = textarea.scrollHeight + 'px';
-            };
-            adjustWidth();
-            textarea.addEventListener('input', adjustWidth);
-            textarea.setAttribute('maxlength', '500');
-            textarea.style.wordBreak = 'break-word';
-            textarea.style.whiteSpace = 'pre-wrap';
-            textarea.style.overflowWrap = 'break-word';
-          });
-        }
-        
-        function updateHistoryData(data) {
-          const now = new Date();
-          window.pastOrdersRawData = [];
-          data.forEach((row, index) => {
-            const checkOut = new Date(row.checkOut);
-            if (checkOut < now) {
-              window.pastOrdersRawData.push({
-                index,
-                orderDate: row.orderDate,
-                ownerName: row.ownerName || '',
-                phone: row.phone || '',
-                checkIn: row.checkIn,
-                checkOut: row.checkOut,
-                dogName: row.dogName || '',
-                dogAge: row.dogAge || '',
-                dogBreed: row.dogBreed || '',
-                notes: row.notes || '',
-                neutered: row.neutered || '',
-                status: r.status || '',
-                adminNote: row.adminNote || ''
-              });
-            }
-          });
-        }
-      });
   </script>
 </body>
 </html>
