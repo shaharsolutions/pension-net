@@ -160,7 +160,9 @@
 
   <div class="container">
     <h3>היסטוריית הזמנות</h3>
-    <input type="text" id="historySearchInput" placeholder="חיפוש בהיסטוריית ההזמנות..." style="margin-bottom:8px; max-width:300px;">
+    <div style="margin-bottom:12px;">
+      <input type="text" id="historySearchInput" placeholder="חיפוש בהיסטוריית ההזמנות..." style="padding:8px 12px; font-size:14px; width:300px; max-width:100%; border:1px solid #ccc; border-radius:6px;">
+    </div>
     <table id="pastOrdersTable">
       <thead>
         <tr>
@@ -211,12 +213,25 @@
     }
 
     // טעינת נתונים ראשונית
-    fetch(SHEET_URL, { method:"GET", mode:"cors" })
-      .then(res => res.json())
+    fetch(SHEET_URL)
+      .then(res => {
+        console.log('Response status:', res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log('Data received:', data);
+        if (!data || !Array.isArray(data)) {
+          console.error('Invalid data format:', data);
+          alert('שגיאה בטעינת נתונים מהשרת');
+          return;
+        }
         renderFutureOrders(data);
         renderHistory(data);
         renderCurrentDogs(data);
+      })
+      .catch(err => {
+        console.error('Error loading data:', err);
+        alert('שגיאה בחיבור לשרת: ' + err.message);
       });
 
     function renderFutureOrders(data){
@@ -250,31 +265,109 @@
       });
     }
 
+    // משתנים גלובליים לחיפוש ודפדוף
+    let allHistoryData = [];
+    const ROWS_PER_PAGE = 10;
+    let currentPage = 1;
+    let searchTerm = '';
+
     function renderHistory(data){
-      const tbody = document.querySelector("#pastOrdersTable tbody");
-      tbody.innerHTML = "";
       const now = new Date();
+      allHistoryData = [];
       data.forEach((r,i)=>{
         if(new Date(r.checkOut)<now){
-          const tr=document.createElement("tr");
-          tr.innerHTML=`
-            <td>${formatDateTime(r.orderDate)}</td>
-            <td>${r.ownerName||''}</td>
-            <td>${r.phone||''}</td>
-            <td>${formatDateOnly(r.checkIn)}</td>
-            <td>${formatDateOnly(r.checkOut)}</td>
-            <td>${r.dogName||''}</td>
-            <td>${r.dogAge||''}</td>
-            <td>${r.dogBreed||''}</td>
-            <td>${r.notes||''}</td>
-            <td>${r.neutered||''}</td>
-            <td>${r.status||''}</td>
-            <td><textarea class="admin-note" data-index="${i}">${r.adminNote||''}</textarea></td>
-          `;
-          tbody.appendChild(tr);
+          allHistoryData.push({...r, _index: i});
         }
       });
+      renderHistoryPage();
     }
+
+    function filterHistory() {
+      if (!searchTerm) return allHistoryData;
+      const term = searchTerm.toLowerCase();
+      return allHistoryData.filter(r => {
+        return Object.values(r).some(val => 
+          String(val).toLowerCase().includes(term)
+        );
+      });
+    }
+
+    function renderHistoryPage() {
+      const tbody = document.querySelector("#pastOrdersTable tbody");
+      tbody.innerHTML = "";
+      
+      const filtered = filterHistory();
+      const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
+      const startIdx = (currentPage - 1) * ROWS_PER_PAGE;
+      const pageData = filtered.slice(startIdx, startIdx + ROWS_PER_PAGE);
+
+      pageData.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML=`
+          <td>${formatDateTime(r.orderDate)}</td>
+          <td>${r.ownerName||''}</td>
+          <td>${r.phone||''}</td>
+          <td>${formatDateOnly(r.checkIn)}</td>
+          <td>${formatDateOnly(r.checkOut)}</td>
+          <td>${r.dogName||''}</td>
+          <td>${r.dogAge||''}</td>
+          <td>${r.dogBreed||''}</td>
+          <td>${r.notes||''}</td>
+          <td>${r.neutered||''}</td>
+          <td>${r.status||''}</td>
+          <td><textarea class="admin-note" data-index="${r._index}">${r.adminNote||''}</textarea></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderPagination(filtered.length, totalPages);
+    }
+
+    function renderPagination(totalRows, totalPages) {
+      const paginationDiv = document.getElementById('historyPagination');
+      paginationDiv.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = '← הקודם';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.style.margin = '0 8px';
+      prevBtn.style.padding = '8px 16px';
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderHistoryPage();
+        }
+      };
+
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = 'הבא →';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.style.margin = '0 8px';
+      nextBtn.style.padding = '8px 16px';
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderHistoryPage();
+        }
+      };
+
+      const info = document.createElement('span');
+      info.textContent = `עמוד ${currentPage} מתוך ${totalPages} (${totalRows} תוצאות)`;
+      info.style.margin = '0 12px';
+
+      paginationDiv.appendChild(prevBtn);
+      paginationDiv.appendChild(info);
+      paginationDiv.appendChild(nextBtn);
+    }
+
+    // חיבור שדה החיפוש
+    document.getElementById('historySearchInput').addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      currentPage = 1;
+      renderHistoryPage();
+    });
 
     function renderCurrentDogs(data){
       const ul=document.getElementById("currentDogsList");
