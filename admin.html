@@ -194,7 +194,7 @@
   </div>
 
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwURAJFLeQpmN_GcCVW7pjO0oLjO9QYJrHNy-xkVeWG94z1aZNbSw0ckRHKAZ2XKjWmsg/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxaaQJyJGFAtx8qFtgGCe2U-ak3gDqqPmPZWikBD3KDSXF54H8XC8M3-rfxGgahaek5Aw/exec";
 
     function formatDateTime(dateStr) {
       if (!dateStr) return '';
@@ -213,26 +213,29 @@
     }
 
     // טעינת נתונים ראשונית
-    fetch(SHEET_URL)
-      .then(res => {
-        console.log('Response status:', res.status);
-        return res.json();
-      })
-      .then(data => {
+    async function loadData() {
+      try {
+        // ניסיון ראשון עם fetch רגיל
+        const response = await fetch(SHEET_URL + '?t=' + Date.now());
+        const data = await response.json();
         console.log('Data received:', data);
+        
         if (!data || !Array.isArray(data)) {
           console.error('Invalid data format:', data);
           alert('שגיאה בטעינת נתונים מהשרת');
           return;
         }
+        
         renderFutureOrders(data);
         renderHistory(data);
         renderCurrentDogs(data);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error loading data:', err);
-        alert('שגיאה בחיבור לשרת: ' + err.message);
-      });
+        alert('שגיאה בחיבור לשרת. ודא שה-Apps Script פרוס כ-Web App עם הרשאה ל-Anyone');
+      }
+    }
+
+    loadData();
 
     function renderFutureOrders(data){
       const tbody = document.querySelector("#futureOrdersTable tbody");
@@ -399,7 +402,7 @@
           const adminNote=row.querySelector('textarea').value;
           await fetch(SHEET_URL,{
             method:"POST",
-            mode:"cors",
+            mode:"no-cors",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({mode:"update",index,status,adminNote})
           });
@@ -411,7 +414,7 @@
           const adminNote=row.querySelector('textarea').value;
           await fetch(SHEET_URL,{
             method:"POST",
-            mode:"cors",
+            mode:"no-cors",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({mode:"update",index,adminNote})
           });
@@ -422,11 +425,18 @@
         saveStatus.textContent='✅ השינויים נשמרו בהצלחה!';
         saveStatus.className='success';
 
-        // רענון
-        const refreshed=await fetch(SHEET_URL,{method:"GET",mode:"cors"}).then(r=>r.json());
-        renderFutureOrders(refreshed);
-        renderHistory(refreshed);
-        renderCurrentDogs(refreshed);
+        // רענון הנתונים
+        setTimeout(async () => {
+          try {
+            const response = await fetch(SHEET_URL + '?t=' + Date.now());
+            const refreshed = await response.json();
+            renderFutureOrders(refreshed);
+            renderHistory(refreshed);
+            renderCurrentDogs(refreshed);
+          } catch(e) {
+            console.error('Error refreshing:', e);
+          }
+        }, 1000);
 
       } catch(err){
         console.error(err);
