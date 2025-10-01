@@ -576,25 +576,44 @@
     const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // GreenAPI Configuration
     const GREEN_API_INSTANCE = '7105264953';
     const GREEN_API_TOKEN = 'c0e0fdbd81794dfc941722c133598333ad671ebe13af4fe181';
     
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentStep = 0;
+    let previousOrders = [];
+
+    // פונקציות עזר
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
+    function formatDateWithDay(dateString) {
+      const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const date = new Date(dateString);
+      if (isNaN(date)) return '';
+      const day = ('0' + date.getDate()).slice(-2);
+      const month = ('0' + (date.getMonth() + 1)).slice(-2);
+      const year = date.getFullYear();
+      const dayName = daysHebrew[date.getDay()];
+      return `${day}/${month}/${year} (${dayName})`;
+    }
+
     async function sendWhatsAppMessage(phone, message) {
-      // המרת מספר טלפון לפורמט בינלאומי (972...)
       let formattedPhone = phone.replace(/[\s\-]/g, '');
       if (formattedPhone.startsWith('0')) {
         formattedPhone = '972' + formattedPhone.substring(1);
       }
       
       console.log('📞 Sending WhatsApp to:', formattedPhone);
-      console.log('📝 Message:', message);
       
       try {
         const url = `https://api.green-api.com/waInstance${GREEN_API_INSTANCE}/sendMessage/${GREEN_API_TOKEN}`;
-        console.log('🌐 API URL:', url);
         
         const response = await fetch(url, {
           method: 'POST',
@@ -620,9 +639,6 @@
         throw error;
       }
     }
-    let currentStep = 0;
-    let previousOrders = [];
-    let searchTimeout;
 
     function updateStepIndicator() {
       document.querySelectorAll('.step').forEach(step => {
@@ -693,7 +709,7 @@
       const checkIn = formatDateWithDay(data.checkIn);
       const checkOut = formatDateWithDay(data.checkOut);
       
-      const days = calculateDays(data.checkIn, data.checkOut);
+      const numDays = calculateDays(data.checkIn, data.checkOut);
       
       const summary = `
         <div class="summary-box">
@@ -732,7 +748,7 @@
           </div>
           <div class="summary-item">
             <span class="summary-label">מספר ימים:</span>
-            <span class="summary-value">${days} ימים</span>
+            <span class="summary-value">${numDays} ימים</span>
           </div>
           ${data.notes ? `
           <div class="summary-item">
@@ -918,7 +934,6 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
         console.log('✅ WhatsApp message sent successfully to:', finalPhone);
       } catch (whatsappError) {
         console.error('❌ Failed to send WhatsApp message:', whatsappError);
-        // ממשיכים גם אם הווטסאפ נכשל
       }
       
       const checkIn = formatDateWithDay(formData.checkIn);
