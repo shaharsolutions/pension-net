@@ -36,13 +36,6 @@
       text-align: center;
     }
 
-    .header img {
-      width: 60px;
-      height: 60px;
-      margin-bottom: 15px;
-      filter: brightness(0) invert(1);
-    }
-
     .header h1 {
       font-size: 28px;
       font-weight: 700;
@@ -131,6 +124,11 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .form-group {
@@ -279,56 +277,12 @@
       gap: 16px;
     }
 
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-
-      .header {
-        padding: 30px 20px;
-      }
-
-      .header h1 {
-        font-size: 24px;
-      }
-
-      .form-content {
-        padding: 30px 20px;
-      }
-
-      .date-group {
-        grid-template-columns: 1fr;
-      }
-
-      .step-label {
-        font-size: 10px;
-      }
-    }
-
-    .required::after {
-      content: '*';
-      color: #f44336;
-      margin-right: 4px;
-    }
-
-    .helper-text {
-      font-size: 12px;
-      color: #999;
-      margin-top: 4px;
-    }
-
     .radio-group {
       display: flex;
       gap: 12px;
     }
 
     .radio-group-4 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .radio-group-breed {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
@@ -343,10 +297,6 @@
     @media (min-width: 500px) {
       .radio-group-4 {
         grid-template-columns: repeat(4, 1fr);
-      }
-      
-      .radio-group-breed {
-        grid-template-columns: repeat(3, 1fr);
       }
 
       .radio-group-neuter {
@@ -376,14 +326,9 @@
       display: none;
     }
 
-    .radio-option input[type="radio"]:checked + .radio-label {
-      color: white;
-    }
-
     .radio-option:has(input[type="radio"]:checked) {
       background: #667eea;
       border-color: #667eea;
-      color: white;
     }
 
     .radio-label {
@@ -404,19 +349,60 @@
     .radio-option:has(input[type="radio"]:checked) .radio-label {
       color: white;
     }
+
+    .required::after {
+      content: '*';
+      color: #f44336;
+      margin-right: 4px;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 30px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .form-content {
+        padding: 30px 20px;
+      }
+
+      .date-group {
+        grid-template-columns: 1fr;
+      }
+
+      .step-label {
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="dog icon" />
       <h1>הזמנת מקום בפנסיון</h1>
       <p>מלאו את הפרטים בשלושה שלבים פשוטים</p>
     </div>
 
     <div class="form-content">
       <div class="step-indicator">
-        <div class="step active" data-step="1">
+        <div class="step active" data-step="0">
+          <div class="step-circle">👤</div>
+          <div class="step-label">זיהוי</div>
+        </div>
+        <div class="step" data-step="1">
           <div class="step-circle">1</div>
           <div class="step-label">פרטי הבעלים</div>
         </div>
@@ -431,16 +417,34 @@
       </div>
 
       <div id="bookingForm">
+        <!-- Step 0: Phone Identification -->
+        <div class="form-step active" data-step="0">
+          <div class="form-group">
+            <label class="required">מספר טלפון</label>
+            <input type="tel" id="identificationPhone" placeholder="050-1234567" required />
+            <div class="helper-text">הזן את מספר הטלפון שלך</div>
+          </div>
+          <div id="searchingIndicator" style="display: none; text-align: center; margin: 20px 0; color: #667eea; font-weight: 600;">
+            <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
+            מחפש הזמנות קודמות...
+          </div>
+          <div id="previousDogsContainer" style="display: none; margin-top: 20px;">
+            <label class="required">מצאנו את הכלבים שלך! בחר כלב:</label>
+            <select id="previousDogSelect" style="width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 16px; margin-top: 8px;">
+              <option value="">-- כלב חדש --</option>
+            </select>
+            <div class="helper-text" style="margin-top: 8px;">או בחר "כלב חדש" להזמנה עבור כלב חדש</div>
+            <div class="button-group">
+              <button type="button" class="btn-primary" onclick="nextStep()" style="margin-top: 20px;">המשך →</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Step 1: Owner Details -->
-        <div class="form-step active" data-step="1">
+        <div class="form-step" data-step="1">
           <div class="form-group">
             <label class="required">שם מלא</label>
             <input type="text" name="ownerName" placeholder="לדוגמה: יוסי כהן" required />
-          </div>
-          <div class="form-group">
-            <label class="required">מספר טלפון</label>
-            <input type="tel" name="phone" placeholder="050-1234567" required />
-            <div class="helper-text">נשלח אליכם אישור בהודעת SMS</div>
           </div>
           <div class="button-group">
             <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
@@ -570,7 +574,9 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
     
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let currentStep = 1;
+    let currentStep = 0;
+    let previousOrders = [];
+    let searchTimeout;
 
     function updateStepIndicator() {
       document.querySelectorAll('.step').forEach(step => {
@@ -600,7 +606,6 @@
         }
       }
       
-      // Validate radio groups
       const radioGroups = {};
       currentFormStep.querySelectorAll('input[type="radio"][required]').forEach(radio => {
         if (!radioGroups[radio.name]) {
@@ -637,6 +642,7 @@
 
     function showSummary() {
       const data = getFormData();
+      const phone = document.getElementById('identificationPhone').value.trim();
       
       const checkIn = formatDateWithDay(data.checkIn);
       const checkOut = formatDateWithDay(data.checkOut);
@@ -650,7 +656,7 @@
           </div>
           <div class="summary-item">
             <span class="summary-label">טלפון:</span>
-            <span class="summary-value">${data.phone}</span>
+            <span class="summary-value">${phone}</span>
           </div>
           <div class="summary-item">
             <span class="summary-label">שם הכלב:</span>
@@ -710,6 +716,73 @@
       return data;
     }
 
+    async function identifyCustomer() {
+      const phoneInput = document.getElementById('identificationPhone');
+      let phone = phoneInput.value.trim();
+      
+      if (!phone || phone.length < 9) {
+        return;
+      }
+      
+      document.getElementById('searchingIndicator').style.display = 'block';
+      document.getElementById('previousDogsContainer').style.display = 'none';
+      
+      if (/^[1-9]\d{8}$/.test(phone)) {
+        phone = '0' + phone;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('phone', phone)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        previousOrders = data || [];
+        
+        document.getElementById('searchingIndicator').style.display = 'none';
+        
+        if (previousOrders.length > 0) {
+          const select = document.getElementById('previousDogSelect');
+          select.innerHTML = '<option value="">-- כלב חדש --</option>';
+          
+          const uniqueDogs = [];
+          const dogNames = new Set();
+          
+          previousOrders.forEach(order => {
+            if (!dogNames.has(order.dog_name)) {
+              dogNames.add(order.dog_name);
+              uniqueDogs.push(order);
+            }
+          });
+          
+          uniqueDogs.forEach((order, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${order.dog_name} (${order.dog_breed}, ${order.dog_age})`;
+            select.appendChild(option);
+          });
+          
+          select.dataset.uniqueDogs = JSON.stringify(uniqueDogs);
+          
+          document.querySelector('input[name="ownerName"]').value = previousOrders[0].owner_name;
+          
+          document.getElementById('previousDogsContainer').style.display = 'block';
+        } else {
+          currentStep = 1;
+          updateStepIndicator();
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('searchingIndicator').style.display = 'none';
+        currentStep = 1;
+        updateStepIndicator();
+      }
+    }
+
     async function submitForm() {
       if (!validateStep(3)) {
         return;
@@ -720,14 +793,16 @@
       submitBtn.textContent = 'שולח...';
       
       const formData = getFormData();
+      const phone = document.getElementById('identificationPhone').value.trim();
+      let finalPhone = phone;
       
-      if (/^[1-9]\d{8}$/.test(formData.phone)) {
-        formData.phone = '0' + formData.phone;
+      if (/^[1-9]\d{8}$/.test(phone)) {
+        finalPhone = '0' + phone;
       }
       
       const orderData = {
         owner_name: formData.ownerName,
-        phone: formData.phone,
+        phone: finalPhone,
         check_in: formData.checkIn,
         check_out: formData.checkOut,
         dog_name: formData.dogName,
@@ -748,36 +823,4 @@
         alert('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.');
         submitBtn.disabled = false;
         submitBtn.textContent = 'שלח הזמנה ✓';
-        return;
-      }
-      
-      document.getElementById('finalSummary').innerHTML = document.getElementById('summaryPreview').innerHTML;
-      currentStep = 4;
-      updateStepIndicator();
-    }
-
-    function resetForm() {
-      document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
-        input.value = '';
-      });
-      document.querySelectorAll('#bookingForm input[type="radio"]').forEach(radio => {
-        radio.checked = false;
-      });
-      currentStep = 1;
-      updateStepIndicator();
-      document.getElementById('summaryPreview').innerHTML = '';
-    }
-
-    // Set minimum date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelector('input[name="checkIn"]').min = today;
-    document.querySelector('input[name="checkOut"]').min = today;
-
-    // Auto-update checkout minimum date based on checkin
-    document.querySelector('input[name="checkIn"]').addEventListener('change', function() {
-      const checkInDate = this.value;
-      document.querySelector('input[name="checkOut"]').min = checkInDate;
-    });
-  </script>
-</body>
-</html>
+        return
