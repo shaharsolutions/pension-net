@@ -564,8 +564,12 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxt9zQ10Gnb0NoJujKItkoO8z_Rnb_bJ_1ancMtaPwHeby0gwn68cJZyOzdvh7uM2FD6w/exec';
+    const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let currentStep = 1;
 
     function updateStepIndicator() {
@@ -706,7 +710,7 @@
       return data;
     }
 
-    function submitForm() {
+    async function submitForm() {
       if (!validateStep(3)) {
         return;
       }
@@ -715,30 +719,41 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'שולח...';
       
-      const obj = getFormData();
+      const formData = getFormData();
       
-      if (/^[1-9]\d{8}$/.test(obj.phone)) {
-        obj.phone = '0' + obj.phone;
+      if (/^[1-9]\d{8}$/.test(formData.phone)) {
+        formData.phone = '0' + formData.phone;
       }
       
-      obj.mode = 'add';
-      obj.neutered = obj.neutered || 'לא צוין';
-      obj.dogBreed = obj.dogSize || '';
+      const orderData = {
+        owner_name: formData.ownerName,
+        phone: formData.phone,
+        check_in: formData.checkIn,
+        check_out: formData.checkOut,
+        dog_name: formData.dogName,
+        dog_age: formData.dogAge,
+        dog_breed: formData.dogSize || '',
+        neutered: formData.neutered || 'לא צוין',
+        notes: formData.notes || '',
+        status: 'ממתין'
+      };
       
-      fetch(SHEET_URL, {
-        method: 'POST',
-        body: JSON.stringify(obj)
-      })
-      .then(response => {
-        document.getElementById('finalSummary').innerHTML = document.getElementById('summaryPreview').innerHTML;
-        currentStep = 4;
-        updateStepIndicator();
-      })
-      .catch(error => {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select();
+      
+      if (error) {
         console.error('Error:', error);
+        alert('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.');
         submitBtn.disabled = false;
         submitBtn.textContent = 'שלח הזמנה ✓';
-      });
+        return;
+      }
+      
+      document.getElementById('finalSummary').innerHTML = document.getElementById('summaryPreview').innerHTML;
+      currentStep = 4;
+      updateStepIndicator();
     }
 
     function resetForm() {
