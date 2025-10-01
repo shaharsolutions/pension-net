@@ -241,6 +241,9 @@
     .summary-value {
       color: #333;
       font-weight: 600;
+      text-align: left;
+      word-break: keep-all;
+      white-space: nowrap;
     }
 
     .success-message {
@@ -710,6 +713,8 @@
       const checkOut = formatDateWithDay(data.checkOut);
       
       const numDays = calculateDays(data.checkIn, data.checkOut);
+      const pricePerDay = 130;
+      const totalPrice = numDays * pricePerDay;
       
       const summary = `
         <div class="summary-box">
@@ -749,6 +754,14 @@
           <div class="summary-item">
             <span class="summary-label">מספר ימים:</span>
             <span class="summary-value">${numDays} ימים</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מחיר ליום:</span>
+            <span class="summary-value">${pricePerDay}₪</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">סה"כ לתשלום:</span>
+            <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
           </div>
           ${data.notes ? `
           <div class="summary-item">
@@ -939,6 +952,8 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
       const checkIn = formatDateWithDay(formData.checkIn);
       const checkOut = formatDateWithDay(formData.checkOut);
       const totalDays = calculateDays(formData.checkIn, formData.checkOut);
+      const pricePerDay = 130;
+      const totalPrice = totalDays * pricePerDay;
       
       const finalSummary = `
         <div class="summary-box">
@@ -978,6 +993,14 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
           <div class="summary-item">
             <span class="summary-label">מספר ימים:</span>
             <span class="summary-value">${totalDays} ימים</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מחיר ליום:</span>
+            <span class="summary-value">${pricePerDay}₪</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">סה"כ לתשלום:</span>
+            <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
           </div>
           ${formData.notes ? `
           <div class="summary-item">
