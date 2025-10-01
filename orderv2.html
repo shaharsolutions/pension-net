@@ -527,6 +527,27 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="required">אופי הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="temperament" value="ידידותי" required />
+                <span class="radio-label">ידידותי<br><small>אוהב כולם</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="temperament" value="שקט" required />
+                <span class="radio-label">שקט<br><small>רגוע</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="temperament" value="אנרגטי" required />
+                <span class="radio-label">אנרגטי<br><small>פעיל</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="temperament" value="ביישן" required />
+                <span class="radio-label">ביישן<br><small>זהיר</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
             <label>הערות מיוחדות</label>
             <textarea name="notes" placeholder="אלרגיות, תרופות, התנהגות מיוחדת וכו'"></textarea>
           </div>
@@ -744,6 +765,10 @@
             <span class="summary-value">${data.neutered}</span>
           </div>
           <div class="summary-item">
+            <span class="summary-label">אופי:</span>
+            <span class="summary-value">${data.temperament}</span>
+          </div>
+          <div class="summary-item">
             <span class="summary-label">כניסה:</span>
             <span class="summary-value">${checkIn}</span>
           </div>
@@ -866,6 +891,9 @@
         document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
         document.querySelector(`input[name="dogSize"][value="${selectedDog.dog_breed}"]`).checked = true;
         document.querySelector(`input[name="neutered"][value="${selectedDog.neutered}"]`).checked = true;
+        if (selectedDog.temperament) {
+          document.querySelector(`input[name="temperament"][value="${selectedDog.temperament}"]`).checked = true;
+        }
         document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
       }
       
@@ -899,6 +927,7 @@
         dog_age: formData.dogAge,
         dog_breed: formData.dogSize || '',
         neutered: formData.neutered || 'לא צוין',
+        temperament: formData.temperament || '',
         notes: formData.notes || '',
         status: 'ממתין'
       };
@@ -932,6 +961,7 @@
 🎂 גיל: ${formData.dogAge}
 📏 גודל: ${formData.dogSize}
 💉 מין וסטטוס: ${formData.neutered}
+🐾 אופי: ${formData.temperament}
 ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
 
 ⏳ *סטטוס ההזמנה:* ממתין לאישור
@@ -981,6 +1011,10 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
           <div class="summary-item">
             <span class="summary-label">מין וסטטוס:</span>
             <span class="summary-value">${formData.neutered}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">אופי:</span>
+            <span class="summary-value">${formData.temperament}</span>
           </div>
           <div class="summary-item">
             <span class="summary-label">כניסה:</span>
