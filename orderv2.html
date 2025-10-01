@@ -527,25 +527,9 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="required">אופי הכלב</label>
-            <div class="radio-group radio-group-4">
-              <label class="radio-option">
-                <input type="radio" name="temperament" value="ידידותי" required />
-                <span class="radio-label">ידידותי<br><small>אוהב כולם</small></span>
-              </label>
-              <label class="radio-option">
-                <input type="radio" name="temperament" value="שקט" required />
-                <span class="radio-label">שקט<br><small>רגוע</small></span>
-              </label>
-              <label class="radio-option">
-                <input type="radio" name="temperament" value="אנרגטי" required />
-                <span class="radio-label">אנרגטי<br><small>פעיל</small></span>
-              </label>
-              <label class="radio-option">
-                <input type="radio" name="temperament" value="ביישן" required />
-                <span class="radio-label">ביישן<br><small>זהיר</small></span>
-              </label>
-            </div>
+            <label>אופי הכלב</label>
+            <textarea name="dogTemperament" placeholder="לדוגמה: ידידותי, אנרגטי, ביישן, דומיננטי, רגוע, משחקי, חרדתי מכלבים אחרים..."></textarea>
+            <div class="helper-text">תאר את האופי והתנהגות הכלב - זה יעזור לנו לדאוג לו בצורה הטובה ביותר</div>
           </div>
           <div class="form-group">
             <label>הערות מיוחדות</label>
@@ -607,7 +591,6 @@
     let currentStep = 0;
     let previousOrders = [];
 
-    // פונקציות עזר
     function calculateDays(checkIn, checkOut) {
       if (!checkIn || !checkOut) return 0;
       const start = new Date(checkIn);
@@ -764,10 +747,12 @@
             <span class="summary-label">מין וסטטוס:</span>
             <span class="summary-value">${data.neutered}</span>
           </div>
+          ${data.dogTemperament ? `
           <div class="summary-item">
-            <span class="summary-label">אופי:</span>
-            <span class="summary-value">${data.temperament}</span>
+            <span class="summary-label">אופי הכלב:</span>
+            <span class="summary-value">${data.dogTemperament}</span>
           </div>
+          ` : ''}
           <div class="summary-item">
             <span class="summary-label">כניסה:</span>
             <span class="summary-value">${checkIn}</span>
@@ -891,9 +876,7 @@
         document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
         document.querySelector(`input[name="dogSize"][value="${selectedDog.dog_breed}"]`).checked = true;
         document.querySelector(`input[name="neutered"][value="${selectedDog.neutered}"]`).checked = true;
-        if (selectedDog.temperament) {
-          document.querySelector(`input[name="temperament"][value="${selectedDog.temperament}"]`).checked = true;
-        }
+        document.querySelector('textarea[name="dogTemperament"]').value = selectedDog.dog_temperament || '';
         document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
       }
       
@@ -927,7 +910,7 @@
         dog_age: formData.dogAge,
         dog_breed: formData.dogSize || '',
         neutered: formData.neutered || 'לא צוין',
-        temperament: formData.temperament || '',
+        dog_temperament: formData.dogTemperament || '',
         notes: formData.notes || '',
         status: 'ממתין'
       };
@@ -945,7 +928,6 @@
         return;
       }
       
-      // שליחת הודעת וואטסאפ
       const numDays = calculateDays(formData.checkIn, formData.checkOut);
       const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
 
@@ -961,7 +943,7 @@
 🎂 גיל: ${formData.dogAge}
 📏 גודל: ${formData.dogSize}
 💉 מין וסטטוס: ${formData.neutered}
-🐾 אופי: ${formData.temperament}
+${formData.dogTemperament ? `🐕 אופי: ${formData.dogTemperament}` : ''}
 ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
 
 ⏳ *סטטוס ההזמנה:* ממתין לאישור
@@ -1012,10 +994,12 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
             <span class="summary-label">מין וסטטוס:</span>
             <span class="summary-value">${formData.neutered}</span>
           </div>
+          ${formData.dogTemperament ? `
           <div class="summary-item">
-            <span class="summary-label">אופי:</span>
-            <span class="summary-value">${formData.temperament}</span>
+            <span class="summary-label">אופי הכלב:</span>
+            <span class="summary-value">${formData.dogTemperament}</span>
           </div>
+          ` : ''}
           <div class="summary-item">
             <span class="summary-label">כניסה:</span>
             <span class="summary-value">${checkIn}</span>
