@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>ניהול פנסיון כלבים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      direction: rtl;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+      border-radius: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .container {
+      margin: 20px auto;
+      padding: 30px;
+      max-width: 95%;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      overflow-x: auto;
+    }
+
+    .container h3 {
+      color: #667eea;
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    #currentDogsContainer {
+      margin: 20px auto;
+      max-width: 95%;
+      background: white;
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    #currentDogsContainer h3 {
+      color: #667eea;
+      font-size: 24px;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    #currentDogsList {
+      list-style-type: disc;
+      padding-right: 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    #currentDogsList li {
+      margin-bottom: 8px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1200px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    th, td {
+      padding: 14px 10px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #f8f9ff;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    tbody tr:nth-child(even):hover {
+      background: #f8f9ff;
+    }
+
+    input[type="text"], textarea {
+      width: 95%;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    select {
+      padding: 8px 12px;
+      min-width: 110px;
+      width: 100%;
+      direction: rtl;
+      text-align: center;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: white;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea.admin-note {
+      width: 80ch;
+      max-width: 100%;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      resize: none;
+      font-size: 12px;
+      padding: 8px 12px;
+      line-height: 1.4;
+      min-height: 60px;
+    }
+
+    .manager-note-column {
+      min-width: 200px;
+      max-width: 300px;
+    }
+
+    .wide-date-column {
+      min-width: 140px;
+      white-space: nowrap;
+    }
+
+    .status-approved {
+      color: #4caf50;
+      font-weight: bold;
+    }
+
+    .status-cancelled {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    /* Floating Save Button */
+    #saveButtonContainer {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+
+    #saveButton {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #saveButton:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(76, 175, 80, 0.5);
+    }
+
+    #saveButton:active {
+      transform: translateY(-1px);
+    }
+
+    .loading::after {
+      content: " ⏳";
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Search Input */
+    #historySearchInput {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    #historySearchInput:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Pagination Buttons */
+    #historyPagination button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 0 8px;
+    }
+
+    #historyPagination button:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    #historyPagination button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    #historyPagination span {
+      margin: 0 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .success-banner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 50px;
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+      font-weight: 600;
+      font-size: 16px;
+      z-index: 2000;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 24px;
+      }
+
+      .container {
+        padding: 20px 16px;
+      }
+
+      #saveButton {
+        padding: 14px 32px;
+        font-size: 16px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+  </header>
+
+  <div id="currentDogsContainer">
+    <h3>כלבים שנמצאים כעת בפנסיון</h3>
+    <ul id="currentDogsList"></ul>
+  </div>
+
+  <div class="container">
+  <h3>הזמנות</h3>
+  <table id="futureOrdersTable">
+    <thead>
+      <tr>
+        <th>מועד הזמנה</th>
+        <th>שם הבעלים</th>
+        <th>טלפון</th>
+        <th class="wide-date-column">כניסה</th>
+        <th class="wide-date-column">יציאה</th>
+        <th>שם הכלב</th>
+        <th>גיל</th>
+        <th>גזע</th>
+        <th>הערות</th>
+        <th>מסורס / מעוקרת</th>
+        <th>סטטוס</th>
+        <th class="manager-note-column">הערות מנהל</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="container" id="historyTableContainer">
+  <h3>היסטוריית הזמנות</h3>
+  <div style="margin-bottom:12px;">
+    <label for="historySearchInput" style="font-weight:bold;">חיפוש בהיסטוריית ההזמנות:</label>
+    <input type="text" id="historySearchInput" placeholder="הקלד לחיפוש..." style="margin-top:4px; margin-bottom:8px; max-width:300px;">
+  </div>
+  <div id="pastOrdersTableWrapper">
+    <table id="pastOrdersTable">
+      <thead>
+        <tr>
+          <th>מועד הזמנה</th>
+          <th>שם הבעלים</th>
+          <th>טלפון</th>
+          <th class="wide-date-column">כניסה</th>
+          <th class="wide-date-column">יציאה</th>
+          <th>שם הכלב</th>
+          <th>גיל</th>
+          <th>גזע</th>
+          <th>הערות</th>
+          <th>מסורס / מעוקרת</th>
+          <th>סטטוס</th>
+          <th class="manager-note-column">הערות מנהל</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div id="historyPagination" style="text-align:center; margin-top:16px;"></div>
+</div>
+
+  <!-- Floating Save Button -->
+  <div id="saveButtonContainer">
+    <button id="saveButton">💾 שמור שינויים</button>
+  </div>
+
+  <script>
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const pad = (n) => n.toString().padStart(2, '0');
+      // Use a non-breaking space (\u00A0) between date and time
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}\u00A0${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function formatDateOnly(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const pad = (n) => n.toString().padStart(2, '0');
+      const dayName = d.toLocaleDateString('he-IL', { weekday: 'long' });
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} (${dayName})`;
+    }
+
+    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxt9zQ10Gnb0NoJujKItkoO8z_Rnb_bJ_1ancMtaPwHeby0gwn68cJZyOzdvh7uM2FD6w/exec';
+
+    fetch(SHEET_URL)
+      .then(res => res.json())
+      .then(data => {
+        const futureTbody = document.querySelector("#futureOrdersTable tbody");
+        const pastTbody = document.querySelector("#pastOrdersTable tbody");
+
+        // סינון ההזמנות הפעילות (מאושר) ומיון לפי checkOut
+        const now = new Date();
+        // פעיל: הזמנות עתידיות (checkOut>=now)
+        const futureOrders = data.map((row, index) => ({...row, _index: index})).filter(row => {
+          const checkOut = new Date(row.checkOut);
+          return checkOut >= now;
+        });
+        // פעיל ומאושר בלבד
+        const activeOrders = futureOrders.filter(order => order.status === 'מאושר');
+        activeOrders.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
+        // כל שאר ההזמנות העתידיות (לא מאושר)
+        const otherFutureOrders = futureOrders.filter(order => order.status !== 'מאושר');
+        // הצג קודם את הפעילות המאושרות, אח"כ את כל השאר
+        const orderedFuture = [...activeOrders, ...otherFutureOrders];
+        orderedFuture.forEach(row => {
+          let tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${formatDateTime(row.orderDate)}</td>
+            <td>${row.ownerName || ''}</td>
+            <td>${row.phone || ''}</td>
+            <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
+            <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
+            <td>${row.dogName || ''}</td>
+            <td>${row.dogAge || ''}</td>
+            <td>${row.dogBreed || ''}</td>
+            <td>${row.notes || ''}</td>
+            <td>${row.neutered || ''}</td>
+            <td>
+              <select data-index="${row._index}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
+                <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
+                <option value="מאושר" ${row.status === "מאושר" ? "selected" : ""}>מאושר</option>
+                <option value="בוטל" ${row.status === "בוטל" ? "selected" : ""}>בוטל</option>
+              </select>
+            </td>
+            <td class="manager-note-column">
+              <textarea class="admin-note" data-index="${row._index}" cols="50" rows="2">${row.adminNote || ''}</textarea>
+            </td>
+          `;
+          futureTbody.appendChild(tr);
+        });
+        // --- היסטוריית הזמנות עם חיפוש ודפדוף ---
+        // Store history data for search/pagination
+        window.pastOrdersRawData = [];
+        data.forEach((row, index) => {
+          const checkOut = new Date(row.checkOut);
+          if (checkOut < now) {
+            window.pastOrdersRawData.push({
+              index,
+              orderDate: row.orderDate,
+              ownerName: row.ownerName || '',
+              phone: row.phone || '',
+              checkIn: row.checkIn,
+              checkOut: row.checkOut,
+              dogName: row.dogName || '',
+              dogAge: row.dogAge || '',
+              dogBreed: row.dogBreed || '',
+              notes: row.notes || '',
+              neutered: row.neutered || '',
+              status: row.status || '',
+              adminNote: row.adminNote || ''
+            });
+          }
+        });
+        renderPastOrdersTable();
+    // ========== פונקציות חיפוש ודפדוף עבור היסטוריית הזמנות ==========
+    const HISTORY_ROWS_PER_PAGE = 10;
+    window.pastOrdersSearchTerm = '';
+    window.pastOrdersCurrentPage = 1;
+
+    function filterPastOrdersData() {
+      if (!window.pastOrdersRawData) return [];
+      const term = (window.pastOrdersSearchTerm || '').trim();
+      if (!term) return window.pastOrdersRawData.slice();
+      const lowerTerm = term.toLowerCase();
+      return window.pastOrdersRawData.filter(row =>
+        Object.values(row).some(val =>
+          (val + '').toLowerCase().includes(lowerTerm)
+        )
+      );
+    }
+
+    function renderPastOrdersTable() {
+      const tbody = document.querySelector('#pastOrdersTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const filtered = filterPastOrdersData();
+      const totalRows = filtered.length;
+      const maxPage = Math.max(1, Math.ceil(totalRows / HISTORY_ROWS_PER_PAGE));
+      // Clamp current page
+      if (window.pastOrdersCurrentPage > maxPage) window.pastOrdersCurrentPage = maxPage;
+      if (window.pastOrdersCurrentPage < 1) window.pastOrdersCurrentPage = 1;
+      const startIdx = (window.pastOrdersCurrentPage - 1) * HISTORY_ROWS_PER_PAGE;
+      const pageRows = filtered.slice(startIdx, startIdx + HISTORY_ROWS_PER_PAGE);
+      pageRows.forEach(row => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDateTime(row.orderDate)}</td>
+          <td>${row.ownerName}</td>
+          <td>${row.phone}</td>
+          <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
+          <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
+          <td>${row.dogName}</td>
+          <td>${row.dogAge}</td>
+          <td>${row.dogBreed}</td>
+          <td>${row.notes}</td>
+          <td>${row.neutered}</td>
+          <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
+          <td class="manager-note-column">
+            <textarea class="admin-note" data-index="${row.index}" cols="50" rows="2">${row.adminNote}</textarea>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      renderPastOrdersPagination(totalRows, window.pastOrdersCurrentPage, maxPage);
+      // Auto-resize textareas
+      document.querySelectorAll('#pastOrdersTable textarea.admin-note').forEach(textarea => {
+        const adjustWidth = () => {
+          textarea.style.width = '80ch';
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        };
+        adjustWidth();
+        textarea.addEventListener('input', adjustWidth);
+        textarea.setAttribute('maxlength', '500');
+        textarea.style.wordBreak = 'break-word';
+        textarea.style.whiteSpace = 'pre-wrap';
+        textarea.style.overflowWrap = 'break-word';
+      });
+    }
+
+    function renderPastOrdersPagination(totalRows, currentPage, maxPage) {
+      const pagDiv = document.getElementById('historyPagination');
+      if (!pagDiv) return;
+      pagDiv.innerHTML = '';
+      if (maxPage <= 1) return;
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = 'הקודם';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.style.margin = '0 8px';
+      prevBtn.onclick = function() {
+        window.pastOrdersCurrentPage = Math.max(1, window.pastOrdersCurrentPage - 1);
+        renderPastOrdersTable();
+      };
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = 'הבא';
+      nextBtn.disabled = currentPage === maxPage;
+      nextBtn.style.margin = '0 8px';
+      nextBtn.onclick = function() {
+        window.pastOrdersCurrentPage = Math.min(maxPage, window.pastOrdersCurrentPage + 1);
+        renderPastOrdersTable();
+      };
+      const infoSpan = document.createElement('span');
+      infoSpan.textContent = `עמוד ${currentPage} מתוך ${maxPage}`;
+      infoSpan.style.margin = '0 14px';
+      pagDiv.appendChild(prevBtn);
+      pagDiv.appendChild(infoSpan);
+      pagDiv.appendChild(nextBtn);
+    }
+
+    // חיבור שדה החיפוש
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('historySearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          window.pastOrdersSearchTerm = searchInput.value;
+          window.pastOrdersCurrentPage = 1;
+          renderPastOrdersTable();
+        });
+      }
+    });
+
+        const currentDogs = data.filter(row => {
+          const now = new Date();
+          const checkIn = new Date(row.checkIn);
+          const checkOut = new Date(row.checkOut);
+          return row.status === "מאושר" && checkIn <= now && checkOut >= now;
+        });
+
+        const dogsList = document.getElementById('currentDogsList');
+        currentDogs.forEach(row => {
+          const li = document.createElement('li');
+          li.textContent = `${row.dogName || 'ללא שם'} (${row.ownerName || 'ללא בעלים'})`;
+          dogsList.appendChild(li);
+        });
+
+        document.querySelectorAll('textarea.admin-note').forEach(textarea => {
+          const adjustWidth = () => {
+            textarea.style.width = '80ch';
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+          };
+
+          adjustWidth();
+          textarea.addEventListener('input', adjustWidth);
+
+          textarea.setAttribute('maxlength', '500');
+          textarea.style.wordBreak = 'break-word';
+          textarea.style.whiteSpace = 'pre-wrap';
+          textarea.style.overflowWrap = 'break-word';
+        });
+
+        document.getElementById('saveButton').addEventListener('click', async () => {
+          const saveBtn = document.getElementById('saveButton');
+          saveBtn.classList.add('loading');
+          const rows = document.querySelectorAll('#futureOrdersTable tbody tr');
+          for (const row of rows) {
+            const index = row.querySelector('select')?.dataset?.index;
+            const status = row.querySelector('select')?.value;
+            const adminNote = row.querySelector('textarea.admin-note')?.value;
+
+            await fetch(SHEET_URL, {
+              method: "POST",
+              body: JSON.stringify({
+                mode: "update",
+                index,
+                status,
+                adminNote
+              })
+            });
+
+            const select = row.querySelector('select');
+            select.classList.remove('status-approved', 'status-cancelled');
+            if (status === 'מאושר') select.classList.add('status-approved');
+            if (status === 'בוטל') select.classList.add('status-cancelled');
+          }
+          const savedBanner = document.createElement('div');
+          savedBanner.className = 'success-banner';
+          savedBanner.textContent = '✅ השינויים נשמרו בהצלחה';
+          document.body.appendChild(savedBanner);
+
+          // רענון רשימת הכלבים בפנסיון
+          fetch(SHEET_URL)
+            .then(res => res.json())
+            .then(data => {
+              const currentDogs = data.filter(row => {
+                const now = new Date();
+                const checkIn = new Date(row.checkIn);
+                const checkOut = new Date(row.checkOut);
+                return row.status === "מאושר" && checkIn <= now && checkOut >= now;
+              });
+
+              const dogsList = document.getElementById('currentDogsList');
+              dogsList.innerHTML = '';
+              currentDogs.forEach(row => {
+                const li = document.createElement('li');
+                li.textContent = `${row.dogName || 'ללא שם'} (${row.ownerName || 'ללא בעלים'})`;
+                dogsList.appendChild(li);
+              });
+            })
+            .then(() => {
+              // רענון הטבלאות
+              fetch(SHEET_URL)
+                .then(res => res.json())
+                .then(data => {
+                  const futureTbody = document.querySelector("#futureOrdersTable tbody");
+                  const pastTbody = document.querySelector("#pastOrdersTable tbody");
+                  futureTbody.innerHTML = '';
+                  pastTbody.innerHTML = '';
+
+                  // סינון ההזמנות הפעילות (מאושר) ומיון לפי checkOut
+                  const now = new Date();
+                  const futureOrders = data.map((row, index) => ({...row, _index: index})).filter(row => {
+                    const checkOut = new Date(row.checkOut);
+                    return checkOut >= now;
+                  });
+                  const activeOrders = futureOrders.filter(order => order.status === 'מאושר');
+                  activeOrders.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
+                  const otherFutureOrders = futureOrders.filter(order => order.status !== 'מאושר');
+                  const orderedFuture = [...activeOrders, ...otherFutureOrders];
+                  orderedFuture.forEach(row => {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                      <td>${formatDateTime(row.orderDate)}</td>
+                      <td>${row.ownerName || ''}</td>
+                      <td>${row.phone || ''}</td>
+                      <td class="wide-date-column">${formatDateOnly(row.checkIn)}</td>
+                      <td class="wide-date-column">${formatDateOnly(row.checkOut)}</td>
+                      <td>${row.dogName || ''}</td>
+                      <td>${row.dogAge || ''}</td>
+                      <td>${row.dogBreed || ''}</td>
+                      <td>${row.notes || ''}</td>
+                      <td>${row.neutered || ''}</td>
+                      <td>
+                        <select data-index="${row._index}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
+                          <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
+                          <option value="מאושר" ${row.status === "מאושר" ? "selected" : ""}>מאושר</option>
+                          <option value="בוטל" ${row.status === "בוטל" ? "selected" : ""}>בוטל</option>
+                        </select>
+                      </td>
+                      <td class="manager-note-column">
+                        <textarea class="admin-note" data-index="${row._index}" cols="50" rows="2">${row.adminNote || ''}</textarea>
+                      </td>
+                    `;
+                    futureTbody.appendChild(tr);
+                  });
+                  // --- היסטוריית הזמנות עם חיפוש ודפדוף ---
+                  window.pastOrdersRawData = [];
+                  data.forEach((row, index) => {
+                    const checkOut = new Date(row.checkOut);
+                    if (checkOut < now) {
+                      window.pastOrdersRawData.push({
+                        index,
+                        orderDate: row.orderDate,
+                        ownerName: row.ownerName || '',
+                        phone: row.phone || '',
+                        checkIn: row.checkIn,
+                        checkOut: row.checkOut,
+                        dogName: row.dogName || '',
+                        dogAge: row.dogAge || '',
+                        dogBreed: row.dogBreed || '',
+                        notes: row.notes || '',
+                        neutered: row.neutered || '',
+                        status: row.status || '',
+                        adminNote: row.adminNote || ''
+                      });
+                    }
+                  });
+                  renderPastOrdersTable();
+                });
+            })
+            .finally(() => {
+              saveBtn.classList.remove('loading');
+            });
+
+          setTimeout(() => {
+            savedBanner.remove();
+          }, 4000);
+        });
+      });
+  </script>
+</body>
+</html>
