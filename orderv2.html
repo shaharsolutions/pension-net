@@ -899,7 +899,7 @@
       }
       
       // שליחת הודעת וואטסאפ
-      const days = calculateDays(formData.checkIn, formData.checkOut);
+      const numDays = calculateDays(formData.checkIn, formData.checkOut);
       const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
 
 שלום ${formData.ownerName}!
@@ -910,7 +910,7 @@
 🐶 שם הכלב: ${formData.dogName}
 📅 כניסה: ${formatDateWithDay(formData.checkIn)}
 📅 יציאה: ${formatDateWithDay(formData.checkOut)}
-⏱️ מספר ימים: ${days} ימים
+⏱️ מספר ימים: ${numDays} ימים
 🎂 גיל: ${formData.dogAge}
 📏 גודל: ${formData.dogSize}
 💉 מין וסטטוס: ${formData.neutered}
@@ -934,7 +934,7 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
       
       const checkIn = formatDateWithDay(formData.checkIn);
       const checkOut = formatDateWithDay(formData.checkOut);
-      const days = calculateDays(formData.checkIn, formData.checkOut);
+      const totalDays = calculateDays(formData.checkIn, formData.checkOut);
       
       const finalSummary = `
         <div class="summary-box">
@@ -973,7 +973,7 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
           </div>
           <div class="summary-item">
             <span class="summary-label">מספר ימים:</span>
-            <span class="summary-value">${days} ימים</span>
+            <span class="summary-value">${totalDays} ימים</span>
           </div>
           ${formData.notes ? `
           <div class="summary-item">
