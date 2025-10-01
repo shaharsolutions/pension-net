@@ -179,18 +179,35 @@
 
     .price-input {
       width: 80px;
-      padding: 6px 8px;
+      padding: 6px 24px 6px 8px;
       border: 2px solid #e0e0e0;
       border-radius: 6px;
       font-size: 14px;
       text-align: center;
       font-weight: 600;
+      direction: ltr;
     }
 
     .price-input:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .price-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .price-wrapper::after {
+      content: '₪';
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 700;
+      color: #667eea;
+      pointer-events: none;
     }
 
     .days-cell {
@@ -572,7 +589,9 @@
           <td>${row.notes}</td>
           <td>${row.neutered}</td>
           <td>
-            <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />₪
+            <div class="price-wrapper">
+              <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+            </div>
           </td>
           <td class="days-cell">
             ${days}
@@ -764,14 +783,12 @@
           const id = row.querySelector('select')?.dataset?.id;
           const status = row.querySelector('select')?.value;
           const adminNote = row.querySelector('textarea.admin-note')?.value;
-          const pricePerDay = row.querySelector('.price-input')?.value;
 
           const { error } = await supabase
             .from('orders')
             .update({
               status: status,
-              admin_note: adminNote,
-              price_per_day: pricePerDay ? parseInt(pricePerDay) : 130
+              admin_note: adminNote
             })
             .eq('id', id);
 
