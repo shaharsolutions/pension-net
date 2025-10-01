@@ -604,13 +604,32 @@
           if (row.status !== "מאושר") return false;
           
           const now = new Date();
-          now.setHours(0, 0, 0, 0); // איפוס השעה להשוואה רק של תאריכים
+          now.setHours(0, 0, 0, 0);
           
-          const checkIn = new Date(row.checkIn);
+          // המרת תאריך - תומך גם ב-string וגם ב-Date object
+          let checkIn = row.checkIn;
+          if (typeof checkIn === 'string') {
+            checkIn = new Date(checkIn + 'T00:00:00');
+          } else {
+            checkIn = new Date(checkIn);
+          }
           checkIn.setHours(0, 0, 0, 0);
           
-          const checkOut = new Date(row.checkOut);
-          checkOut.setHours(23, 59, 59, 999); // סוף היום
+          let checkOut = row.checkOut;
+          if (typeof checkOut === 'string') {
+            checkOut = new Date(checkOut + 'T23:59:59');
+          } else {
+            checkOut = new Date(checkOut);
+          }
+          checkOut.setHours(23, 59, 59, 999);
+          
+          // Debug - תוכל להסיר אחרי שזה עובד
+          console.log('Checking:', row.dogName, {
+            checkIn: checkIn.toISOString().split('T')[0],
+            checkOut: checkOut.toISOString().split('T')[0],
+            today: now.toISOString().split('T')[0],
+            isInRange: checkIn <= now && checkOut >= now
+          });
           
           return checkIn <= now && checkOut >= now;
         });
@@ -677,10 +696,20 @@
                 const now = new Date();
                 now.setHours(0, 0, 0, 0);
                 
-                const checkIn = new Date(row.checkIn);
+                let checkIn = row.checkIn;
+                if (typeof checkIn === 'string') {
+                  checkIn = new Date(checkIn + 'T00:00:00');
+                } else {
+                  checkIn = new Date(checkIn);
+                }
                 checkIn.setHours(0, 0, 0, 0);
                 
-                const checkOut = new Date(row.checkOut);
+                let checkOut = row.checkOut;
+                if (typeof checkOut === 'string') {
+                  checkOut = new Date(checkOut + 'T23:59:59');
+                } else {
+                  checkOut = new Date(checkOut);
+                }
                 checkOut.setHours(23, 59, 59, 999);
                 
                 return checkIn <= now && checkOut >= now;
