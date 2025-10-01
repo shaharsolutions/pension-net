@@ -178,14 +178,14 @@
     }
 
     .price-input {
-      width: 80px;
-      padding: 6px 24px 6px 8px;
+      width: 90px;
+      padding: 6px 8px 6px 28px;
       border: 2px solid #e0e0e0;
       border-radius: 6px;
       font-size: 14px;
-      text-align: center;
+      text-align: right;
       font-weight: 600;
-      direction: ltr;
+      direction: rtl;
     }
 
     .price-input:focus {
@@ -202,10 +202,11 @@
     .price-wrapper::after {
       content: '₪';
       position: absolute;
-      left: 8px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
       font-weight: 700;
+      font-size: 14px;
       color: #667eea;
       pointer-events: none;
     }
