@@ -601,10 +601,18 @@
     });
 
         const currentDogs = data.filter(row => {
+          if (row.status !== "מאושר") return false;
+          
           const now = new Date();
+          now.setHours(0, 0, 0, 0); // איפוס השעה להשוואה רק של תאריכים
+          
           const checkIn = new Date(row.checkIn);
+          checkIn.setHours(0, 0, 0, 0);
+          
           const checkOut = new Date(row.checkOut);
-          return row.status === "מאושר" && checkIn <= now && checkOut >= now;
+          checkOut.setHours(23, 59, 59, 999); // סוף היום
+          
+          return checkIn <= now && checkOut >= now;
         });
 
         const dogsList = document.getElementById('currentDogsList');
@@ -664,10 +672,18 @@
             .then(res => res.json())
             .then(data => {
               const currentDogs = data.filter(row => {
+                if (row.status !== "מאושר") return false;
+                
                 const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                
                 const checkIn = new Date(row.checkIn);
+                checkIn.setHours(0, 0, 0, 0);
+                
                 const checkOut = new Date(row.checkOut);
-                return row.status === "מאושר" && checkIn <= now && checkOut >= now;
+                checkOut.setHours(23, 59, 59, 999);
+                
+                return checkIn <= now && checkOut >= now;
               });
 
               const dogsList = document.getElementById('currentDogsList');
