@@ -746,17 +746,6 @@
       document.getElementById('summaryPreview').innerHTML = summary;
     }
 
-    function formatDateWithDay(dateString) {
-      const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-      const date = new Date(dateString);
-      if (isNaN(date)) return '';
-      const day = ('0' + date.getDate()).slice(-2);
-      const month = ('0' + (date.getMonth() + 1)).slice(-2);
-      const year = date.getFullYear();
-      const dayName = daysHebrew[date.getDay()];
-      return `${day}/${month}/${year} (${dayName})`;
-    }
-
     function getFormData() {
       const data = {};
       document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
