@@ -428,6 +428,9 @@
             <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
             מחפש הזמנות קודמות...
           </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" onclick="identifyCustomer()">המשך →</button>
+          </div>
           <div id="previousDogsContainer" style="display: none; margin-top: 20px;">
             <label class="required">מצאנו את הכלבים שלך! בחר כלב:</label>
             <select id="previousDogSelect" style="width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 16px; margin-top: 8px;">
@@ -435,7 +438,7 @@
             </select>
             <div class="helper-text" style="margin-top: 8px;">או בחר "כלב חדש" להזמנה עבור כלב חדש</div>
             <div class="button-group">
-              <button type="button" class="btn-primary" onclick="nextStep()" style="margin-top: 20px;">המשך →</button>
+              <button type="button" class="btn-primary" onclick="proceedAfterDogSelection()" style="margin-top: 20px;">המשך →</button>
             </div>
           </div>
         </div>
@@ -721,6 +724,7 @@
       let phone = phoneInput.value.trim();
       
       if (!phone || phone.length < 9) {
+        alert('אנא הזן מספר טלפון תקין');
         return;
       }
       
@@ -771,6 +775,7 @@
           
           document.getElementById('previousDogsContainer').style.display = 'block';
         } else {
+          document.querySelector('input[name="ownerName"]').value = '';
           currentStep = 1;
           updateStepIndicator();
         }
@@ -778,9 +783,27 @@
       } catch (error) {
         console.error('Error:', error);
         document.getElementById('searchingIndicator').style.display = 'none';
-        currentStep = 1;
-        updateStepIndicator();
+        alert('אירעה שגיאה בחיפוש. אנא נסה שוב.');
       }
+    }
+
+    function proceedAfterDogSelection() {
+      const select = document.getElementById('previousDogSelect');
+      const selectedIndex = select.value;
+      
+      if (selectedIndex !== '') {
+        const uniqueDogs = JSON.parse(select.dataset.uniqueDogs);
+        const selectedDog = uniqueDogs[selectedIndex];
+        
+        document.querySelector('input[name="dogName"]').value = selectedDog.dog_name;
+        document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
+        document.querySelector(`input[name="dogSize"][value="${selectedDog.dog_breed}"]`).checked = true;
+        document.querySelector(`input[name="neutered"][value="${selectedDog.neutered}"]`).checked = true;
+        document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
+      }
+      
+      currentStep = selectedIndex !== '' ? 3 : 2;
+      updateStepIndicator();
     }
 
     async function submitForm() {
@@ -823,4 +846,78 @@
         alert('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.');
         submitBtn.disabled = false;
         submitBtn.textContent = 'שלח הזמנה ✓';
-        return
+        return;
+      }
+      
+      const checkIn = formatDateWithDay(formData.checkIn);
+      const checkOut = formatDateWithDay(formData.checkOut);
+      
+      const finalSummary = `
+        <div class="summary-box">
+          <h3>פרטי ההזמנה</h3>
+          <div class="summary-item">
+            <span class="summary-label">שם הבעלים:</span>
+            <span class="summary-value">${formData.ownerName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">טלפון:</span>
+            <span class="summary-value">${finalPhone}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">שם הכלב:</span>
+            <span class="summary-value">${formData.dogName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גיל:</span>
+            <span class="summary-value">${formData.dogAge}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גודל:</span>
+            <span class="summary-value">${formData.dogSize}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מין וסטטוס:</span>
+            <span class="summary-value">${formData.neutered}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">כניסה:</span>
+            <span class="summary-value">${checkIn}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">יציאה:</span>
+            <span class="summary-value">${checkOut}</span>
+          </div>
+          ${formData.notes ? `
+          <div class="summary-item">
+            <span class="summary-label">הערות:</span>
+            <span class="summary-value">${formData.notes}</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('finalSummary').innerHTML = finalSummary;
+      
+      currentStep = 4;
+      updateStepIndicator();
+    }
+
+    function resetForm() {
+      document.querySelectorAll('#bookingForm input, #bookingForm textarea').forEach(input => {
+        if (input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+      
+      document.getElementById('previousDogsContainer').style.display = 'none';
+      document.getElementById('summaryPreview').innerHTML = '';
+      document.getElementById('finalSummary').innerHTML = '';
+      
+      currentStep = 0;
+      updateStepIndicator();
+    }
+  </script>
+</body>
+</html>
