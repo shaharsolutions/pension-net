@@ -746,15 +746,6 @@
       document.getElementById('summaryPreview').innerHTML = summary;
     }
 
-    function calculateDays(checkIn, checkOut) {
-      if (!checkIn || !checkOut) return 0;
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays;
-    }
-
     function formatDateWithDay(dateString) {
       const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
       const date = new Date(dateString);
