@@ -577,6 +577,37 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
     
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // GreenAPI Configuration
+    const GREEN_API_INSTANCE = '7105264953'; // החלף במזהה המופע שלך
+    const GREEN_API_TOKEN = 'c0e0fdbd81794dfc941722c133598333ad671ebe13af4fe181'; // החלף בטוקן API שלך
+    
+    async function sendWhatsAppMessage(phone, message) {
+      // המרת מספר טלפון לפורמט בינלאומי (972...)
+      let formattedPhone = phone.replace(/[\s\-]/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '972' + formattedPhone.substring(1);
+      }
+      
+      try {
+        const response = await fetch(`https://api.green-api.com/waInstance${GREEN_API_INSTANCE}/sendMessage/${GREEN_API_TOKEN}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            chatId: `${formattedPhone}@c.us`,
+            message: message
+          })
+        });
+        
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        throw error;
+      }
+    }
     let currentStep = 0;
     let previousOrders = [];
     let searchTimeout;
