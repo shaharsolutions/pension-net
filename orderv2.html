@@ -693,6 +693,8 @@
       const checkIn = formatDateWithDay(data.checkIn);
       const checkOut = formatDateWithDay(data.checkOut);
       
+      const days = calculateDays(data.checkIn, data.checkOut);
+      
       const summary = `
         <div class="summary-box">
           <h3>סיכום ההזמנה</h3>
@@ -728,6 +730,10 @@
             <span class="summary-label">יציאה:</span>
             <span class="summary-value">${checkOut}</span>
           </div>
+          <div class="summary-item">
+            <span class="summary-label">מספר ימים:</span>
+            <span class="summary-value">${days} ימים</span>
+          </div>
           ${data.notes ? `
           <div class="summary-item">
             <span class="summary-label">הערות:</span>
@@ -738,6 +744,15 @@
       `;
       
       document.getElementById('summaryPreview').innerHTML = summary;
+    }
+
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
     }
 
     function formatDateWithDay(dateString) {
@@ -893,6 +908,7 @@
       }
       
       // שליחת הודעת וואטסאפ
+      const days = calculateDays(formData.checkIn, formData.checkOut);
       const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
 
 שלום ${formData.ownerName}!
@@ -903,6 +919,7 @@
 🐶 שם הכלב: ${formData.dogName}
 📅 כניסה: ${formatDateWithDay(formData.checkIn)}
 📅 יציאה: ${formatDateWithDay(formData.checkOut)}
+⏱️ מספר ימים: ${days} ימים
 🎂 גיל: ${formData.dogAge}
 📏 גודל: ${formData.dogSize}
 💉 מין וסטטוס: ${formData.neutered}
@@ -926,6 +943,7 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
       
       const checkIn = formatDateWithDay(formData.checkIn);
       const checkOut = formatDateWithDay(formData.checkOut);
+      const days = calculateDays(formData.checkIn, formData.checkOut);
       
       const finalSummary = `
         <div class="summary-box">
@@ -961,6 +979,10 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
           <div class="summary-item">
             <span class="summary-label">יציאה:</span>
             <span class="summary-value">${checkOut}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מספר ימים:</span>
+            <span class="summary-value">${days} ימים</span>
           </div>
           ${formData.notes ? `
           <div class="summary-item">
