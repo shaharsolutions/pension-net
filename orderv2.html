@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>הזמנת מקום בפנסיון</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      direction: rtl;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .header img {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 15px;
+      filter: brightness(0) invert(1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .form-content {
+      padding: 40px 30px;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      right: 0;
+      left: 0;
+      height: 2px;
+      background: #e0e0e0;
+      z-index: 0;
+    }
+
+    .step {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      flex: 1;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-circle {
+      background: #667eea;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .step.completed .step-circle {
+      background: #4caf50;
+      color: white;
+    }
+
+    .step-label {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .step.active .step-label {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .form-step {
+      display: none;
+    }
+
+    .form-step.active {
+      display: block;
+      animation: fadeIn 0.4s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+      background: white;
+      color: #333;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    button {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .summary-box {
+      background: #f8f9ff;
+      border: 2px solid #667eea;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+
+    .summary-box h3 {
+      color: #667eea;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .summary-value {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .success-message {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #4caf50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 40px;
+    }
+
+    .success-message h2 {
+      color: #4caf50;
+      margin-bottom: 12px;
+    }
+
+    .success-message p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .date-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 30px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .form-content {
+        padding: 30px 20px;
+      }
+
+      .date-group {
+        grid-template-columns: 1fr;
+      }
+
+      .step-label {
+        font-size: 10px;
+      }
+    }
+
+    .required::after {
+      content: '*';
+      color: #f44336;
+      margin-right: 4px;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .radio-group-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .radio-group-breed {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .radio-group-neuter {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (min-width: 500px) {
+      .radio-group-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .radio-group-breed {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .radio-group-neuter {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .radio-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: white;
+    }
+
+    .radio-option:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .radio-option input[type="radio"] {
+      display: none;
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-label {
+      color: white;
+    }
+
+    .radio-option:has(input[type="radio"]:checked) {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .radio-label {
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+      transition: color 0.3s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .radio-label small {
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .radio-option:has(input[type="radio"]:checked) .radio-label {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="dog icon" />
+      <h1>הזמנת מקום בפנסיון</h1>
+      <p>מלאו את הפרטים בשלושה שלבים פשוטים</p>
+    </div>
+
+    <div class="form-content">
+      <div class="step-indicator">
+        <div class="step active" data-step="1">
+          <div class="step-circle">1</div>
+          <div class="step-label">פרטי הבעלים</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-circle">2</div>
+          <div class="step-label">פרטי הכלב</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-circle">3</div>
+          <div class="step-label">תאריכים</div>
+        </div>
+      </div>
+
+      <div id="bookingForm">
+        <!-- Step 1: Owner Details -->
+        <div class="form-step active" data-step="1">
+          <div class="form-group">
+            <label class="required">שם מלא</label>
+            <input type="text" name="ownerName" placeholder="לדוגמה: יוסי כהן" required />
+          </div>
+          <div class="form-group">
+            <label class="required">מספר טלפון</label>
+            <input type="tel" name="phone" placeholder="050-1234567" required />
+            <div class="helper-text">נשלח אליכם אישור בהודעת SMS</div>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Dog Details -->
+        <div class="form-step" data-step="2">
+          <div class="form-group">
+            <label class="required">שם הכלב</label>
+            <input type="text" name="dogName" placeholder="לדוגמה: מקס" required />
+          </div>
+          <div class="form-group">
+            <label class="required">גיל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="גור (עד שנה)" required />
+                <span class="radio-label">גור<br><small>עד שנה</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="צעיר (1-3)" required />
+                <span class="radio-label">צעיר<br><small>1-3</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="בוגר (4-7)" required />
+                <span class="radio-label">בוגר<br><small>4-7</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="מבוגר (8+)" required />
+                <span class="radio-label">מבוגר<br><small>8+</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">גודל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="קטן" required />
+                <span class="radio-label">קטן<br><small>עד 10 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="בינוני" required />
+                <span class="radio-label">בינוני<br><small>10-25 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="גדול" required />
+                <span class="radio-label">גדול<br><small>25-40 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="ענק" required />
+                <span class="radio-label">ענק<br><small>40+ ק"ג</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">מין וסירוס/עיקור</label>
+            <div class="radio-group radio-group-neuter">
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מסורס" required />
+                <span class="radio-label">מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מעוקרת" required />
+                <span class="radio-label">מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מסורס" required />
+                <span class="radio-label">לא מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מעוקרת" required />
+                <span class="radio-label">לא מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>הערות מיוחדות</label>
+            <textarea name="notes" placeholder="אלרגיות, תרופות, התנהגות מיוחדת וכו'"></textarea>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Dates -->
+        <div class="form-step" data-step="3">
+          <div class="date-group">
+            <div class="form-group">
+              <label class="required">תאריך כניסה</label>
+              <input type="date" name="checkIn" required />
+            </div>
+            <div class="form-group">
+              <label class="required">תאריך יציאה</label>
+              <input type="date" name="checkOut" required />
+            </div>
+          </div>
+          <div class="helper-text" style="margin-top: 8px;">
+            * הכניסה בין השעות 08:00-18:00, היציאה עד 12:00
+          </div>
+
+          <div id="summaryPreview"></div>
+
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="submitForm()">שלח הזמנה ✓</button>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="form-step" data-step="4">
+          <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>ההזמנה נשלחה בהצלחה!</h2>
+            <p>תקבלו אישור בהודעת SMS בהקדם.<br>מספר הטלפון שלנו: 052-8366744</p>
+            <div id="finalSummary"></div>
+            <button type="button" class="btn-primary" onclick="resetForm()" style="margin-top: 24px;">הזמנה חדשה</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxt9zQ10Gnb0NoJujKItkoO8z_Rnb_bJ_1ancMtaPwHeby0gwn68cJZyOzdvh7uM2FD6w/exec';
+    let currentStep = 1;
+
+    function updateStepIndicator() {
+      document.querySelectorAll('.step').forEach(step => {
+        const stepNum = parseInt(step.dataset.step);
+        step.classList.remove('active', 'completed');
+        if (stepNum === currentStep) {
+          step.classList.add('active');
+        } else if (stepNum < currentStep) {
+          step.classList.add('completed');
+        }
+      });
+
+      document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.remove('active');
+      });
+      document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+    }
+
+    function validateStep(step) {
+      const currentFormStep = document.querySelector(`.form-step[data-step="${step}"]`);
+      const inputs = currentFormStep.querySelectorAll('input[required]:not([type="radio"]), select[required], textarea[required]');
+      
+      for (let input of inputs) {
+        if (!input.value.trim()) {
+          input.focus();
+          return false;
+        }
+      }
+      
+      // Validate radio groups
+      const radioGroups = {};
+      currentFormStep.querySelectorAll('input[type="radio"][required]').forEach(radio => {
+        if (!radioGroups[radio.name]) {
+          radioGroups[radio.name] = false;
+        }
+        if (radio.checked) {
+          radioGroups[radio.name] = true;
+        }
+      });
+      
+      for (let groupName in radioGroups) {
+        if (!radioGroups[groupName]) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+
+    function nextStep() {
+      if (validateStep(currentStep)) {
+        if (currentStep === 3) {
+          showSummary();
+        }
+        currentStep++;
+        updateStepIndicator();
+      }
+    }
+
+    function prevStep() {
+      currentStep--;
+      updateStepIndicator();
+    }
+
+    function showSummary() {
+      const data = getFormData();
+      
+      const checkIn = formatDateWithDay(data.checkIn);
+      const checkOut = formatDateWithDay(data.checkOut);
+      
+      const summary = `
+        <div class="summary-box">
+          <h3>סיכום ההזמנה</h3>
+          <div class="summary-item">
+            <span class="summary-label">שם הבעלים:</span>
+            <span class="summary-value">${data.ownerName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">טלפון:</span>
+            <span class="summary-value">${data.phone}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">שם הכלב:</span>
+            <span class="summary-value">${data.dogName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גיל:</span>
+            <span class="summary-value">${data.dogAge}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גודל:</span>
+            <span class="summary-value">${data.dogSize}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מין וסטטוס:</span>
+            <span class="summary-value">${data.neutered}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">כניסה:</span>
+            <span class="summary-value">${checkIn}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">יציאה:</span>
+            <span class="summary-value">${checkOut}</span>
+          </div>
+          ${data.notes ? `
+          <div class="summary-item">
+            <span class="summary-label">הערות:</span>
+            <span class="summary-value">${data.notes}</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('summaryPreview').innerHTML = summary;
+    }
+
+    function formatDateWithDay(dateString) {
+      const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const date = new Date(dateString);
+      if (isNaN(date)) return '';
+      const day = ('0' + date.getDate()).slice(-2);
+      const month = ('0' + (date.getMonth() + 1)).slice(-2);
+      const year = date.getFullYear();
+      const dayName = daysHebrew[date.getDay()];
+      return `${day}/${month}/${year} (${dayName})`;
+    }
+
+    function getFormData() {
+      const data = {};
+      document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
+        data[input.name] = input.value;
+      });
+      document.querySelectorAll('#bookingForm input[type="radio"]:checked').forEach(radio => {
+        data[radio.name] = radio.value;
+      });
+      return data;
+    }
+
+    function submitForm() {
+      if (!validateStep(3)) {
+        return;
+      }
+      
+      const submitBtn = document.querySelector('.form-step[data-step="3"] .btn-primary');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'שולח...';
+      
+      const obj = getFormData();
+      
+      if (/^[1-9]\d{8}$/.test(obj.phone)) {
+        obj.phone = '0' + obj.phone;
+      }
+      
+      obj.mode = 'add';
+      obj.neutered = obj.neutered || 'לא צוין';
+      obj.dogBreed = obj.dogSize || '';
+      
+      fetch(SHEET_URL, {
+        method: 'POST',
+        body: JSON.stringify(obj)
+      })
+      .then(response => {
+        document.getElementById('finalSummary').innerHTML = document.getElementById('summaryPreview').innerHTML;
+        currentStep = 4;
+        updateStepIndicator();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'שלח הזמנה ✓';
+      });
+    }
+
+    function resetForm() {
+      document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
+        input.value = '';
+      });
+      document.querySelectorAll('#bookingForm input[type="radio"]').forEach(radio => {
+        radio.checked = false;
+      });
+      currentStep = 1;
+      updateStepIndicator();
+      document.getElementById('summaryPreview').innerHTML = '';
+    }
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="checkIn"]').min = today;
+    document.querySelector('input[name="checkOut"]').min = today;
+
+    // Auto-update checkout minimum date based on checkin
+    document.querySelector('input[name="checkIn"]').addEventListener('change', function() {
+      const checkInDate = this.value;
+      document.querySelector('input[name="checkOut"]').min = checkInDate;
+    });
+  </script>
+</body>
+</html>
