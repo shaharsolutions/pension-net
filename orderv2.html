@@ -359,6 +359,55 @@
       margin-right: 4px;
     }
 
+    .dog-selection-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .dog-button {
+      padding: 16px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: right;
+      color: #333;
+    }
+
+    .dog-button:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+      transform: translateY(-2px);
+    }
+
+    .dog-button.selected {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .dog-button-icon {
+      margin-left: 8px;
+      font-size: 18px;
+    }
+
+    .new-dog-button {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      border: 2px solid #4caf50;
+    }
+
+    .new-dog-button:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      border-color: #45a049;
+      transform: translateY(-2px);
+    }
+
     .helper-text {
       font-size: 12px;
       color: #999;
@@ -425,24 +474,15 @@
           <div class="form-group">
             <label class="required">מספר טלפון</label>
             <input type="tel" id="identificationPhone" placeholder="050-1234567" required />
-            <div class="helper-text">הזן את מספר הטלפון שלך</div>
+            <div class="helper-text">הזן את מספר הטלפון שלך ולחץ Enter או המשך למטה</div>
           </div>
           <div id="searchingIndicator" style="display: none; text-align: center; margin: 20px 0; color: #667eea; font-weight: 600;">
             <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
             מחפש הזמנות קודמות...
           </div>
-          <div class="button-group">
-            <button type="button" class="btn-primary" onclick="identifyCustomer()">המשך →</button>
-          </div>
           <div id="previousDogsContainer" style="display: none; margin-top: 20px;">
             <label class="required">מצאנו את הכלבים שלך! בחר כלב:</label>
-            <select id="previousDogSelect" style="width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 16px; margin-top: 8px;">
-              <option value="">-- כלב חדש --</option>
-            </select>
-            <div class="helper-text" style="margin-top: 8px;">או בחר "כלב חדש" להזמנה עבור כלב חדש</div>
-            <div class="button-group">
-              <button type="button" class="btn-primary" onclick="proceedAfterDogSelection()" style="margin-top: 20px;">המשך →</button>
-            </div>
+            <div id="dogSelectionButtons" class="dog-selection-buttons"></div>
           </div>
         </div>
 
@@ -590,6 +630,27 @@
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let currentStep = 0;
     let previousOrders = [];
+
+    // האזנה ללחיצה על Enter בשדה הטלפון
+    document.addEventListener('DOMContentLoaded', function() {
+      const phoneInput = document.getElementById('identificationPhone');
+      if (phoneInput) {
+        phoneInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            identifyCustomer();
+          }
+        });
+        
+        // חיפוש אוטומטי אחרי הקלדת 10 ספרות
+        phoneInput.addEventListener('input', function() {
+          const phone = this.value.replace(/[\s\-]/g, '');
+          if (phone.length === 10) {
+            identifyCustomer();
+          }
+        });
+      }
+    });
 
     function calculateDays(checkIn, checkOut) {
       if (!checkIn || !checkOut) return 0;
@@ -826,8 +887,8 @@
         document.getElementById('searchingIndicator').style.display = 'none';
         
         if (previousOrders.length > 0) {
-          const select = document.getElementById('previousDogSelect');
-          select.innerHTML = '<option value="">-- כלב חדש --</option>';
+          const buttonsContainer = document.getElementById('dogSelectionButtons');
+          buttonsContainer.innerHTML = '';
           
           const uniqueDogs = [];
           const dogNames = new Set();
@@ -839,14 +900,52 @@
             }
           });
           
+          // יצירת כפתור לכל כלב
           uniqueDogs.forEach((order, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = `${order.dog_name} (${order.dog_breed}, ${order.dog_age})`;
-            select.appendChild(option);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dog-button';
+            button.dataset.dogIndex = index;
+            button.innerHTML = `<span class="dog-button-icon">🐕</span> ${order.dog_name} (${order.dog_breed}, ${order.dog_age})`;
+            button.onclick = function() {
+              // הסרת בחירה מכל הכפתורים
+              document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
+              // בחירת הכפתור הנוכחי
+              this.classList.add('selected');
+              
+              // מילוי הפרטים והמשך לשלב 3
+              const selectedDog = uniqueDogs[index];
+              document.querySelector('input[name="dogName"]').value = selectedDog.dog_name;
+              document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
+              document.querySelector(`input[name="dogSize"][value="${selectedDog.dog_breed}"]`).checked = true;
+              document.querySelector(`input[name="neutered"][value="${selectedDog.neutered}"]`).checked = true;
+              document.querySelector('textarea[name="dogTemperament"]').value = selectedDog.dog_temperament || '';
+              document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
+              
+              // מעבר לשלב 3 (תאריכים)
+              currentStep = 3;
+              updateStepIndicator();
+            };
+            buttonsContainer.appendChild(button);
           });
           
-          select.dataset.uniqueDogs = JSON.stringify(uniqueDogs);
+          // כפתור "כלב חדש"
+          const newDogButton = document.createElement('button');
+          newDogButton.type = 'button';
+          newDogButton.className = 'dog-button new-dog-button';
+          newDogButton.innerHTML = `<span class="dog-button-icon">➕</span> כלב חדש`;
+          newDogButton.onclick = function() {
+            document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // מעבר לשלב 2 (פרטי הכלב)
+            currentStep = 2;
+            updateStepIndicator();
+          };
+          buttonsContainer.appendChild(newDogButton);
+          
+          // שמירת הנתונים
+          window.uniqueDogsData = uniqueDogs;
           
           document.querySelector('input[name="ownerName"]').value = previousOrders[0].owner_name;
           
@@ -865,12 +964,15 @@
     }
 
     function proceedAfterDogSelection() {
-      const select = document.getElementById('previousDogSelect');
-      const selectedIndex = select.value;
+      const selectedIndex = window.selectedDogIndex;
+      
+      if (selectedIndex === undefined) {
+        alert('אנא בחר כלב או "כלב חדש"');
+        return;
+      }
       
       if (selectedIndex !== '') {
-        const uniqueDogs = JSON.parse(select.dataset.uniqueDogs);
-        const selectedDog = uniqueDogs[selectedIndex];
+        const selectedDog = window.uniqueDogsData[selectedIndex];
         
         document.querySelector('input[name="dogName"]').value = selectedDog.dog_name;
         document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
