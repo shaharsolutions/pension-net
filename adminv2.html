@@ -84,7 +84,7 @@
     table {
       border-collapse: collapse;
       width: 100%;
-      min-width: 1200px;
+      min-width: 1400px;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -175,6 +175,63 @@
     .manager-note-column {
       min-width: 200px;
       max-width: 300px;
+    }
+
+    .price-input {
+      width: 80px;
+      padding: 6px 8px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .price-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .days-cell {
+      position: relative;
+      font-weight: 700;
+      color: #667eea;
+      cursor: help;
+      padding: 14px 10px;
+    }
+
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #333;
+    }
+
+    .days-cell:hover .tooltip {
+      display: block;
+      animation: fadeIn 0.2s;
     }
 
     .wide-date-column {
@@ -320,6 +377,11 @@
       }
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     @media (max-width: 600px) {
       header h1 {
         font-size: 24px;
@@ -369,6 +431,8 @@
           <th>גודל</th>
           <th>הערות</th>
           <th>מסורס / מעוקרת</th>
+          <th>מחיר ליום</th>
+          <th>ימים</th>
           <th>סטטוס</th>
           <th class="manager-note-column">הערות מנהל</th>
         </tr>
@@ -397,6 +461,8 @@
             <th>גודל</th>
             <th>הערות</th>
             <th>מסורס / מעוקרת</th>
+            <th>מחיר ליום</th>
+            <th>ימים</th>
             <th>סטטוס</th>
             <th class="manager-note-column">הערות מנהל</th>
           </tr>
@@ -423,6 +489,15 @@
     window.pastOrdersCurrentPage = 1;
     window.pastOrdersRawData = [];
 
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
     function formatDateTime(dateStr) {
       if (!dateStr) return '';
       const d = new Date(dateStr);
@@ -442,9 +517,7 @@
 
     function formatPhoneForWhatsApp(phone) {
       if (!phone) return '';
-      // מסיר רווחים ומקפים
       const cleaned = phone.replace(/[\s\-]/g, '');
-      // מסיר 0 מההתחלה ומוסיף 972
       const withCountryCode = cleaned.replace(/^0/, '972');
       return withCountryCode;
     }
@@ -483,6 +556,10 @@
       
       pageRows.forEach(row => {
         let tr = document.createElement('tr');
+        const days = calculateDays(row.check_in, row.check_out);
+        const pricePerDay = row.price_per_day || 130;
+        const totalPrice = days * pricePerDay;
+        
         tr.innerHTML = `
           <td>${formatDateTime(row.order_date)}</td>
           <td>${row.owner_name}</td>
@@ -494,6 +571,13 @@
           <td>${row.dog_breed}</td>
           <td>${row.notes}</td>
           <td>${row.neutered}</td>
+          <td>
+            <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />₪
+          </td>
+          <td class="days-cell">
+            ${days}
+            <div class="tooltip">סה"כ לתשלום: ${totalPrice}₪</div>
+          </td>
           <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
           <td class="manager-note-column">
             <textarea class="admin-note" data-id="${row.id}" cols="50" rows="2">${row.admin_note || ''}</textarea>
@@ -579,6 +663,10 @@
         
         orderedFuture.forEach(row => {
           let tr = document.createElement("tr");
+          const days = calculateDays(row.check_in, row.check_out);
+          const pricePerDay = row.price_per_day || 130;
+          const totalPrice = days * pricePerDay;
+          
           tr.innerHTML = `
             <td>${formatDateTime(row.order_date)}</td>
             <td>${row.owner_name || ''}</td>
@@ -590,6 +678,13 @@
             <td>${row.dog_breed || ''}</td>
             <td>${row.notes || ''}</td>
             <td>${row.neutered || ''}</td>
+            <td>
+              <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />₪
+            </td>
+            <td class="days-cell">
+              ${days}
+              <div class="tooltip">סה"כ לתשלום: ${totalPrice}₪</div>
+            </td>
             <td>
               <select data-id="${row.id}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
                 <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
@@ -669,12 +764,14 @@
           const id = row.querySelector('select')?.dataset?.id;
           const status = row.querySelector('select')?.value;
           const adminNote = row.querySelector('textarea.admin-note')?.value;
+          const pricePerDay = row.querySelector('.price-input')?.value;
 
           const { error } = await supabase
             .from('orders')
             .update({
               status: status,
-              admin_note: adminNote
+              admin_note: adminNote,
+              price_per_day: pricePerDay ? parseInt(pricePerDay) : 130
             })
             .eq('id', id);
 
