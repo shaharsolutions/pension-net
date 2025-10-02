@@ -649,6 +649,8 @@
     const GREEN_API_INSTANCE = '7105264953';
     const GREEN_API_TOKEN = 'c0e0fdbd81794dfc941722c133598333ad671ebe13af4fe181';
     
+    const ADMIN_PHONE = '972528366744'; // מספר טלפון של המנהל
+    
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let currentStep = 0;
     let previousOrders = [];
@@ -1003,7 +1005,6 @@
         document.getElementById('searchingIndicator').style.display = 'none';
         alert('אירעה שגיאה בחיפוש: ' + (error.message || 'שגיאה לא ידועה'));
         
-        // גם במקרה של שגיאה, נאפשר להמשיך
         document.querySelector('input[name="ownerName"]').value = '';
         currentStep = 1;
         updateStepIndicator();
@@ -1036,10 +1037,13 @@
         dog_age: formData.dogAge,
         dog_breed: formData.dogSize || '',
         neutered: formData.neutered || 'לא צוין',
-        dog_temperament: formData.dogTemperament || '',
-        notes: formData.notes || '',
-        status: 'ממתין'
+        notes: formData.notes || ''
       };
+      
+      // הוספת אופי הכלב להערות אם קיים
+      if (formData.dogTemperament) {
+        orderData.notes = (formData.dogTemperament ? `אופי: ${formData.dogTemperament}\n` : '') + (formData.notes || '');
+      }
       
       const { data, error } = await supabase
         .from('orders')
@@ -1055,6 +1059,8 @@
       }
       
       const numDays = calculateDays(formData.checkIn, formData.checkOut);
+      
+      // שליחת הודעה ללקוח
       const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
 
 שלום ${formData.ownerName}!
@@ -1072,6 +1078,8 @@
 ${formData.dogTemperament ? `🐕 אופי: ${formData.dogTemperament}` : ''}
 ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
 
+💰 *עלות משוערת:* ${numDays * 130}₪ (${130}₪ ליום)
+
 ⏳ *סטטוס ההזמנה:* ממתין לאישור
 
 נחזור אליך בהקדם עם אישור סופי.
@@ -1085,6 +1093,38 @@ ${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
         console.log('✅ WhatsApp message sent successfully to:', finalPhone);
       } catch (whatsappError) {
         console.error('❌ Failed to send WhatsApp message:', whatsappError);
+      }
+      
+      // שליחת התראה למנהל
+      const adminMessage = `🔔 *הזמנה חדשה התקבלה!*
+
+👤 *פרטי הלקוח:*
+שם: ${formData.ownerName}
+טלפון: ${finalPhone}
+
+🐕 *פרטי הכלב:*
+שם: ${formData.dogName}
+גיל: ${formData.dogAge}
+גודל: ${formData.dogSize}
+מין וסטטוס: ${formData.neutered}
+${formData.dogTemperament ? `אופי: ${formData.dogTemperament}` : ''}
+
+📅 *תאריכים:*
+כניסה: ${formatDateWithDay(formData.checkIn)}
+יציאה: ${formatDateWithDay(formData.checkOut)}
+מספר ימים: ${numDays}
+
+💰 *עלות משוערת:* ${numDays * 130}₪
+
+${formData.notes ? `📝 *הערות:* ${formData.notes}` : ''}
+
+⏰ ${new Date().toLocaleString('he-IL')}`;
+
+      try {
+        await sendWhatsAppMessage(ADMIN_PHONE, adminMessage);
+        console.log('✅ Admin notification sent successfully');
+      } catch (adminError) {
+        console.error('❌ Failed to send admin notification:', adminError);
       }
       
       const checkIn = formatDateWithDay(formData.checkIn);
