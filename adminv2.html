@@ -784,16 +784,27 @@
           const id = row.querySelector('select')?.dataset?.id;
           const status = row.querySelector('select')?.value;
           const adminNote = row.querySelector('textarea.admin-note')?.value;
+          const pricePerDay = row.querySelector('.price-input')?.value;
+
+          const updateData = {
+            status: status,
+            admin_note: adminNote
+          };
+
+          // הוסף price_per_day רק אם השדה קיים
+          if (pricePerDay) {
+            updateData.price_per_day = parseInt(pricePerDay);
+          }
 
           const { error } = await supabase
             .from('orders')
-            .update({
-              status: status,
-              admin_note: adminNote
-            })
+            .update(updateData)
             .eq('id', id);
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error updating row:', id, error);
+            throw error;
+          }
 
           const select = row.querySelector('select');
           select.classList.remove('status-approved', 'status-cancelled');
@@ -812,7 +823,7 @@
         
       } catch (error) {
         console.error('Error saving:', error);
-        alert('שגיאה בשמירת הנתונים');
+        alert('שגיאה בשמירת הנתונים: ' + error.message);
         saveBtn.classList.remove('loading');
         saveBtn.disabled = false;
       }
