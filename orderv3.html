@@ -1,1 +1,1183 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>הזמנת מקום בפנסיון</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      direction: rtl;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .form-content {
+      padding: 40px 30px;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      right: 0;
+      left: 0;
+      height: 2px;
+      background: #e0e0e0;
+      z-index: 0;
+    }
+
+    .step {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      flex: 1;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-circle {
+      background: #667eea;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .step.completed .step-circle {
+      background: #4caf50;
+      color: white;
+    }
+
+    .step-label {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .step.active .step-label {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .form-step {
+      display: none;
+    }
+
+    .form-step.active {
+      display: block;
+      animation: fadeIn 0.4s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+      background: white;
+      color: #333;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    button {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .summary-box {
+      background: #f8f9ff;
+      border: 2px solid #667eea;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+
+    .summary-box h3 {
+      color: #667eea;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .summary-value {
+      color: #333;
+      font-weight: 600;
+      text-align: left;
+      word-break: keep-all;
+      white-space: nowrap;
+    }
+
+    .success-message {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #4caf50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 40px;
+    }
+
+    .success-message h2 {
+      color: #4caf50;
+      margin-bottom: 12px;
+    }
+
+    .success-message p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .date-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .radio-group-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .radio-group-neuter {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (min-width: 500px) {
+      .radio-group-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .radio-group-neuter {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .radio-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: white;
+    }
+
+    .radio-option:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .radio-option input[type="radio"] {
+      display: none;
+    }
+
+    .radio-option:has(input[type="radio"]:checked) {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .radio-label {
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+      transition: color 0.3s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .radio-label small {
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .radio-option:has(input[type="radio"]:checked) .radio-label {
+      color: white;
+    }
+
+    .required::after {
+      content: '*';
+      color: #f44336;
+      margin-right: 4px;
+    }
+
+    .dog-selection-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .dog-button {
+      padding: 16px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: right;
+      color: #333;
+    }
+
+    .dog-button:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+      transform: translateY(-2px);
+    }
+
+    .dog-button.selected {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .dog-button-icon {
+      margin-left: 8px;
+      font-size: 18px;
+    }
+
+    .new-dog-button {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      border: 2px solid #4caf50;
+    }
+
+    .new-dog-button:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      border-color: #45a049;
+      transform: translateY(-2px);
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .days-display {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 16px;
+      display: none;
+      animation: fadeIn 0.4s;
+    }
+
+    .days-display.show {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 30px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .form-content {
+        padding: 30px 20px;
+      }
+
+      .date-group {
+        grid-template-columns: 1fr;
+      }
+
+      .step-label {
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>הזמנת מקום בפנסיון</h1>
+      <p>מלאו את הפרטים בשלושה שלבים פשוטים</p>
+    </div>
+
+    <div class="form-content">
+      <div class="step-indicator">
+        <div class="step active" data-step="0">
+          <div class="step-circle">👤</div>
+          <div class="step-label">זיהוי</div>
+        </div>
+        <div class="step" data-step="1">
+          <div class="step-circle">1</div>
+          <div class="step-label">פרטי הבעלים</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-circle">2</div>
+          <div class="step-label">פרטי הכלב</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-circle">3</div>
+          <div class="step-label">תאריכים</div>
+        </div>
+      </div>
+
+      <div id="bookingForm">
+        <!-- Step 0: Phone Identification -->
+        <div class="form-step active" data-step="0">
+          <div class="form-group">
+            <label class="required">מספר טלפון</label>
+            <input type="tel" id="identificationPhone" placeholder="050-1234567" required />
+            <div class="helper-text">הזן את מספר הטלפון שלך ולחץ Enter או המשך למטה</div>
+          </div>
+          <div id="searchingIndicator" style="display: none; text-align: center; margin: 20px 0; color: #667eea; font-weight: 600;">
+            <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
+            מחפש הזמנות קודמות...
+          </div>
+          <div id="previousDogsContainer" style="display: none; margin-top: 20px;">
+            <label class="required">מצאנו את הכלבים שלך! בחר כלב:</label>
+            <div id="dogSelectionButtons" class="dog-selection-buttons"></div>
+          </div>
+        </div>
+
+        <!-- Step 1: Owner Details -->
+        <div class="form-step" data-step="1">
+          <div class="form-group">
+            <label class="required">שם מלא</label>
+            <input type="text" name="ownerName" placeholder="לדוגמה: יוסי כהן" required />
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Dog Details -->
+        <div class="form-step" data-step="2">
+          <div class="form-group">
+            <label class="required">שם הכלב</label>
+            <input type="text" name="dogName" placeholder="לדוגמה: מקס" required />
+          </div>
+          <div class="form-group">
+            <label class="required">גיל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="גור (עד שנה)" required />
+                <span class="radio-label">גור<br><small>עד שנה</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="צעיר (1-3)" required />
+                <span class="radio-label">צעיר<br><small>1-3</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="בוגר (4-7)" required />
+                <span class="radio-label">בוגר<br><small>4-7</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="מבוגר (8+)" required />
+                <span class="radio-label">מבוגר<br><small>8+</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">גודל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="קטן" required />
+                <span class="radio-label">קטן<br><small>עד 10 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="בינוני" required />
+                <span class="radio-label">בינוני<br><small>10-25 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="גדול" required />
+                <span class="radio-label">גדול<br><small>25-40 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="ענק" required />
+                <span class="radio-label">ענק<br><small>40+ ק"ג</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">מין וסירוס/עיקור</label>
+            <div class="radio-group radio-group-neuter">
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מסורס" required />
+                <span class="radio-label">מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מעוקרת" required />
+                <span class="radio-label">מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מסורס" required />
+                <span class="radio-label">לא מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מעוקרת" required />
+                <span class="radio-label">לא מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>אופי הכלב</label>
+            <textarea name="dogTemperament" placeholder="לדוגמה: ידידותי, אנרגטי, ביישן, דומיננטי, רגוע, משחקי, חרדתי מכלבים אחרים..."></textarea>
+            <div class="helper-text">תאר את האופי והתנהגות הכלב - זה יעזור לנו לדאוג לו בצורה הטובה ביותר</div>
+          </div>
+          <div class="form-group">
+            <label>הערות מיוחדות</label>
+            <textarea name="notes" placeholder="אלרגיות, תרופות, התנהגות מיוחדת וכו'"></textarea>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Dates -->
+        <div class="form-step" data-step="3">
+          <div class="date-group">
+            <div class="form-group">
+              <label class="required">תאריך כניסה</label>
+              <input type="date" name="checkIn" id="checkInDate" required />
+            </div>
+            <div class="form-group">
+              <label class="required">תאריך יציאה</label>
+              <input type="date" name="checkOut" id="checkOutDate" required />
+            </div>
+          </div>
+          
+          <div id="daysDisplay" class="days-display">
+            <span id="daysText"></span>
+          </div>
+          
+          <div class="helper-text" style="margin-top: 8px;">
+            * הכניסה בין השעות 08:00-18:00, היציאה עד 12:00
+          </div>
+
+          <div id="summaryPreview"></div>
+
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="submitForm()">שלח הזמנה ✓</button>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="form-step" data-step="4">
+          <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>ההזמנה נשלחה בהצלחה!</h2>
+            <p>תקבלו אישור בהודעת וואטסאפ בהקדם.<br>מספר הטלפון שלנו: 052-8366744</p>
+            <div id="finalSummary"></div>
+            <button type="button" class="btn-primary" onclick="resetForm()" style="margin-top: 24px;">הזמנה חדשה</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
+    
+    const GREEN_API_INSTANCE = '7105264953';
+    const GREEN_API_TOKEN = 'c0e0fdbd81794dfc941722c133598333ad671ebe13af4fe181';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentStep = 0;
+    let previousOrders = [];
+
+    // האזנה ללחיצה על Enter בשדה הטלפון
+    document.addEventListener('DOMContentLoaded', function() {
+      const phoneInput = document.getElementById('identificationPhone');
+      if (phoneInput) {
+        phoneInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            identifyCustomer();
+          }
+        });
+        
+        // חיפוש אוטומטי אחרי הקלדת 10 ספרות
+        phoneInput.addEventListener('input', function() {
+          const phone = this.value.replace(/[\s\-]/g, '');
+          if (phone.length === 10) {
+            identifyCustomer();
+          }
+        });
+      }
+
+      // האזנה לשינוי בתאריכים
+      const checkInInput = document.getElementById('checkInDate');
+      const checkOutInput = document.getElementById('checkOutDate');
+      
+      if (checkInInput && checkOutInput) {
+        checkInInput.addEventListener('change', updateDaysDisplay);
+        checkOutInput.addEventListener('change', updateDaysDisplay);
+      }
+    });
+
+    function updateDaysDisplay() {
+      const checkIn = document.getElementById('checkInDate').value;
+      const checkOut = document.getElementById('checkOutDate').value;
+      const daysDisplay = document.getElementById('daysDisplay');
+      const daysText = document.getElementById('daysText');
+      
+      if (checkIn && checkOut) {
+        const days = calculateDays(checkIn, checkOut);
+        if (days > 0) {
+          daysText.textContent = `🐾 הכלב ישהה בפנסיון ${days} ימים`;
+          daysDisplay.classList.add('show');
+        } else {
+          daysDisplay.classList.remove('show');
+        }
+      } else {
+        daysDisplay.classList.remove('show');
+      }
+    }
+
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
+    function formatDateWithDay(dateString) {
+      const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const date = new Date(dateString);
+      if (isNaN(date)) return '';
+      const day = ('0' + date.getDate()).slice(-2);
+      const month = ('0' + (date.getMonth() + 1)).slice(-2);
+      const year = date.getFullYear();
+      const dayName = daysHebrew[date.getDay()];
+      return `${day}/${month}/${year} (${dayName})`;
+    }
+
+    async function sendWhatsAppMessage(phone, message) {
+      let formattedPhone = phone.replace(/[\s\-]/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '972' + formattedPhone.substring(1);
+      }
+      
+      console.log('📞 Sending WhatsApp to:', formattedPhone);
+      
+      try {
+        const url = `https://api.green-api.com/waInstance${GREEN_API_INSTANCE}/sendMessage/${GREEN_API_TOKEN}`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            chatId: `${formattedPhone}@c.us`,
+            message: message
+          })
+        });
+        
+        const result = await response.json();
+        console.log('📬 API Response:', result);
+        
+        if (!response.ok) {
+          throw new Error(`API Error: ${JSON.stringify(result)}`);
+        }
+        
+        return result;
+      } catch (error) {
+        console.error('❌ Error sending WhatsApp message:', error);
+        throw error;
+      }
+    }
+
+    function updateStepIndicator() {
+      document.querySelectorAll('.step').forEach(step => {
+        const stepNum = parseInt(step.dataset.step);
+        step.classList.remove('active', 'completed');
+        if (stepNum === currentStep) {
+          step.classList.add('active');
+        } else if (stepNum < currentStep) {
+          step.classList.add('completed');
+        }
+      });
+
+      document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.remove('active');
+      });
+      document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+    }
+
+    function validateStep(step) {
+      const currentFormStep = document.querySelector(`.form-step[data-step="${step}"]`);
+      const inputs = currentFormStep.querySelectorAll('input[required]:not([type="radio"]), select[required], textarea[required]');
+      
+      for (let input of inputs) {
+        if (!input.value.trim()) {
+          input.focus();
+          return false;
+        }
+      }
+      
+      const radioGroups = {};
+      currentFormStep.querySelectorAll('input[type="radio"][required]').forEach(radio => {
+        if (!radioGroups[radio.name]) {
+          radioGroups[radio.name] = false;
+        }
+        if (radio.checked) {
+          radioGroups[radio.name] = true;
+        }
+      });
+      
+      for (let groupName in radioGroups) {
+        if (!radioGroups[groupName]) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+
+    function nextStep() {
+      if (validateStep(currentStep)) {
+        if (currentStep === 3) {
+          showSummary();
+        }
+        currentStep++;
+        updateStepIndicator();
+      }
+    }
+
+    function prevStep() {
+      currentStep--;
+      updateStepIndicator();
+    }
+
+    function showSummary() {
+      const data = getFormData();
+      const phone = document.getElementById('identificationPhone').value.trim();
+      
+      const checkIn = formatDateWithDay(data.checkIn);
+      const checkOut = formatDateWithDay(data.checkOut);
+      
+      const numDays = calculateDays(data.checkIn, data.checkOut);
+      const pricePerDay = 130;
+      const totalPrice = numDays * pricePerDay;
+      
+      const summary = `
+        <div class="summary-box">
+          <h3>סיכום ההזמנה</h3>
+          <div class="summary-item">
+            <span class="summary-label">שם הבעלים:</span>
+            <span class="summary-value">${data.ownerName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">טלפון:</span>
+            <span class="summary-value">${phone}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">שם הכלב:</span>
+            <span class="summary-value">${data.dogName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גיל:</span>
+            <span class="summary-value">${data.dogAge}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גודל:</span>
+            <span class="summary-value">${data.dogSize}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מין וסטטוס:</span>
+            <span class="summary-value">${data.neutered}</span>
+          </div>
+          ${data.dogTemperament ? `
+          <div class="summary-item">
+            <span class="summary-label">אופי הכלב:</span>
+            <span class="summary-value">${data.dogTemperament}</span>
+          </div>
+          ` : ''}
+          <div class="summary-item">
+            <span class="summary-label">כניסה:</span>
+            <span class="summary-value">${checkIn}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">יציאה:</span>
+            <span class="summary-value">${checkOut}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מספר ימים:</span>
+            <span class="summary-value">${numDays} ימים</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מחיר ליום:</span>
+            <span class="summary-value">${pricePerDay}₪</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">סה"כ לתשלום:</span>
+            <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
+          </div>
+          ${data.notes ? `
+          <div class="summary-item">
+            <span class="summary-label">הערות:</span>
+            <span class="summary-value">${data.notes}</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('summaryPreview').innerHTML = summary;
+    }
+
+    function getFormData() {
+      const data = {};
+      document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
+        data[input.name] = input.value;
+      });
+      document.querySelectorAll('#bookingForm input[type="radio"]:checked').forEach(radio => {
+        data[radio.name] = radio.value;
+      });
+      return data;
+    }
+
+    async function identifyCustomer() {
+      const phoneInput = document.getElementById('identificationPhone');
+      let phone = phoneInput.value.trim();
+      
+      if (!phone || phone.length < 9) {
+        alert('אנא הזן מספר טלפון תקין');
+        return;
+      }
+      
+      document.getElementById('searchingIndicator').style.display = 'block';
+      document.getElementById('previousDogsContainer').style.display = 'none';
+      
+      if (/^[1-9]\d{8}$/.test(phone)) {
+        phone = '0' + phone;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('phone', phone)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        previousOrders = data || [];
+        
+        document.getElementById('searchingIndicator').style.display = 'none';
+        
+        if (previousOrders.length > 0) {
+          const buttonsContainer = document.getElementById('dogSelectionButtons');
+          buttonsContainer.innerHTML = '';
+          
+          const uniqueDogs = [];
+          const dogNames = new Set();
+          
+          previousOrders.forEach(order => {
+            if (!dogNames.has(order.dog_name)) {
+              dogNames.add(order.dog_name);
+              uniqueDogs.push(order);
+            }
+          });
+          
+          uniqueDogs.forEach((order, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dog-button';
+            button.dataset.dogIndex = index;
+            button.innerHTML = `<span class="dog-button-icon">🐕</span> ${order.dog_name} (${order.dog_breed}, ${order.dog_age})`;
+            button.onclick = function() {
+              document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
+              this.classList.add('selected');
+              
+              const selectedDog = uniqueDogs[index];
+              document.querySelector('input[name="dogName"]').value = selectedDog.dog_name;
+              document.querySelector(`input[name="dogAge"][value="${selectedDog.dog_age}"]`).checked = true;
+              document.querySelector(`input[name="dogSize"][value="${selectedDog.dog_breed}"]`).checked = true;
+              document.querySelector(`input[name="neutered"][value="${selectedDog.neutered}"]`).checked = true;
+              document.querySelector('textarea[name="dogTemperament"]').value = selectedDog.dog_temperament || '';
+              document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
+              
+              currentStep = 3;
+              updateStepIndicator();
+            };
+            buttonsContainer.appendChild(button);
+          });
+          
+          const newDogButton = document.createElement('button');
+          newDogButton.type = 'button';
+          newDogButton.className = 'dog-button new-dog-button';
+          newDogButton.innerHTML = `<span class="dog-button-icon">➕</span> כלב חדש`;
+          newDogButton.onclick = function() {
+            document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            currentStep = 2;
+            updateStepIndicator();
+          };
+          buttonsContainer.appendChild(newDogButton);
+          
+          window.uniqueDogsData = uniqueDogs;
+          
+          document.querySelector('input[name="ownerName"]').value = previousOrders[0].owner_name;
+          
+          document.getElementById('previousDogsContainer').style.display = 'block';
+        } else {
+          document.querySelector('input[name="ownerName"]').value = '';
+          currentStep = 1;
+          updateStepIndicator();
+        }
+        
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        document.getElementById('searchingIndicator').style.display = 'none';
+        alert('אירעה שגיאה בחיפוש: ' + (error.message || 'שגיאה לא ידועה'));
+        
+        // גם במקרה של שגיאה, נאפשר להמשיך
+        document.querySelector('input[name="ownerName"]').value = '';
+        currentStep = 1;
+        updateStepIndicator();
+      }
+    }
+
+    async function submitForm() {
+      if (!validateStep(3)) {
+        return;
+      }
+      
+      const submitBtn = document.querySelector('.form-step[data-step="3"] .btn-primary');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'שולח...';
+      
+      const formData = getFormData();
+      const phone = document.getElementById('identificationPhone').value.trim();
+      let finalPhone = phone;
+      
+      if (/^[1-9]\d{8}$/.test(phone)) {
+        finalPhone = '0' + phone;
+      }
+      
+      const orderData = {
+        owner_name: formData.ownerName,
+        phone: finalPhone,
+        check_in: formData.checkIn,
+        check_out: formData.checkOut,
+        dog_name: formData.dogName,
+        dog_age: formData.dogAge,
+        dog_breed: formData.dogSize || '',
+        neutered: formData.neutered || 'לא צוין',
+        dog_temperament: formData.dogTemperament || '',
+        notes: formData.notes || '',
+        status: 'ממתין'
+      };
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select();
+      
+      if (error) {
+        console.error('Error:', error);
+        alert('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'שלח הזמנה ✓';
+        return;
+      }
+      
+      const numDays = calculateDays(formData.checkIn, formData.checkOut);
+      const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
+
+שלום ${formData.ownerName}!
+
+קיבלנו את ההזמנה שלך לפנסיון.
+
+📋 *פרטי ההזמנה:*
+🐶 שם הכלב: ${formData.dogName}
+📅 כניסה: ${formatDateWithDay(formData.checkIn)}
+📅 יציאה: ${formatDateWithDay(formData.checkOut)}
+⏱️ מספר ימים: ${numDays} ימים
+🎂 גיל: ${formData.dogAge}
+📏 גודל: ${formData.dogSize}
+💉 מין וסטטוס: ${formData.neutered}
+${formData.dogTemperament ? `🐕 אופי: ${formData.dogTemperament}` : ''}
+${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
+
+⏳ *סטטוס ההזמנה:* ממתין לאישור
+
+נחזור אליך בהקדם עם אישור סופי.
+
+📞 לשאלות: 052-8366744
+
+תודה שבחרת בנו! 🐾`;
+
+      try {
+        await sendWhatsAppMessage(finalPhone, whatsappMessage);
+        console.log('✅ WhatsApp message sent successfully to:', finalPhone);
+      } catch (whatsappError) {
+        console.error('❌ Failed to send WhatsApp message:', whatsappError);
+      }
+      
+      const checkIn = formatDateWithDay(formData.checkIn);
+      const checkOut = formatDateWithDay(formData.checkOut);
+      const totalDays = calculateDays(formData.checkIn, formData.checkOut);
+      const pricePerDay = 130;
+      const totalPrice = totalDays * pricePerDay;
+      
+      const finalSummary = `
+        <div class="summary-box">
+          <h3>פרטי ההזמנה</h3>
+          <div class="summary-item">
+            <span class="summary-label">שם הבעלים:</span>
+            <span class="summary-value">${formData.ownerName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">טלפון:</span>
+            <span class="summary-value">${finalPhone}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">שם הכלב:</span>
+            <span class="summary-value">${formData.dogName}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גיל:</span>
+            <span class="summary-value">${formData.dogAge}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">גודל:</span>
+            <span class="summary-value">${formData.dogSize}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מין וסטטוס:</span>
+            <span class="summary-value">${formData.neutered}</span>
+          </div>
+          ${formData.dogTemperament ? `
+          <div class="summary-item">
+            <span class="summary-label">אופי הכלב:</span>
+            <span class="summary-value">${formData.dogTemperament}</span>
+          </div>
+          ` : ''}
+          <div class="summary-item">
+            <span class="summary-label">כניסה:</span>
+            <span class="summary-value">${checkIn}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">יציאה:</span>
+            <span class="summary-value">${checkOut}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מספר ימים:</span>
+            <span class="summary-value">${totalDays} ימים</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">מחיר ליום:</span>
+            <span class="summary-value">${pricePerDay}₪</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">סה"כ לתשלום:</span>
+            <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
+          </div>
+          ${formData.notes ? `
+          <div class="summary-item">
+            <span class="summary-label">הערות:</span>
+            <span class="summary-value">${formData.notes}</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('finalSummary').innerHTML = finalSummary;
+      
+      currentStep = 4;
+      updateStepIndicator();
+    }
+
+    function resetForm() {
+      document.querySelectorAll('#bookingForm input, #bookingForm textarea').forEach(input => {
+        if (input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+      
+      document.getElementById('previousDogsContainer').style.display = 'none';
+      document.getElementById('summaryPreview').innerHTML = '';
+      document.getElementById('finalSummary').innerHTML = '';
+      document.getElementById('daysDisplay').classList.remove('show');
+      
+      currentStep = 0;
+      updateStepIndicator();
+    }
+  </script>
+</body>
+</html>
