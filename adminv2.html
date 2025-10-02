@@ -5,6 +5,9 @@
   <title>ניהול פנסיון כלבים</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <style>
     * {
       box-sizing: border-box;
@@ -131,10 +134,21 @@
       transition: all 0.3s;
     }
 
-    input[type="text"]:focus, textarea:focus {
+    input[type="text"]:focus, textarea:focus, input[type="date"]:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input[type="date"] {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      width: 100%;
+      direction: ltr;
+      text-align: center;
     }
 
     select {
@@ -179,7 +193,7 @@
 
     .price-input {
       width: 90px;
-      padding: 6px 8px 6px 28px;
+      padding: 6px 30px 6px 8px;
       border: 2px solid #e0e0e0;
       border-radius: 6px;
       font-size: 14px;
@@ -202,7 +216,7 @@
     .price-wrapper::after {
       content: '₪';
       position: absolute;
-      right: 10px;
+      left: 8px;
       top: 50%;
       transform: translateY(-50%);
       font-weight: 700;
@@ -253,8 +267,24 @@
     }
 
     .wide-date-column {
-      min-width: 140px;
+      min-width: 160px;
       white-space: nowrap;
+    }
+
+    .date-input {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
     .status-approved {
@@ -533,6 +563,16 @@
       return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} (${dayName})`;
     }
 
+    function formatDateForInput(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     function formatPhoneForWhatsApp(phone) {
       if (!phone) return '';
       const cleaned = phone.replace(/[\s\-]/g, '');
@@ -582,8 +622,14 @@
           <td>${formatDateTime(row.order_date)}</td>
           <td>${row.owner_name}</td>
           <td>${createWhatsAppLink(row.phone)}</td>
-          <td class="wide-date-column">${formatDateOnly(row.check_in)}</td>
-          <td class="wide-date-column">${formatDateOnly(row.check_out)}</td>
+          <td class="wide-date-column">
+            <input type="date" class="date-input" data-id="${row.id}" data-field="check_in" value="${formatDateForInput(row.check_in)}" />
+            <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(row.check_in)}</div>
+          </td>
+          <td class="wide-date-column">
+            <input type="date" class="date-input" data-id="${row.id}" data-field="check_out" value="${formatDateForInput(row.check_out)}" />
+            <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(row.check_out)}</div>
+          </td>
           <td>${row.dog_name}</td>
           <td>${row.dog_age}</td>
           <td>${row.dog_breed}</td>
@@ -785,6 +831,12 @@
           const status = row.querySelector('select')?.value;
           const adminNote = row.querySelector('textarea.admin-note')?.value;
           const pricePerDay = row.querySelector('.price-input')?.value;
+          
+          // קבלת התאריכים החדשים
+          const checkInInput = row.querySelector('input[data-field="check_in"]');
+          const checkOutInput = row.querySelector('input[data-field="check_out"]');
+          const checkIn = checkInInput?.value;
+          const checkOut = checkOutInput?.value;
 
           const updateData = {
             status: status,
@@ -794,6 +846,14 @@
           // הוסף price_per_day רק אם השדה קיים
           if (pricePerDay) {
             updateData.price_per_day = parseInt(pricePerDay);
+          }
+
+          // הוסף תאריכים
+          if (checkIn) {
+            updateData.check_in = checkIn;
+          }
+          if (checkOut) {
+            updateData.check_out = checkOut;
           }
 
           const { error } = await supabase
