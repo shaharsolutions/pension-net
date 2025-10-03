@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>ניתוחים ותחזיות - פנסיון כלבים</title>
+  <!-- Icon removed for sandbox compatibility -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      direction: rtl;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+      border-radius: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background: white;
+      color: #667eea;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .card h3 {
+      color: #667eea;
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #333;
+      margin: 12px 0;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .stat-change {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .stat-change.positive {
+      background: #e8f5e9;
+      color: #4caf50;
+    }
+
+    .stat-change.negative {
+      background: #ffebee;
+      color: #f44336;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .chart-container h3 {
+      color: #667eea;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      max-height: 300px;
+    }
+
+    .prediction-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .prediction-box h3 {
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .prediction-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .prediction-item:last-child {
+      border-bottom: none;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .table-container h3 {
+      color: #667eea;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: right;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f5f5f5;
+      font-weight: 600;
+      color: #333;
+    }
+
+    tr:hover {
+      background: #f8f9ff;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .loading::after {
+      content: " ⏳";
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      color: #333;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 24px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="adminv3.html" class="back-btn">← חזרה לניהול</a>
+    <h1>📊 ניתוחים ותחזיות עסקיות</h1>
+  </header>
+
+  <div id="loadingIndicator" class="loading">טוען נתונים...</div>
+
+  <div id="dashboardContent" style="display: none;">
+    
+    <!-- KPIs עיקריים -->
+    <div class="dashboard-grid">
+      <div class="card">
+        <h3>💰 הכנסות החודש</h3>
+        <div class="stat-value" id="monthlyRevenue">₪0</div>
+        <div class="stat-change positive" id="revenueChange">+0%</div>
+      </div>
+
+      <div class="card">
+        <h3>🐕 כלבים החודש</h3>
+        <div class="stat-value" id="monthlyDogs">0</div>
+        <div class="stat-change positive" id="dogsChange">+0%</div>
+      </div>
+
+      <div class="card">
+        <h3>📈 תפוסה ממוצעת</h3>
+        <div class="stat-value" id="avgOccupancy">0%</div>
+        <div class="stat-label">קיבולת מקסימלית: 15 כלבים</div>
+      </div>
+
+      <div class="card">
+        <h3>👥 לקוחות פעילים</h3>
+        <div class="stat-value" id="activeCustomers">0</div>
+        <div class="stat-label" id="newCustomers">0 לקוחות חדשים החודש</div>
+      </div>
+    </div>
+
+    <!-- תחזית הכנסות -->
+    <div class="prediction-box">
+      <h3>🔮 תחזית הכנסות - 3 חודשים הבאים</h3>
+      <div class="prediction-item">
+        <span id="nextMonth1">חודש הבא</span>
+        <strong id="prediction1">₪0</strong>
+      </div>
+      <div class="prediction-item">
+        <span id="nextMonth2">חודשיים</span>
+        <strong id="prediction2">₪0</strong>
+      </div>
+      <div class="prediction-item">
+        <span id="nextMonth3">שלושה חודשים</span>
+        <strong id="prediction3">₪0</strong>
+      </div>
+    </div>
+
+    <!-- גרף הכנסות חודשיות -->
+    <div class="chart-container">
+      <h3>📊 הכנסות ב-6 חודשים אחרונים</h3>
+      <canvas id="revenueChart"></canvas>
+    </div>
+
+    <!-- גרף תפוסה -->
+    <div class="chart-container">
+      <h3>📅 תפוסה לפי חודש</h3>
+      <canvas id="occupancyChart"></canvas>
+    </div>
+
+    <!-- לקוחות מובילים -->
+    <div class="table-container">
+      <h3>⭐ 10 הלקוחות המובילים</h3>
+      <table id="topCustomersTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>שם</th>
+            <th>טלפון</th>
+            <th>הזמנות</th>
+            <th>סה"כ הכנסות</th>
+            <th>ממוצע לביקור</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ניתוח גזעים ופרטים -->
+    <div class="dashboard-grid">
+      <div class="card">
+        <h3>🐶 פילוח לפי גודל</h3>
+        <div id="breedBreakdown"></div>
+      </div>
+
+      <div class="card">
+        <h3>📊 סטטיסטיקות כלליות</h3>
+        <div id="generalStats"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const MAX_CAPACITY = 15;
+
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function getMonthName(monthIndex) {
+      const months = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 
+                      'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+      return months[monthIndex];
+    }
+
+    function formatCurrency(amount) {
+      return '₪' + amount.toLocaleString('he-IL');
+    }
+
+    async function loadAnalytics() {
+      try {
+        const { data: allOrders, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'מאושר')
+          .order('check_in', { ascending: true });
+
+        if (error) throw error;
+
+        // חישוב נתונים
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        // הכנסות החודש הנוכחי
+        const thisMonthOrders = allOrders.filter(order => {
+          const checkIn = new Date(order.check_in);
+          return checkIn.getMonth() === currentMonth && checkIn.getFullYear() === currentYear;
+        });
+
+        const thisMonthRevenue = thisMonthOrders.reduce((sum, order) => {
+          const days = calculateDays(order.check_in, order.check_out);
+          const price = order.price_per_day || 130;
+          return sum + (days * price);
+        }, 0);
+
+        // הכנסות החודש הקודם
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        
+        const lastMonthOrders = allOrders.filter(order => {
+          const checkIn = new Date(order.check_in);
+          return checkIn.getMonth() === lastMonth && checkIn.getFullYear() === lastMonthYear;
+        });
+
+        const lastMonthRevenue = lastMonthOrders.reduce((sum, order) => {
+          const days = calculateDays(order.check_in, order.check_out);
+          const price = order.price_per_day || 130;
+          return sum + (days * price);
+        }, 0);
+
+        const revenueChange = lastMonthRevenue > 0 
+          ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
+          : 0;
+
+        document.getElementById('monthlyRevenue').textContent = formatCurrency(thisMonthRevenue);
+        document.getElementById('revenueChange').textContent = `${revenueChange > 0 ? '+' : ''}${revenueChange}% מהחודש הקודם`;
+        document.getElementById('revenueChange').className = `stat-change ${revenueChange >= 0 ? 'positive' : 'negative'}`;
+
+        // כלבים החודש
+        const uniqueDogsThisMonth = new Set(thisMonthOrders.map(o => o.dog_name)).size;
+        const uniqueDogsLastMonth = new Set(lastMonthOrders.map(o => o.dog_name)).size;
+        const dogsChange = uniqueDogsLastMonth > 0
+          ? ((uniqueDogsThisMonth - uniqueDogsLastMonth) / uniqueDogsLastMonth * 100).toFixed(1)
+          : 0;
+
+        document.getElementById('monthlyDogs').textContent = uniqueDogsThisMonth;
+        document.getElementById('dogsChange').textContent = `${dogsChange > 0 ? '+' : ''}${dogsChange}% מהחודש הקודם`;
+        document.getElementById('dogsChange').className = `stat-change ${dogsChange >= 0 ? 'positive' : 'negative'}`;
+
+        // תפוסה ממוצעת
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        let totalOccupancy = 0;
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+          const currentDate = new Date(currentYear, currentMonth, day);
+          const dogsOnDay = thisMonthOrders.filter(order => {
+            const checkIn = new Date(order.check_in);
+            const checkOut = new Date(order.check_out);
+            return currentDate >= checkIn && currentDate <= checkOut;
+          }).length;
+          totalOccupancy += dogsOnDay;
+        }
+
+        const avgOccupancy = ((totalOccupancy / daysInMonth / MAX_CAPACITY) * 100).toFixed(1);
+        document.getElementById('avgOccupancy').textContent = avgOccupancy + '%';
+
+        // לקוחות פעילים
+        const uniqueCustomers = new Set(allOrders.map(o => o.phone)).size;
+        const newCustomersThisMonth = new Set(
+          thisMonthOrders
+            .filter(order => {
+              const firstOrder = allOrders
+                .filter(o => o.phone === order.phone)
+                .sort((a, b) => new Date(a.check_in) - new Date(b.check_in))[0];
+              return new Date(firstOrder.check_in).getMonth() === currentMonth &&
+                     new Date(firstOrder.check_in).getFullYear() === currentYear;
+            })
+            .map(o => o.phone)
+        ).size;
+
+        document.getElementById('activeCustomers').textContent = uniqueCustomers;
+        document.getElementById('newCustomers').textContent = `${newCustomersThisMonth} לקוחות חדשים החודש`;
+
+        // תחזית הכנסות - בהתבסס על ממוצע 3 חודשים אחרונים
+        const revenueByMonth = {};
+        allOrders.forEach(order => {
+          const checkIn = new Date(order.check_in);
+          const monthKey = `${checkIn.getFullYear()}-${checkIn.getMonth()}`;
+          if (!revenueByMonth[monthKey]) revenueByMonth[monthKey] = 0;
+          const days = calculateDays(order.check_in, order.check_out);
+          const price = order.price_per_day || 130;
+          revenueByMonth[monthKey] += days * price;
+        });
+
+        const recentMonths = Object.values(revenueByMonth).slice(-3);
+        const avgRevenue = recentMonths.reduce((a, b) => a + b, 0) / recentMonths.length;
+        const growthRate = 1.05; // הנחה של 5% צמיחה חודשית
+
+        for (let i = 1; i <= 3; i++) {
+          const futureMonth = new Date(currentYear, currentMonth + i, 1);
+          const prediction = avgRevenue * Math.pow(growthRate, i);
+          document.getElementById(`nextMonth${i}`).textContent = getMonthName(futureMonth.getMonth()) + ' ' + futureMonth.getFullYear();
+          document.getElementById(`prediction${i}`).textContent = formatCurrency(Math.round(prediction));
+        }
+
+        // גרף הכנסות חודשיות
+        const last6Months = [];
+        const last6MonthsRevenue = [];
+        
+        for (let i = 5; i >= 0; i--) {
+          const monthDate = new Date(currentYear, currentMonth - i, 1);
+          const monthKey = `${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+          last6Months.push(getMonthName(monthDate.getMonth()));
+          last6MonthsRevenue.push(revenueByMonth[monthKey] || 0);
+        }
+
+        new Chart(document.getElementById('revenueChart'), {
+          type: 'bar',
+          data: {
+            labels: last6Months,
+            datasets: [{
+              label: 'הכנסות (₪)',
+              data: last6MonthsRevenue,
+              backgroundColor: 'rgba(102, 126, 234, 0.6)',
+              borderColor: 'rgba(102, 126, 234, 1)',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return '₪' + value.toLocaleString();
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // גרף תפוסה
+        const last6MonthsOccupancy = [];
+        
+        for (let i = 5; i >= 0; i--) {
+          const monthDate = new Date(currentYear, currentMonth - i, 1);
+          const daysInThisMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+          
+          const monthOrders = allOrders.filter(order => {
+            const checkIn = new Date(order.check_in);
+            return checkIn.getMonth() === monthDate.getMonth() && 
+                   checkIn.getFullYear() === monthDate.getFullYear();
+          });
+
+          let monthTotalOccupancy = 0;
+          for (let day = 1; day <= daysInThisMonth; day++) {
+            const currentDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+            const dogsOnDay = monthOrders.filter(order => {
+              const checkIn = new Date(order.check_in);
+              const checkOut = new Date(order.check_out);
+              return currentDate >= checkIn && currentDate <= checkOut;
+            }).length;
+            monthTotalOccupancy += dogsOnDay;
+          }
+
+          const monthAvgOccupancy = ((monthTotalOccupancy / daysInThisMonth / MAX_CAPACITY) * 100).toFixed(1);
+          last6MonthsOccupancy.push(parseFloat(monthAvgOccupancy));
+        }
+
+        // גרף תפוסה - עמודות במקום קו
+        new Chart(document.getElementById('occupancyChart'), {
+          type: 'bar',
+          data: {
+            labels: last6Months,
+            datasets: [{
+              label: 'תפוסה ממוצעת (%)',
+              data: last6MonthsOccupancy,
+              backgroundColor: 'rgba(76, 175, 80, 0.8)',
+              borderColor: 'rgba(76, 175, 80, 1)',
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+
+        // לקוחות מובילים
+        const customerStats = {};
+        allOrders.forEach(order => {
+          if (!customerStats[order.phone]) {
+            customerStats[order.phone] = {
+              name: order.owner_name,
+              phone: order.phone,
+              orders: 0,
+              revenue: 0
+            };
+          }
+          customerStats[order.phone].orders++;
+          const days = calculateDays(order.check_in, order.check_out);
+          const price = order.price_per_day || 130;
+          customerStats[order.phone].revenue += days * price;
+        });
+
+        const topCustomers = Object.values(customerStats)
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 10);
+
+        const tbody = document.querySelector('#topCustomersTable tbody');
+        tbody.innerHTML = '';
+        
+        topCustomers.forEach((customer, index) => {
+          const avgPerVisit = customer.revenue / customer.orders;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${customer.name}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.orders}</td>
+            <td><strong>${formatCurrency(customer.revenue)}</strong></td>
+            <td>${formatCurrency(Math.round(avgPerVisit))}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // פילוח לפי גודל
+        const sizeBreakdown = {};
+        allOrders.forEach(order => {
+          const size = order.dog_breed || 'לא צוין';
+          sizeBreakdown[size] = (sizeBreakdown[size] || 0) + 1;
+        });
+
+        let breedHtml = '';
+        Object.entries(sizeBreakdown)
+          .sort((a, b) => b[1] - a[1])
+          .forEach(([size, count]) => {
+            const percentage = ((count / allOrders.length) * 100).toFixed(1);
+            breedHtml += `
+              <div class="metric-row">
+                <span class="metric-label">${size}</span>
+                <span class="metric-value">${count} (${percentage}%)</span>
+              </div>
+            `;
+          });
+        document.getElementById('breedBreakdown').innerHTML = breedHtml;
+
+        // סטטיסטיקות כלליות
+        const totalRevenue = allOrders.reduce((sum, order) => {
+          const days = calculateDays(order.check_in, order.check_out);
+          const price = order.price_per_day || 130;
+          return sum + (days * price);
+        }, 0);
+
+        const avgOrderValue = totalRevenue / allOrders.length;
+        const totalDays = allOrders.reduce((sum, order) => sum + calculateDays(order.check_in, order.check_out), 0);
+
+        document.getElementById('generalStats').innerHTML = `
+          <div class="metric-row">
+            <span class="metric-label">סה"כ הכנסות מתחילת הפעילות</span>
+            <span class="metric-value">${formatCurrency(totalRevenue)}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">סה"כ הזמנות</span>
+            <span class="metric-value">${allOrders.length}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">ממוצע להזמנה</span>
+            <span class="metric-value">${formatCurrency(Math.round(avgOrderValue))}</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">סה"כ ימי אירוח</span>
+            <span class="metric-value">${totalDays} ימים</span>
+          </div>
+        `;
+
+        // הסתר טעינה והצג דשבורד
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'block';
+
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+        document.getElementById('loadingIndicator').innerHTML = '❌ שגיאה בטעינת הנתונים: ' + error.message;
+      }
+    }
+
+    // טען נתונים בטעינת הדף
+    loadAnalytics();
+  </script>
+</body>
+</html>
