@@ -100,7 +100,6 @@
       font-size: 32px;
       font-weight: 700;
       margin: 0;
-      padding-top: 40px; /* מוסיף רווח מתחת לכפתורים */
     }
 
     .header-btn {
@@ -397,12 +396,6 @@
       white-space: nowrap;
     }
 
-    .notes-column {
-      min-width: 160px;
-      white-space: normal;
-      text-align: right;
-    }
-
     .date-display {
       cursor: pointer;
       padding: 4px 8px;
@@ -578,7 +571,6 @@
     @media (max-width: 600px) {
       header h1 {
         font-size: 24px;
-        padding-top: 60px; /* יותר רווח במסך קטן */
       }
 
       .container {
@@ -610,8 +602,8 @@
 
   <div id="mainContent">
     <header>
-      <button class="header-btn left" onclick="logout()">🚪 יציאה</button>
-      <a href="growth.html" class="header-btn right">📊 ניתוחים</a>
+      <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
+      <a href="growth.html" class="header-btn right">📊 דוחות</a>
       <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
     </header>
 
@@ -634,7 +626,7 @@
             <th>גיל</th>
             <th>גודל</th>
             <th>מסורס / מעוקרת</th>
-            <th class="notes-column">הערות</th>
+            <th>הערות</th>
             <th>מחיר ליום</th>
             <th>ימים</th>
             <th>סטטוס</th>
@@ -664,7 +656,7 @@
               <th>גיל</th>
               <th>גודל</th>
               <th>מסורס / מעוקרת</th>
-              <th class="notes-column">הערות</th>
+              <th>הערות</th>
               <th>מחיר ליום</th>
               <th>ימים</th>
               <th>סטטוס</th>
@@ -812,57 +804,6 @@
       );
     }
 
-    // פונקציות עזר להערות ואופי
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>\"']/g, s => (
-        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
-      ));
-    }
-
-    function formatDogNotes(dog_temperament, notes) {
-      const BLUE = '#667eea';
-      const normalize = (v) => {
-        if (v == null) return '';
-        let t = String(v).replace(/[\u200E\u200F]/g, '').trim();
-        if (!t) return '';
-        const tNoDot = t.replace(/[.\s]+$/, '');
-        const empties = ['אין','אין הערות','אין מידע','ללא','ללא הערות','-'];
-        if (empties.includes(tNoDot)) return '';
-        return t;
-      };
-
-      let temp = normalize(dog_temperament);
-      let n = normalize(notes);
-
-      if (n) {
-        const lines = n.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-        let collected = [];
-        let explicitNote = '';
-        lines.forEach(line => {
-          const stripped = line.replace(/[.\s]+$/, '');
-          if (/^אופי\s*:/.test(stripped)) {
-            if (!temp) temp = stripped.replace(/^אופי\s*:\s*/, '').trim();
-          } else if (/^הערות\s*:/.test(stripped)) {
-            explicitNote = stripped.replace(/^הערות\s*:\s*/, '').trim();
-          } else if (!/^אין$/i.test(stripped)) {
-            collected.push(stripped);
-          }
-        });
-        n = [explicitNote, ...collected].filter(Boolean).join(' ');
-      }
-
-      const parts = [];
-      if (temp) {
-        const t = escapeHtml(temp.replace(/[.\s]+$/, ''));
-        parts.push(`<div><span style="color:${BLUE};font-weight:700;">אופי:</span> ${t}.</div>`);
-      }
-      if (n) {
-        const s = escapeHtml(n.replace(/[.\s]+$/, ''));
-        parts.push(`<div><span style="color:${BLUE};font-weight:700;">הערות:</span> ${s}.</div>`);
-      }
-      return parts.length ? parts.join('<br>') : '<span style="color:#999;">אין</span>';
-    }
-
     function renderPastOrdersTable() {
       const tbody = document.querySelector('#pastOrdersTable tbody');
       if (!tbody) return;
@@ -882,10 +823,30 @@
         const days = calculateDays(row.check_in, row.check_out);
         const pricePerDay = row.price_per_day || 130;
         const totalPrice = days * pricePerDay;
-
-        // שימוש בפורמט החדש להערות ואופי
-        const notesDisplay = formatDogNotes(row.dog_temperament, row.notes);
-
+        
+        // הכנת תצוגת הערות - פשוט וישיר
+        const temperament = (row.dog_temperament || '').toString().trim();
+        const notes = (row.notes || '').toString().trim();
+        
+        let notesDisplay = '';
+        
+        // בניית התצוגה
+        if (temperament || notes) {
+          const parts = [];
+          
+          if (temperament) {
+            parts.push(`<span style="color: #667eea; font-weight: 700;">אופי:</span> ${temperament}.`);
+          }
+          
+          if (notes) {
+            parts.push(`<span style="color: #667eea; font-weight: 700;">הערות:</span> ${notes}.`);
+          }
+          
+          notesDisplay = parts.join('<br><br>');
+        } else {
+          notesDisplay = '<span style="color: #999;">אין</span>';
+        }
+        
         tr.innerHTML = `
           <td>${formatDateTime(row.order_date)}</td>
           <td>${row.owner_name}</td>
@@ -902,7 +863,7 @@
           <td>${row.dog_age}</td>
           <td>${row.dog_breed}</td>
           <td>${row.neutered}</td>
-          <td class="notes-column" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
           <td class="price-cell">
             <div class="price-wrapper">
               <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
@@ -1028,10 +989,30 @@
           const days = calculateDays(row.check_in, row.check_out);
           const pricePerDay = row.price_per_day || 130;
           const totalPrice = days * pricePerDay;
-
-          // שימוש בפורמט החדש להערות ואופי
-          const notesDisplay = formatDogNotes(row.dog_temperament, row.notes);
-
+          
+          // הכנת תצוגת הערות - פשוט וישיר
+          const temperament = (row.dog_temperament || '').toString().trim();
+          const notes = (row.notes || '').toString().trim();
+          
+          let notesDisplay = '';
+          
+          // בניית התצוגה
+          if (temperament || notes) {
+            const parts = [];
+            
+            if (temperament) {
+              parts.push(`<span style="color: #667eea; font-weight: 700;">אופי:</span> ${temperament}.`);
+            }
+            
+            if (notes) {
+              parts.push(`<span style="color: #667eea; font-weight: 700;">הערות:</span> ${notes}.`);
+            }
+            
+            notesDisplay = parts.join('<br><br>');
+          } else {
+            notesDisplay = '<span style="color: #999;">אין</span>';
+          }
+          
           tr.innerHTML = `
             <td>${formatDateTime(row.order_date)}</td>
             <td>${row.owner_name || ''}</td>
@@ -1042,7 +1023,7 @@
             <td>${row.dog_age || ''}</td>
             <td>${row.dog_breed || ''}</td>
             <td>${row.neutered || ''}</td>
-            <td class="notes-column" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
             <td class="price-cell">
               <div class="price-wrapper">
                 <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
