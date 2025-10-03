@@ -396,6 +396,12 @@
       white-space: nowrap;
     }
 
+    .notes-column {
+      min-width: 160px;
+      white-space: normal;
+      text-align: right;
+    }
+
     .date-display {
       cursor: pointer;
       padding: 4px 8px;
@@ -626,7 +632,7 @@
             <th>גיל</th>
             <th>גודל</th>
             <th>מסורס / מעוקרת</th>
-            <th>הערות</th>
+            <th class="notes-column">הערות</th>
             <th>מחיר ליום</th>
             <th>ימים</th>
             <th>סטטוס</th>
@@ -656,7 +662,7 @@
               <th>גיל</th>
               <th>גודל</th>
               <th>מסורס / מעוקרת</th>
-              <th>הערות</th>
+              <th class="notes-column">הערות</th>
               <th>מחיר ליום</th>
               <th>ימים</th>
               <th>סטטוס</th>
@@ -804,6 +810,57 @@
       );
     }
 
+    // פונקציות עזר להערות ואופי
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>\"']/g, s => (
+        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
+      ));
+    }
+
+    function formatDogNotes(dog_temperament, notes) {
+      const BLUE = '#667eea';
+      const normalize = (v) => {
+        if (v == null) return '';
+        let t = String(v).replace(/[\u200E\u200F]/g, '').trim();
+        if (!t) return '';
+        const tNoDot = t.replace(/[.\s]+$/, '');
+        const empties = ['אין','אין הערות','אין מידע','ללא','ללא הערות','-'];
+        if (empties.includes(tNoDot)) return '';
+        return t;
+      };
+
+      let temp = normalize(dog_temperament);
+      let n = normalize(notes);
+
+      if (n) {
+        const lines = n.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        let collected = [];
+        let explicitNote = '';
+        lines.forEach(line => {
+          const stripped = line.replace(/[.\s]+$/, '');
+          if (/^אופי\s*:/.test(stripped)) {
+            if (!temp) temp = stripped.replace(/^אופי\s*:\s*/, '').trim();
+          } else if (/^הערות\s*:/.test(stripped)) {
+            explicitNote = stripped.replace(/^הערות\s*:\s*/, '').trim();
+          } else if (!/^אין$/i.test(stripped)) {
+            collected.push(stripped);
+          }
+        });
+        n = [explicitNote, ...collected].filter(Boolean).join(' ');
+      }
+
+      const parts = [];
+      if (temp) {
+        const t = escapeHtml(temp.replace(/[.\s]+$/, ''));
+        parts.push(`<div><span style="color:${BLUE};font-weight:700;">אופי:</span> ${t}.</div>`);
+      }
+      if (n) {
+        const s = escapeHtml(n.replace(/[.\s]+$/, ''));
+        parts.push(`<div><span style="color:${BLUE};font-weight:700;">הערות:</span> ${s}.</div>`);
+      }
+      return parts.length ? parts.join('<br>') : '<span style="color:#999;">אין</span>';
+    }
+
     function renderPastOrdersTable() {
       const tbody = document.querySelector('#pastOrdersTable tbody');
       if (!tbody) return;
@@ -824,19 +881,8 @@
         const pricePerDay = row.price_per_day || 130;
         const totalPrice = days * pricePerDay;
 
-        // בניית notesDisplay לפי ההנחיות החדשות
-        let temperament = (row.dog_temperament || "").toString().trim();
-        let notes = (row.notes || "").toString().trim();
-        let displayParts = [];
-        if (temperament) {
-          displayParts.push(`<div><span style="color:#667eea;font-weight:700;">אופי:</span> ${temperament}.</div>`);
-        }
-        if (notes) {
-          displayParts.push(`<div><span style="color:#667eea;font-weight:700;">הערות:</span> ${notes}.</div>`);
-        }
-        let notesDisplay = displayParts.length > 0 
-          ? displayParts.join("<br><br>") 
-          : `<span style="color:#999;">אין</span>`;
+        // שימוש בפורמט החדש להערות ואופי
+        const notesDisplay = formatDogNotes(row.dog_temperament, row.notes);
 
         tr.innerHTML = `
           <td>${formatDateTime(row.order_date)}</td>
@@ -854,7 +900,7 @@
           <td>${row.dog_age}</td>
           <td>${row.dog_breed}</td>
           <td>${row.neutered}</td>
-          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+          <td class="notes-column" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
           <td class="price-cell">
             <div class="price-wrapper">
               <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
@@ -981,19 +1027,8 @@
           const pricePerDay = row.price_per_day || 130;
           const totalPrice = days * pricePerDay;
 
-          // בניית notesDisplay לפי ההנחיות החדשות
-          let temperament = (row.dog_temperament || "").toString().trim();
-          let notes = (row.notes || "").toString().trim();
-          let displayParts = [];
-          if (temperament) {
-            displayParts.push(`<div><span style="color:#667eea;font-weight:700;">אופי:</span> ${temperament}.</div>`);
-          }
-          if (notes) {
-            displayParts.push(`<div><span style="color:#667eea;font-weight:700;">הערות:</span> ${notes}.</div>`);
-          }
-          let notesDisplay = displayParts.length > 0 
-            ? displayParts.join("<br><br>") 
-            : `<span style="color:#999;">אין</span>`;
+          // שימוש בפורמט החדש להערות ואופי
+          const notesDisplay = formatDogNotes(row.dog_temperament, row.notes);
 
           tr.innerHTML = `
             <td>${formatDateTime(row.order_date)}</td>
@@ -1005,7 +1040,7 @@
             <td>${row.dog_age || ''}</td>
             <td>${row.dog_breed || ''}</td>
             <td>${row.neutered || ''}</td>
-            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+            <td class="notes-column" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
             <td class="price-cell">
               <div class="price-wrapper">
                 <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
