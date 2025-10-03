@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ניהול פנסיון כלבים</title>
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <link rel="icon" href="data:," />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -100,6 +100,7 @@
       font-size: 32px;
       font-weight: 700;
       margin: 0;
+      padding-top: 40px; /* מוסיף רווח מתחת לכפתורים */
     }
 
     .header-btn {
@@ -577,6 +578,7 @@
     @media (max-width: 600px) {
       header h1 {
         font-size: 24px;
+        padding-top: 60px; /* יותר רווח במסך קטן */
       }
 
       .container {
@@ -608,7 +610,7 @@
 
   <div id="mainContent">
     <header>
-      <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
+      <button class="header-btn left" onclick="logout()">🚪 יציאה</button>
       <a href="growth.html" class="header-btn right">📊 ניתוחים</a>
       <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
     </header>
