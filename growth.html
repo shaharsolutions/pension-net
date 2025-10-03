@@ -130,11 +130,11 @@
     .chart-container h3 {
       color: #667eea;
       font-size: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     canvas {
-      max-height: 300px;
+      max-height: 220px;
     }
 
     .prediction-box {
@@ -377,6 +377,141 @@
 
     function formatCurrency(amount) {
       return '₪' + amount.toLocaleString('he-IL');
+    }
+
+    function formatCurrency(amount) {
+      return '₪' + amount.toLocaleString('he-IL');
+    }
+
+    function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy, topCustomers, sizeBreakdown) {
+      const insights = [];
+      
+      // ניתוח צמיחה
+      const revenueGrowth = lastMonthRev > 0 ? ((thisMonthRev - lastMonthRev) / lastMonthRev * 100) : 0;
+      if (revenueGrowth > 10) {
+        insights.push({
+          icon: '🚀',
+          title: 'צמיחה מרשימה',
+          text: `ההכנסות עלו ב-${revenueGrowth.toFixed(1)}% לעומת החודש הקודם! המגמה חיובית - כדאי לנצל את התנופה ולהשקיע בשיווק.`
+        });
+      } else if (revenueGrowth < -10) {
+        insights.push({
+          icon: '⚠️',
+          title: 'ירידה בהכנסות',
+          text: `ההכנסות ירדו ב-${Math.abs(revenueGrowth).toFixed(1)}%. כדאי לבדוק: האם יש עונתיות? האם צריך קמפיין שיווקי? מתחרים חדשים באזור?`
+        });
+      }
+
+      // ניתוח תפוסה
+      const occupancyNum = parseFloat(occupancy);
+      if (occupancyNum > 80) {
+        insights.push({
+          icon: '🎯',
+          title: 'תפוסה גבוהה',
+          text: `תפוסה של ${occupancyNum.toFixed(1)}% היא מצוינת! אבל זה אומר שאתה מתקרב למקסימום. כדאי לשקול: העלאת מחירים, הרחבת הפנסיון, או העסקת עוזר.`
+        });
+      } else if (occupancyNum < 50) {
+        insights.push({
+          icon: '📢',
+          title: 'יש מקום לצמיחה',
+          text: `תפוסה של ${occupancyNum.toFixed(1)}% משאירה הרבה פוטנציאל. המלצות: פרסום ממוקד ברשתות החברתיות, הנחות ללקוחות חוזרים, שיתופי פעולה עם וטרינרים.`
+        });
+      }
+
+      // ניתוח נאמנות לקוחות
+      const repeatCustomers = {};
+      orders.forEach(order => {
+        repeatCustomers[order.phone] = (repeatCustomers[order.phone] || 0) + 1;
+      });
+      const loyalCustomers = Object.values(repeatCustomers).filter(count => count >= 3).length;
+      const totalCustomers = Object.keys(repeatCustomers).length;
+      const loyaltyRate = (loyalCustomers / totalCustomers * 100);
+
+      if (loyaltyRate > 30) {
+        insights.push({
+          icon: '❤️',
+          title: 'נאמנות לקוחות גבוהה',
+          text: `${loyaltyRate.toFixed(1)}% מהלקוחות שלך חוזרים 3+ פעמים! זה מצוין. תשמור על השירות האיכותי ושקול תוכנית נאמנות (כרטיסייה - 10 ימים ב-1100₪ במקום 1300₪).`
+        });
+      } else {
+        insights.push({
+          icon: '🎁',
+          title: 'הזדמנות לשיפור נאמנות',
+          text: `רק ${loyaltyRate.toFixed(1)}% מהלקוחות חוזרים. כדאי: לשלוח הודעות תודה, לתת הנחה בביקור השני, ליצור קבוצת WhatsApp ללקוחות קבועים.`
+        });
+      }
+
+      // ניתוח 10-90 (20% מהלקוחות מייצרים 80% מההכנסות?)
+      const top20PercentCount = Math.ceil(totalCustomers * 0.2);
+      const top20Revenue = topCustomers.slice(0, top20PercentCount).reduce((sum, c) => sum + c.revenue, 0);
+      const totalRevenue = topCustomers.reduce((sum, c) => sum + c.revenue, 0);
+      const top20Percentage = (top20Revenue / totalRevenue * 100);
+
+      if (top20Percentage > 70) {
+        insights.push({
+          icon: '⭐',
+          title: 'תלות בלקוחות מובילים',
+          text: `${top20Percentage.toFixed(1)}% מההכנסות מגיעות מ-20% מהלקוחות. זה טוב (לקוחות נאמנים!) אבל גם סיכון. כדאי לגוון ולהביא לקוחות חדשים.`
+        });
+      }
+
+      // ניתוח גדלים פופולריים
+      const sortedSizes = Object.entries(sizeBreakdown).sort((a, b) => b[1] - a[1]);
+      const topSize = sortedSizes[0];
+      const topSizePercent = (topSize[1] / orders.length * 100);
+
+      if (topSizePercent > 40) {
+        insights.push({
+          icon: '🐕',
+          title: `התמחות בכלבים ${topSize[0]}`,
+          text: `${topSizePercent.toFixed(1)}% מהכלבים הם "${topSize[0]}". זה יתרון! תוכל לפרסם כמומחה ל${topSize[0]}, להתאים את הציוד, ולמשוך עוד לקוחות מסוג זה.`
+        });
+      }
+
+      // ניתוח עונתיות
+      const monthlyDistribution = {};
+      orders.forEach(order => {
+        const month = new Date(order.check_in).getMonth();
+        monthlyDistribution[month] = (monthlyDistribution[month] || 0) + 1;
+      });
+      
+      const maxMonth = Object.entries(monthlyDistribution).reduce((max, curr) => 
+        curr[1] > max[1] ? curr : max, ['0', 0]
+      );
+      const minMonth = Object.entries(monthlyDistribution).reduce((min, curr) => 
+        curr[1] < min[1] ? curr : min, ['0', 999]
+      );
+      
+      const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 
+                          'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+      
+      if (maxMonth[1] > minMonth[1] * 2) {
+        insights.push({
+          icon: '📅',
+          title: 'עונתיות ברורה',
+          text: `השיא ב${monthNames[maxMonth[0]]} והשפל ב${monthNames[minMonth[0]]}. תכנן מבצעים בחודשים החלשים, והעלה מחירים בעונות השיא.`
+        });
+      }
+
+      const insightsElement = document.getElementById('businessInsights');
+      if (!insightsElement) {
+        console.error('businessInsights element not found');
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
+      insights.forEach(insight => {
+        html += `
+          <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; border-left: 4px solid white;">
+            <div style="font-size: 24px; margin-bottom: 8px;">${insight.icon}</div>
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${insight.title}</div>
+            <div style="font-size: 15px; line-height: 1.6; opacity: 0.95;">${insight.text}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      insightsElement.innerHTML = html;
     }
 
     async function loadAnalytics() {
@@ -686,6 +821,9 @@
             <span class="metric-value">${totalDays} ימים</span>
           </div>
         `;
+
+        // ניתוח תובנות עסקיות
+        generateBusinessInsights(allOrders, thisMonthRevenue, lastMonthRevenue, avgOccupancy, topCustomers, sizeBreakdown);
 
         // הסתר טעינה והצג דשבורד
         document.getElementById('loadingIndicator').style.display = 'none';
