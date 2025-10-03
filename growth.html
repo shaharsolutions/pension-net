@@ -40,7 +40,6 @@
     .back-btn {
       position: absolute;
       top: 20px;
-      left: 20px;
       background: rgba(255,255,255,0.2);
       color: white;
       border: 2px solid white;
@@ -57,6 +56,14 @@
     .back-btn:hover {
       background: white;
       color: #667eea;
+    }
+
+    .back-btn.left {
+      left: 20px;
+    }
+
+    .back-btn.right {
+      right: 20px;
     }
 
     .dashboard-grid {
@@ -255,7 +262,8 @@
 </head>
 <body>
   <header>
-    <a href="adminv3.html" class="back-btn">← חזרה לניהול</a>
+    <a href="adminv3.html" class="back-btn left">← חזרה לניהול</a>
+    <a href="orderv3.html" class="back-btn right">📝 מעבר להזמנה</a>
     <h1>📊 ניתוחים ותחזיות עסקיות</h1>
   </header>
 
