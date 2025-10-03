@@ -24,7 +24,6 @@
       padding-bottom: 100px;
     }
 
-    /* Login Screen Styles */
     .login-container {
       max-width: 400px;
       margin: 100px auto;
@@ -286,13 +285,14 @@
 
     .price-input {
       width: 90px;
-      padding: 6px 30px 6px 30px;
-      border: 2px solid #ffffff;
-      border-radius: 0px;
+      padding: 6px 30px 6px 8px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
       font-size: 14px;
       text-align: center;
       font-weight: 600;
       direction: rtl;
+      transition: all 0.3s;
       -moz-appearance: textfield;
     }
 
@@ -304,7 +304,7 @@
 
     .price-input:focus {
       outline: none;
-      border-color: #ffffff;
+      border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
@@ -352,10 +352,15 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    .days-cell {
+    .price-cell {
       position: relative;
       cursor: help;
       padding: 14px 10px;
+    }
+
+    .price-cell:hover .tooltip {
+      display: block;
+      animation: fadeIn 0.2s;
     }
 
     .tooltip {
@@ -384,11 +389,6 @@
       transform: translateX(-50%);
       border: 6px solid transparent;
       border-top-color: #333;
-    }
-
-    .days-cell:hover .tooltip {
-      display: block;
-      animation: fadeIn 0.2s;
     }
 
     .wide-date-column {
@@ -593,7 +593,6 @@
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
   <div id="loginScreen" class="login-container">
     <h1>🔒 כניסת מנהל</h1>
     <input type="password" id="passwordInput" placeholder="הזן סיסמה" />
@@ -601,11 +600,10 @@
     <div class="error-message" id="errorMessage">סיסמה שגויה!</div>
   </div>
 
-  <!-- Main Content (Hidden by default) -->
   <div id="mainContent">
     <header>
       <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
-      <a href="https://shaharsolutions.github.io/pension-net/growth.html" class="header-btn right">📊 ניתוחים</a>
+      <a href="growth.html" class="header-btn right">📊 ניתוחים</a>
       <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
     </header>
 
@@ -627,8 +625,8 @@
             <th>שם הכלב</th>
             <th>גיל</th>
             <th>גודל</th>
-            <th>הערות</th>
             <th>מסורס / מעוקרת</th>
+            <th>הערות</th>
             <th>מחיר ליום</th>
             <th>ימים</th>
             <th>סטטוס</th>
@@ -657,8 +655,8 @@
               <th>שם הכלב</th>
               <th>גיל</th>
               <th>גודל</th>
-              <th>הערות</th>
               <th>מסורס / מעוקרת</th>
+              <th>הערות</th>
               <th>מחיר ליום</th>
               <th>ימים</th>
               <th>סטטוס</th>
@@ -678,8 +676,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ===== AUTHENTICATION =====
-    const ADMIN_PASSWORD_HASH = '60275c47'; // הסיסמה היא: mypassword
+    const ADMIN_PASSWORD_HASH = '60275c47';
     
     function simpleHash(str) {
       let hash = 0;
@@ -730,7 +727,6 @@
       }
     });
 
-    // ===== SUPABASE & DATA MANAGEMENT =====
     const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
     
@@ -827,7 +823,21 @@
         const days = calculateDays(row.check_in, row.check_out);
         const pricePerDay = row.price_per_day || 130;
         const totalPrice = days * pricePerDay;
-        
+
+        // בניית notesDisplay לפי ההנחיות החדשות
+        let temperament = (row.dog_temperament || "").toString().trim();
+        let notes = (row.notes || "").toString().trim();
+        let displayParts = [];
+        if (temperament) {
+          displayParts.push(`<div><span style="color:#667eea;font-weight:700;">אופי:</span> ${temperament}.</div>`);
+        }
+        if (notes) {
+          displayParts.push(`<div><span style="color:#667eea;font-weight:700;">הערות:</span> ${notes}.</div>`);
+        }
+        let notesDisplay = displayParts.length > 0 
+          ? displayParts.join("<br><br>") 
+          : `<span style="color:#999;">אין</span>`;
+
         tr.innerHTML = `
           <td>${formatDateTime(row.order_date)}</td>
           <td>${row.owner_name}</td>
@@ -843,16 +853,16 @@
           <td>${row.dog_name}</td>
           <td>${row.dog_age}</td>
           <td>${row.dog_breed}</td>
-          <td>${row.notes}</td>
           <td>${row.neutered}</td>
-          <td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+          <td class="price-cell">
             <div class="price-wrapper">
               <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
             </div>
+            <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
           </td>
-          <td class="days-cell">
+          <td>
             <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
-            <div class="tooltip">סה"כ לתשלום: ${totalPrice}₪</div>
           </td>
           <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
           <td class="manager-note-column">
@@ -879,13 +889,16 @@
           const row = this.closest('tr');
           const priceInput = row.querySelector('.price-input');
           const daysInput = row.querySelector('.days-input');
-          const tooltip = row.querySelector('.tooltip');
+          const priceCell = row.querySelector('.price-cell');
+          const tooltip = priceCell ? priceCell.querySelector('.tooltip') : null;
           
-          const price = parseInt(priceInput.value) || 0;
-          const days = parseInt(daysInput.value) || 0;
-          const total = price * days;
-          
-          tooltip.textContent = `סה"כ לתשלום: ${total}₪`;
+          if (tooltip) {
+            const price = parseInt(priceInput.value) || 0;
+            const days = parseInt(daysInput.value) || 0;
+            const total = price * days;
+            
+            tooltip.textContent = `עלות שהייה: ${total}₪`;
+          }
         });
       });
     }
@@ -942,6 +955,14 @@
 
         console.log('Data loaded:', data.length, 'rows');
         
+        // לבדיקה - הצג דוגמה של הנתונים
+        if (data.length > 0) {
+          console.log('Sample data:', {
+            dog_temperament: data[0].dog_temperament,
+            notes: data[0].notes
+          });
+        }
+        
         const futureTbody = document.querySelector("#futureOrdersTable tbody");
         const now = new Date();
         
@@ -959,7 +980,21 @@
           const days = calculateDays(row.check_in, row.check_out);
           const pricePerDay = row.price_per_day || 130;
           const totalPrice = days * pricePerDay;
-          
+
+          // בניית notesDisplay לפי ההנחיות החדשות
+          let temperament = (row.dog_temperament || "").toString().trim();
+          let notes = (row.notes || "").toString().trim();
+          let displayParts = [];
+          if (temperament) {
+            displayParts.push(`<div><span style="color:#667eea;font-weight:700;">אופי:</span> ${temperament}.</div>`);
+          }
+          if (notes) {
+            displayParts.push(`<div><span style="color:#667eea;font-weight:700;">הערות:</span> ${notes}.</div>`);
+          }
+          let notesDisplay = displayParts.length > 0 
+            ? displayParts.join("<br><br>") 
+            : `<span style="color:#999;">אין</span>`;
+
           tr.innerHTML = `
             <td>${formatDateTime(row.order_date)}</td>
             <td>${row.owner_name || ''}</td>
@@ -969,16 +1004,16 @@
             <td>${row.dog_name || ''}</td>
             <td>${row.dog_age || ''}</td>
             <td>${row.dog_breed || ''}</td>
-            <td>${row.notes || ''}</td>
             <td>${row.neutered || ''}</td>
-            <td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+            <td class="price-cell">
               <div class="price-wrapper">
                 <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
               </div>
+              <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
             </td>
-            <td class="days-cell">
+            <td>
               <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
-              <div class="tooltip">סה"כ לתשלום: ${totalPrice}₪</div>
             </td>
             <td>
               <select data-id="${row.id}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
@@ -999,13 +1034,16 @@
             const row = this.closest('tr');
             const priceInput = row.querySelector('.price-input');
             const daysInput = row.querySelector('.days-input');
-            const tooltip = row.querySelector('.tooltip');
+            const priceCell = row.querySelector('.price-cell');
+            const tooltip = priceCell ? priceCell.querySelector('.tooltip') : null;
             
-            const price = parseInt(priceInput.value) || 0;
-            const days = parseInt(daysInput.value) || 0;
-            const total = price * days;
-            
-            tooltip.textContent = `סה"כ לתשלום: ${total}₪`;
+            if (tooltip) {
+              const price = parseInt(priceInput.value) || 0;
+              const days = parseInt(daysInput.value) || 0;
+              const total = price * days;
+              
+              tooltip.textContent = `עלות שהייה: ${total}₪`;
+            }
           });
         });
         
