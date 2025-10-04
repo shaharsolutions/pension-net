@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>ניהול פנסיון כלבים</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      direction: rtl;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .login-container h1 {
+      color: #667eea;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+
+    .login-container input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .login-container button {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .login-container button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .error-message {
+      color: #f44336;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    #mainContent {
+      display: none;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+      border-radius: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .header-btn {
+      position: absolute;
+      top: 20px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .header-btn:hover {
+      background: white;
+      color: #667eea;
+    }
+
+    .header-btn.left {
+      left: 20px;
+    }
+
+    .header-btn.right {
+      right: 20px;
+    }
+
+    .container {
+      margin: 20px auto;
+      padding: 30px;
+      max-width: 95%;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      overflow-x: auto;
+    }
+
+    .container h3 {
+      color: #667eea;
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    #currentDogsContainer {
+      margin: 20px auto;
+      max-width: 95%;
+      background: white;
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    #currentDogsContainer h3 {
+      color: #667eea;
+      font-size: 24px;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    #currentDogsList {
+      list-style-type: disc;
+      padding-right: 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    #currentDogsList li {
+      margin-bottom: 8px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1400px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    th, td {
+      padding: 14px 10px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #f8f9ff;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    tbody tr:nth-child(even):hover {
+      background: #f8f9ff;
+    }
+
+    input[type="text"], textarea {
+      width: 95%;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus, textarea:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input[type="date"] {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      width: 100%;
+      direction: ltr;
+      text-align: center;
+    }
+
+    select {
+      padding: 8px 12px;
+      min-width: 110px;
+      width: 100%;
+      direction: rtl;
+      text-align: center;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: white;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea.admin-note {
+      width: 80ch;
+      max-width: 100%;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      resize: none;
+      font-size: 12px;
+      padding: 8px 12px;
+      line-height: 1.4;
+      min-height: 60px;
+    }
+
+    .manager-note-column {
+      min-width: 200px;
+      max-width: 300px;
+    }
+
+    .price-input {
+      width: 100%;
+      padding: 8px 28px 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      font-weight: 600;
+      direction: rtl;
+      transition: all 0.3s;
+      -moz-appearance: textfield;
+    }
+
+    .price-input::-webkit-outer-spin-button,
+    .price-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .price-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .price-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.5px;
+    }
+    
+    .price-input-container {
+      position: relative;
+      display: inline-block;
+      min-width: 100px;
+    }
+
+    .price-input-container::before {
+      content: '₪';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 700;
+      color: #667eea;
+      font-size: 16px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .price-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .price-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid #d0d0d0;
+      background: #f5f5f5;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #666;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .price-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .price-btn:active {
+      transform: scale(0.95);
+    }
+
+    .days-input {
+      width: 60px;
+      padding: 6px 8px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 700;
+      color: #667eea;
+      direction: ltr;
+      -moz-appearance: textfield;
+    }
+
+    .days-input::-webkit-outer-spin-button,
+    .days-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .days-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .price-cell {
+      position: relative;
+      cursor: help;
+      padding: 14px 10px;
+    }
+
+    .price-cell:hover .tooltip {
+      display: block;
+      animation: fadeIn 0.2s;
+    }
+
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #333;
+    }
+
+    .wide-date-column {
+      min-width: 160px;
+      white-space: nowrap;
+    }
+
+    .date-display {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .date-display:hover {
+      background-color: #f0f2ff;
+    }
+
+    .date-input {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .status-approved {
+      color: #4caf50;
+      font-weight: bold;
+    }
+
+    .status-cancelled {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    .whatsapp-link {
+      color: #25D366;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .whatsapp-link:hover {
+      color: #128C7E;
+      text-decoration: underline;
+    }
+
+    #saveButtonContainer {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+
+    #saveButton {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #saveButton:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(76, 175, 80, 0.5);
+    }
+
+    #saveButton:active {
+      transform: translateY(-1px);
+    }
+
+    .loading::after {
+      content: " ⏳";
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    #historySearchInput {
+      width: 100%;
+      max-width: 400px;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    #historySearchInput:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #historyPagination button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 0 8px;
+    }
+
+    #historyPagination button:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    #historyPagination button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    #historyPagination span {
+      margin: 0 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .success-banner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 50px;
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+      font-weight: 600;
+      font-size: 16px;
+      z-index: 2000;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 24px;
+      }
+
+      .container {
+        padding: 20px 16px;
+      }
+
+      #saveButton {
+        padding: 14px 32px;
+        font-size: 16px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginScreen" class="login-container">
+    <h1>🔒 כניסת מנהל</h1>
+    <input type="password" id="passwordInput" placeholder="הזן סיסמה" />
+    <button onclick="attemptLogin()">כניסה</button>
+    <div class="error-message" id="errorMessage">סיסמה שגויה!</div>
+  </div>
+
+  <div id="mainContent">
+    <header>
+      <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
+      <a href="growth.html" class="header-btn right">📊 דוחות</a>
+      <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+    </header>
+
+    <div id="currentDogsContainer">
+      <h3>כלבים שנמצאים כעת בפנסיון</h3>
+      <ul id="currentDogsList"></ul>
+    </div>
+
+    <div class="container">
+      <h3>הזמנות</h3>
+      <table id="futureOrdersTable">
+        <thead>
+          <tr>
+            <th>מועד הזמנה</th>
+            <th>שם הבעלים</th>
+            <th>טלפון</th>
+            <th class="wide-date-column">כניסה</th>
+            <th class="wide-date-column">יציאה</th>
+            <th>שם הכלב</th>
+            <th>גיל</th>
+            <th>גודל</th>
+            <th>מסורס / מעוקרת</th>
+            <th>הערות מיוחדות</th>
+            <th>אופי</th>
+            <th>מחיר ליום</th>
+            <th>ימים</th>
+            <th>סטטוס</th>
+            <th class="manager-note-column">הערות מנהל</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="container" id="historyTableContainer">
+      <h3>היסטוריית הזמנות</h3>
+      <div style="margin-bottom:12px;">
+        <label for="historySearchInput" style="font-weight:bold;">חיפוש בהיסטוריית ההזמנות:</label>
+        <input type="text" id="historySearchInput" placeholder="הקלד לחיפוש..." style="margin-top:4px; margin-bottom:8px; max-width:300px;">
+      </div>
+      <div id="pastOrdersTableWrapper">
+        <table id="pastOrdersTable">
+          <thead>
+            <tr>
+              <th>מועד הזמנה</th>
+              <th>שם הבעלים</th>
+              <th>טלפון</th>
+              <th class="wide-date-column">כניסה</th>
+              <th class="wide-date-column">יציאה</th>
+              <th>שם הכלב</th>
+              <th>גיל</th>
+              <th>גודל</th>
+              <th>מסורס / מעוקרת</th>
+              <th>הערות מיוחדות</th>
+              <th>אופי</th>
+              <th>מחיר ליום</th>
+              <th>ימים</th>
+              <th>סטטוס</th>
+              <th class="manager-note-column">הערות מנהל</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="historyPagination" style="text-align:center; margin-top:16px;"></div>
+    </div>
+
+    <div id="saveButtonContainer">
+      <button id="saveButton">💾 שמור שינויים</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const ADMIN_PASSWORD_HASH = '60275c47';
+    
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash).toString(16);
+    }
+
+    function checkAuth() {
+      const stored = sessionStorage.getItem('adminAuth');
+      return stored === ADMIN_PASSWORD_HASH;
+    }
+
+    function attemptLogin() {
+      const input = document.getElementById('passwordInput').value;
+      const inputHash = simpleHash(input);
+      
+      if (inputHash === ADMIN_PASSWORD_HASH) {
+        sessionStorage.setItem('adminAuth', inputHash);
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        loadData();
+      } else {
+        const errorMsg = document.getElementById('errorMessage');
+        errorMsg.style.display = 'block';
+        setTimeout(() => {
+          errorMsg.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('adminAuth');
+      location.reload();
+    }
+
+    if (checkAuth()) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+    }
+
+    document.getElementById('passwordInput')?.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        attemptLogin();
+      }
+    });
+
+    const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const HISTORY_ROWS_PER_PAGE = 10;
+    window.pastOrdersSearchTerm = '';
+    window.pastOrdersCurrentPage = 1;
+    window.pastOrdersRawData = [];
+
+    function calculateDays(checkIn, checkOut) {
+      if (!checkIn || !checkOut) return 0;
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
+    function addDaysToDate(dateStr, days) {
+      const date = new Date(dateStr);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().split('T')[0];
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function formatDateOnly(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const pad = (n) => n.toString().padStart(2, '0');
+      const dayName = d.toLocaleDateString('he-IL', { weekday: 'long' });
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} (${dayName})`;
+    }
+
+    function formatDateForInput(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatPhoneForWhatsApp(phone) {
+      if (!phone) return '';
+      const cleaned = phone.replace(/[\s\-]/g, '');
+      const withCountryCode = cleaned.replace(/^0/, '972');
+      return withCountryCode;
+    }
+
+    function createWhatsAppLink(phone) {
+      if (!phone) return '';
+      const formattedPhone = formatPhoneForWhatsApp(phone);
+      return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone}</a>`;
+    }
+
+    function updatePriceWithButtons(input, delta) {
+      const currentValue = parseInt(input.value) || 0;
+      const newValue = Math.max(0, currentValue + delta);
+      input.value = newValue;
+      
+      const row = input.closest('tr');
+      const daysInput = row.querySelector('.days-input');
+      const tooltip = row.querySelector('.tooltip');
+      
+      if (tooltip && daysInput) {
+        const days = parseInt(daysInput.value) || 0;
+        const total = newValue * days;
+        tooltip.textContent = `עלות שהייה: ${total}₪`;
+      }
+    }
+
+    function filterPastOrdersData() {
+      if (!window.pastOrdersRawData) return [];
+      const term = (window.pastOrdersSearchTerm || '').trim();
+      if (!term) return window.pastOrdersRawData.slice();
+      const lowerTerm = term.toLowerCase();
+      return window.pastOrdersRawData.filter(row =>
+        Object.values(row).some(val =>
+          (val + '').toLowerCase().includes(lowerTerm)
+        )
+      );
+    }
+
+    function renderPastOrdersTable() {
+      const tbody = document.querySelector('#pastOrdersTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const filtered = filterPastOrdersData();
+      const totalRows = filtered.length;
+      const maxPage = Math.max(1, Math.ceil(totalRows / HISTORY_ROWS_PER_PAGE));
+      
+      if (window.pastOrdersCurrentPage > maxPage) window.pastOrdersCurrentPage = maxPage;
+      if (window.pastOrdersCurrentPage < 1) window.pastOrdersCurrentPage = 1;
+      
+      const startIdx = (window.pastOrdersCurrentPage - 1) * HISTORY_ROWS_PER_PAGE;
+      const pageRows = filtered.slice(startIdx, startIdx + HISTORY_ROWS_PER_PAGE);
+      
+      pageRows.forEach(row => {
+        let tr = document.createElement('tr');
+        const days = calculateDays(row.check_in, row.check_out);
+        const pricePerDay = row.price_per_day || 130;
+        const totalPrice = days * pricePerDay;
+
+        tr.innerHTML = `
+          <td>${formatDateTime(row.order_date)}</td>
+          <td>${row.owner_name}</td>
+          <td>${createWhatsAppLink(row.phone)}</td>
+          <td class="wide-date-column">
+            <input type="date" class="date-input" data-id="${row.id}" data-field="check_in" value="${formatDateForInput(row.check_in)}" />
+            <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(row.check_in)}</div>
+          </td>
+          <td class="wide-date-column">
+            <input type="date" class="date-input" data-id="${row.id}" data-field="check_out" value="${formatDateForInput(row.check_out)}" />
+            <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(row.check_out)}</div>
+          </td>
+          <td>${row.dog_name}</td>
+          <td>${row.dog_age}</td>
+          <td>${row.dog_breed}</td>
+          <td>${row.neutered}</td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+            ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+          </td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+            ${row.dog_temperament ? row.dog_temperament : '<span style="color:#999;">-</span>'}
+          </td>
+          <td class="price-cell">
+            <div class="price-wrapper">
+              <div class="price-controls">
+                <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+                <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+              </div>
+              <div class="price-input-container">
+                <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+              </div>
+            </div>
+            <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
+          </td>
+          <td>
+            <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+          </td>
+          <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
+          <td class="manager-note-column">
+            <textarea class="admin-note" data-id="${row.id}" cols="50" rows="2">${row.admin_note || ''}</textarea>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      renderPastOrdersPagination(totalRows, window.pastOrdersCurrentPage, maxPage);
+      
+      document.querySelectorAll('#pastOrdersTable textarea.admin-note').forEach(textarea => {
+        const adjustWidth = () => {
+          textarea.style.width = '80ch';
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        };
+        adjustWidth();
+        textarea.addEventListener('input', adjustWidth);
+      });
+      
+      document.querySelectorAll('#pastOrdersTable .price-input, #pastOrdersTable .days-input').forEach(input => {
+        input.addEventListener('input', function() {
+          const row = this.closest('tr');
+          const priceInput = row.querySelector('.price-input');
+          const daysInput = row.querySelector('.days-input');
+          const priceCell = row.querySelector('.price-cell');
+          const tooltip = priceCell ? priceCell.querySelector('.tooltip') : null;
+          
+          if (tooltip) {
+            const price = parseInt(priceInput.value) || 0;
+            const days = parseInt(daysInput.value) || 0;
+            const total = price * days;
+            
+            tooltip.textContent = `עלות שהייה: ${total}₪`;
+          }
+        });
+      });
+    }
+
+    function renderPastOrdersPagination(totalRows, currentPage, maxPage) {
+      const pagDiv = document.getElementById('historyPagination');
+      if (!pagDiv) return;
+      pagDiv.innerHTML = '';
+      if (maxPage <= 1) return;
+      
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = 'הקודם';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = function() {
+        window.pastOrdersCurrentPage = Math.max(1, window.pastOrdersCurrentPage - 1);
+        renderPastOrdersTable();
+      };
+      
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = 'הבא';
+      nextBtn.disabled = currentPage === maxPage;
+      nextBtn.onclick = function() {
+        window.pastOrdersCurrentPage = Math.min(maxPage, window.pastOrdersCurrentPage + 1);
+        renderPastOrdersTable();
+      };
+      
+      const infoSpan = document.createElement('span');
+      infoSpan.textContent = `עמוד ${currentPage} מתוך ${maxPage}`;
+      
+      pagDiv.appendChild(prevBtn);
+      pagDiv.appendChild(infoSpan);
+      pagDiv.appendChild(nextBtn);
+    }
+
+    const searchInput = document.getElementById('historySearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        window.pastOrdersSearchTerm = searchInput.value;
+        window.pastOrdersCurrentPage = 1;
+        renderPastOrdersTable();
+      });
+    }
+
+    async function loadData() {
+      if (!checkAuth()) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .order('check_out', { ascending: true });
+
+        if (error) throw error;
+
+        console.log('Data loaded:', data.length, 'rows');
+        
+        if (data.length > 0) {
+          console.log('Sample data:', {
+            dog_temperament: data[0].dog_temperament,
+            notes: data[0].notes
+          });
+        }
+        
+        const futureTbody = document.querySelector("#futureOrdersTable tbody");
+        const now = new Date();
+        
+        const futureOrders = data.filter(row => {
+          const checkOut = new Date(row.check_out);
+          return checkOut >= now;
+        });
+        
+        const activeOrders = futureOrders.filter(order => order.status === 'מאושר');
+        const otherFutureOrders = futureOrders.filter(order => order.status !== 'מאושר');
+        const orderedFuture = [...activeOrders, ...otherFutureOrders];
+        
+        orderedFuture.forEach(row => {
+          let temperament = row.dog_temperament ? row.dog_temperament.trim() : '';
+          let notes = row.notes ? row.notes.trim() : '';
+          
+          if (!temperament && notes && /^אופי\s*:/m.test(notes)) {
+            const temperamentMatch = notes.match(/^אופי\s*:\s*(.*)$/m);
+            if (temperamentMatch && temperamentMatch[1]) {
+              temperament = temperamentMatch[1].trim();
+            }
+            notes = notes.replace(/^אופי\s*:.*$/m, '').trim();
+          }
+          
+          row.dog_temperament = temperament;
+          row.notes = notes;
+          
+          let tr = document.createElement("tr");
+          const days = calculateDays(row.check_in, row.check_out);
+          const pricePerDay = row.price_per_day || 130;
+          const totalPrice = days * pricePerDay;
+
+          tr.innerHTML = `
+            <td>${formatDateTime(row.order_date)}</td>
+            <td>${row.owner_name || ''}</td>
+            <td>${createWhatsAppLink(row.phone)}</td>
+            <td class="wide-date-column">${formatDateOnly(row.check_in)}</td>
+            <td class="wide-date-column">${formatDateOnly(row.check_out)}</td>
+            <td>${row.dog_name || ''}</td>
+            <td>${row.dog_age || ''}</td>
+            <td>${row.dog_breed || ''}</td>
+            <td>${row.neutered || ''}</td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+              ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+            </td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+              ${row.dog_temperament ? row.dog_temperament : '<span style="color:#999;">-</span>'}
+            </td>
+            <td class="price-cell">
+              <div class="price-wrapper">
+                <div class="price-controls">
+                  <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+                  <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+                </div>
+                <div class="price-input-container">
+                  <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+                </div>
+              </div>
+              <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
+            </td>
+            <td>
+              <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+            </td>
+            <td>
+              <select data-id="${row.id}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
+                <option value="ממתין" ${row.status === "ממתין" ? "selected" : ""}>ממתין</option>
+                <option value="מאושר" ${row.status === "מאושר" ? "selected" : ""}>מאושר</option>
+                <option value="בוטל" ${row.status === "בוטל" ? "selected" : ""}>בוטל</option>
+              </select>
+            </td>
+            <td class="manager-note-column">
+              <textarea class="admin-note" data-id="${row.id}" cols="50" rows="2">${row.admin_note || ''}</textarea>
+            </td>
+          `;
+          futureTbody.appendChild(tr);
+        });
+        
+        document.querySelectorAll('#futureOrdersTable .price-input, #futureOrdersTable .days-input').forEach(input => {
+          input.addEventListener('input', function() {
+            const row = this.closest('tr');
+            const priceInput = row.querySelector('.price-input');
+            const daysInput = row.querySelector('.days-input');
+            const priceCell = row.querySelector('.price-cell');
+            const tooltip = priceCell ? priceCell.querySelector('.tooltip') : null;
+            
+            if (tooltip) {
+              const price = parseInt(priceInput.value) || 0;
+              const days = parseInt(daysInput.value) || 0;
+              const total = price * days;
+              
+              tooltip.textContent = `עלות שהייה: ${total}₪`;
+            }
+          });
+        });
+        
+        window.pastOrdersRawData = data.filter(row => {
+          const checkOut = new Date(row.check_out);
+          return checkOut < now;
+        });
+        renderPastOrdersTable();
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const currentDogs = data.filter(row => {
+          if (row.status !== "מאושר") return false;
+          
+          const checkIn = new Date(row.check_in);
+          const checkOut = new Date(row.check_out);
+          
+          checkIn.setHours(0, 0, 0, 0);
+          checkOut.setHours(23, 59, 59, 999);
+          
+          return checkIn <= today && checkOut >= today;
+        });
+
+        const dogsList = document.getElementById('currentDogsList');
+        dogsList.innerHTML = '';
+        
+        if (currentDogs.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = 'אין כלבים בפנסיון כרגע';
+          li.style.color = '#999';
+          dogsList.appendChild(li);
+        } else {
+          currentDogs.forEach(row => {
+            const li = document.createElement('li');
+            li.textContent = `${row.dog_name || 'ללא שם'} (${row.owner_name || 'ללא בעלים'})`;
+            dogsList.appendChild(li);
+          });
+        }
+
+        document.querySelectorAll('textarea.admin-note').forEach(textarea => {
+          const adjustWidth = () => {
+            textarea.style.width = '80ch';
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+          };
+          adjustWidth();
+          textarea.addEventListener('input', adjustWidth);
+        });
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('שגיאה בטעינת הנתונים');
+      }
+    }
+
+    document.getElementById('saveButton').addEventListener('click', async () => {
+      if (!checkAuth()) {
+        alert('אין הרשאה');
+        return;
+      }
+      
+      const saveBtn = document.getElementById('saveButton');
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+      
+      try {
+        const rows = document.querySelectorAll('#futureOrdersTable tbody tr, #pastOrdersTable tbody tr');
+        
+        for (const row of rows) {
+          const id = row.querySelector('select, .price-input')?.dataset?.id;
+          if (!id) continue;
+          
+          const select = row.querySelector('select');
+          const status = select?.value;
+          const adminNote = row.querySelector('textarea.admin-note')?.value;
+          const pricePerDay = row.querySelector('.price-input')?.value;
+          const daysInput = row.querySelector('.days-input');
+          
+          const checkInInput = row.querySelector('.date-input[data-field="check_in"]');
+          const checkOutInput = row.querySelector('.date-input[data-field="check_out"]');
+          
+          const updateData = {};
+          
+          if (status) updateData.status = status;
+          if (adminNote !== undefined) updateData.admin_note = adminNote;
+          if (pricePerDay) updateData.price_per_day = parseInt(pricePerDay);
+          
+          if (checkInInput && checkInInput.value) {
+            updateData.check_in = checkInInput.value;
+          }
+          if (checkOutInput && checkOutInput.value) {
+            updateData.check_out = checkOutInput.value;
+          }
+          
+          if (daysInput && !checkInInput && !checkOutInput) {
+            const newDays = parseInt(daysInput.value);
+            const checkInDate = daysInput.dataset.checkin;
+            
+            if (checkInDate && newDays > 0) {
+              const newCheckOut = addDaysToDate(checkInDate, newDays);
+              updateData.check_out = newCheckOut;
+            }
+          }
+
+          const { error } = await supabase
+            .from('orders')
+            .update(updateData)
+            .eq('id', id);
+
+          if (error) {
+            console.error('Error updating row:', id, error);
+            throw error;
+          }
+
+          if (select) {
+            select.classList.remove('status-approved', 'status-cancelled');
+            if (status === 'מאושר') select.classList.add('status-approved');
+            if (status === 'בוטל') select.classList.add('status-cancelled');
+          }
+        }
+        
+        const savedBanner = document.createElement('div');
+        savedBanner.className = 'success-banner';
+        savedBanner.textContent = '✅ השינויים נשמרו בהצלחה';
+        document.body.appendChild(savedBanner);
+
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error saving:', error);
+        alert('שגיאה בשמירת הנתונים: ' + error.message);
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+      }
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
