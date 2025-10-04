@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ניהול פנסיון כלבים</title>
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <link rel="icon" href="data:," />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -626,7 +626,8 @@
             <th>גיל</th>
             <th>גודל</th>
             <th>מסורס / מעוקרת</th>
-            <th>הערות</th>
+            <th>הערות מיוחדות</th>
+            <th>אופי</th>
             <th>מחיר ליום</th>
             <th>ימים</th>
             <th>סטטוס</th>
@@ -656,7 +657,8 @@
               <th>גיל</th>
               <th>גודל</th>
               <th>מסורס / מעוקרת</th>
-              <th>הערות</th>
+              <th>הערות מיוחדות</th>
+              <th>אופי</th>
               <th>מחיר ליום</th>
               <th>ימים</th>
               <th>סטטוס</th>
@@ -823,30 +825,7 @@
         const days = calculateDays(row.check_in, row.check_out);
         const pricePerDay = row.price_per_day || 130;
         const totalPrice = days * pricePerDay;
-        
-        // הכנת תצוגת הערות - פשוט וישיר
-        const temperament = (row.dog_temperament || '').toString().trim();
-        const notes = (row.notes || '').toString().trim();
-        
-        let notesDisplay = '';
-        
-        // בניית התצוגה
-        if (temperament || notes) {
-          const parts = [];
-          
-          if (temperament) {
-            parts.push(`<span style="color: #667eea; font-weight: 700;">אופי:</span> ${temperament}.`);
-          }
-          
-          if (notes) {
-            parts.push(`<span style="color: #667eea; font-weight: 700;">הערות:</span> ${notes}.`);
-          }
-          
-          notesDisplay = parts.join('<br><br>');
-        } else {
-          notesDisplay = '<span style="color: #999;">אין</span>';
-        }
-        
+
         tr.innerHTML = `
           <td>${formatDateTime(row.order_date)}</td>
           <td>${row.owner_name}</td>
@@ -863,7 +842,12 @@
           <td>${row.dog_age}</td>
           <td>${row.dog_breed}</td>
           <td>${row.neutered}</td>
-          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+            ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+          </td>
+          <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+            ${row.dog_temperament ? row.dog_temperament : '<span style="color:#999;">-</span>'}
+          </td>
           <td class="price-cell">
             <div class="price-wrapper">
               <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
@@ -985,34 +969,27 @@
         const orderedFuture = [...activeOrders, ...otherFutureOrders];
         
         orderedFuture.forEach(row => {
+          // --- extract temperament from notes if needed ---
+          let temperament = row.dog_temperament ? row.dog_temperament.trim() : '';
+          let notes = row.notes ? row.notes.trim() : '';
+          // אם notes כולל טקסט שמתחיל באופי:, נחלץ את זה ונעביר ל-temperament
+          if (!temperament && notes && /^אופי\s*:/m.test(notes)) {
+            const temperamentMatch = notes.match(/^אופי\s*:\s*(.*)$/m);
+            if (temperamentMatch && temperamentMatch[1]) {
+              temperament = temperamentMatch[1].trim();
+            }
+            // נסיר את שורת האופי מההערות
+            notes = notes.replace(/^אופי\s*:.*$/m, '').trim();
+          }
+          // נעדכן את הערכים לשימוש בהמשך
+          row.dog_temperament = temperament;
+          row.notes = notes;
+          // --- end extraction ---
           let tr = document.createElement("tr");
           const days = calculateDays(row.check_in, row.check_out);
           const pricePerDay = row.price_per_day || 130;
           const totalPrice = days * pricePerDay;
-          
-          // הכנת תצוגת הערות - פשוט וישיר
-          const temperament = (row.dog_temperament || '').toString().trim();
-          const notes = (row.notes || '').toString().trim();
-          
-          let notesDisplay = '';
-          
-          // בניית התצוגה
-          if (temperament || notes) {
-            const parts = [];
-            
-            if (temperament) {
-              parts.push(`<span style="color: #667eea; font-weight: 700;">אופי:</span> ${temperament}.`);
-            }
-            
-            if (notes) {
-              parts.push(`<span style="color: #667eea; font-weight: 700;">הערות:</span> ${notes}.`);
-            }
-            
-            notesDisplay = parts.join('<br><br>');
-          } else {
-            notesDisplay = '<span style="color: #999;">אין</span>';
-          }
-          
+
           tr.innerHTML = `
             <td>${formatDateTime(row.order_date)}</td>
             <td>${row.owner_name || ''}</td>
@@ -1023,7 +1000,12 @@
             <td>${row.dog_age || ''}</td>
             <td>${row.dog_breed || ''}</td>
             <td>${row.neutered || ''}</td>
-            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 300px; white-space: normal;">${notesDisplay}</td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+              ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+            </td>
+            <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+              ${row.dog_temperament ? row.dog_temperament : '<span style="color:#999;">-</span>'}
+            </td>
             <td class="price-cell">
               <div class="price-wrapper">
                 <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
