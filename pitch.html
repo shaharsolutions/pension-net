@@ -3,385 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <title>מערכת ניהול פנסיון כלבים - הפתרון המושלם לעסק שלך</title>
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            direction: rtl;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow-x: hidden;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            left: 0;
-            background: rgba(44, 62, 80, 0.95);
-            backdrop-filter: blur(10px);
-            color: #fff;
-            z-index: 1000;
-            padding: 15px 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-
-        .navbar-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5em;
-            font-weight: bold;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .navbar ul {
-            list-style: none;
-            display: flex;
-            gap: 25px;
-            align-items: center;
-        }
-
-        .navbar a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95em;
-            transition: all 0.3s;
-            padding: 8px 15px;
-            border-radius: 8px;
-            white-space: nowrap;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-        }
-
-        .container {
-            margin-top: 80px;
-            padding-bottom: 50px;
-        }
-
-        .section {
-            min-height: 100vh;
-            display: none;
-            opacity: 0;
-            padding: 60px 20px;
-            transition: opacity 0.5s ease-in-out;
-        }
-
-        .section.active {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .section-content {
-            max-width: 1200px;
-            background: white;
-            border-radius: 30px;
-            padding: 60px;
-            box-shadow: 0 30px 90px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 3.5em;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            font-weight: 800;
-            line-height: 1.2;
-        }
-
-        h2 {
-            font-size: 2.5em;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            font-size: 1.3em;
-            color: #666;
-            margin-bottom: 40px;
-            font-weight: 400;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin: 40px 0;
-        }
-
-        .feature-card {
-            background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
-            padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
-        }
-
-        .feature-icon {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .feature-card h3 {
-            color: #667eea;
-            font-size: 1.4em;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        .feature-card p {
-            color: #666;
-            line-height: 1.7;
-            font-size: 1.05em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 25px;
-            margin: 40px 0;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 30px;
-            border-radius: 20px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .stat-number {
-            font-size: 3em;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1.1em;
-            opacity: 0.95;
-        }
-
-        .demo-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin: 40px 0;
-        }
-
-        .demo-box {
-            background: #f8f9ff;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .demo-box h3 {
-            color: #667eea;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .demo-preview {
-            background: white;
-            border: 3px solid #667eea;
-            border-radius: 15px;
-            padding: 30px;
-            min-height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .demo-preview::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .demo-icon {
-            font-size: 4em;
-            margin-bottom: 15px;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 50px;
-        }
-
-        .nav-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 18px 45px;
-            border-radius: 50px;
-            font-size: 1.1em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
-        }
-
-        .nav-btn.secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .nav-btn.secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .highlight {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            padding: 3px 10px;
-            border-radius: 5px;
-            font-weight: 700;
-        }
-
-        .price-card {
-            background: linear-gradient(135deg, #4caf50, #45a049);
-            color: white;
-            padding: 40px;
-            border-radius: 25px;
-            margin: 30px 0;
-            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.4);
-        }
-
-        .price-card .price {
-            font-size: 3.5em;
-            font-weight: 800;
-            margin: 20px 0;
-        }
-
-        .checklist {
-            text-align: right;
-            max-width: 700px;
-            margin: 30px auto;
-        }
-
-        .checklist li {
-            padding: 15px;
-            margin: 10px 0;
-            background: #f8f9ff;
-            border-radius: 10px;
-            border-right: 5px solid #667eea;
-            font-size: 1.1em;
-            transition: all 0.3s;
-        }
-
-        .checklist li:hover {
-            transform: translateX(-10px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .cta-box {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-            padding: 50px;
-            border-radius: 25px;
-            margin-top: 40px;
-            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
-        }
-
-        .cta-box h3 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: white;
-        }
-
-        .cta-box p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            color: white;
-        }
-
-        .contact-info {
-            font-size: 1.3em;
-            margin: 20px 0;
-            font-weight: 600;
-        }
-
-        .contact-info a {
-            color: #ffd700;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .contact-info a:hover {
-            text-decoration: underline;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; direction: rtl; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); overflow-x: hidden; }
+        .navbar { position: fixed; top: 0; right: 0; left: 0; background: rgba(44, 62, 80, 0.95); backdrop-filter: blur(10px); color: #fff; z-index: 1000; padding: 15px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .navbar-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5em; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .navbar ul { list-style: none; display: flex; gap: 25px; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.95em; transition: all 0.3s; padding: 8px 15px; border-radius: 8px; white-space: nowrap; }
+        .navbar a:hover, .navbar a.active { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .container { margin-top: 80px; padding-bottom: 50px; }
+        .section { min-height: 100vh; display: none; opacity: 0; padding: 60px 20px; transition: opacity 0.5s; }
+        .section.active { display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 1; animation: fadeInUp 0.6s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .section-content { max-width: 1200px; background: white; border-radius: 30px; padding: 60px; box-shadow: 0 30px 90px rgba(0,0,0,0.3); text-align: center; }
+        h1 { font-size: 3.5em; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-weight: 800; line-height: 1.2; }
+        h2 { font-size: 2.5em; color: #2c3e50; margin-bottom: 30px; font-weight: 700; }
+        .subtitle { font-size: 1.3em; color: #666; margin-bottom: 40px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
+        .feature-card { background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%); padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.3s; border: 2px solid transparent; }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(102, 126, 234, 0.3); border-color: #667eea; }
+        .feature-icon { font-size: 3.5em; margin-bottom: 20px; }
+        .feature-card h3 { color: #667eea; font-size: 1.4em; margin-bottom: 15px; font-weight: 700; }
+        .feature-card p { color: #666; line-height: 1.7; font-size: 1.05em; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin: 40px 0; }
+        .stat-card { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; border-radius: 20px; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
+        .stat-number { font-size: 3em; font-weight: 800; margin-bottom: 10px; }
+        .stat-label { font-size: 1.1em; opacity: 0.95; }
+        .demo-container { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0; }
+        .demo-box { background: #f8f9ff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .demo-box h3 { color: #667eea; font-size: 1.5em; margin-bottom: 20px; font-weight: 700; }
+        .demo-preview { background: white; border: 3px solid #667eea; border-radius: 15px; padding: 30px; min-height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; position: relative; }
+        .demo-preview::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #667eea, #764ba2); }
+        .demo-icon { font-size: 4em; margin-bottom: 15px; }
+        .nav-buttons { display: flex; gap: 20px; justify-content: center; margin-top: 50px; }
+        .nav-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 18px 45px; border-radius: 50px; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5); }
+        .nav-btn.secondary { background: white; color: #667eea; border: 2px solid #667eea; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .nav-btn.secondary:hover { background: #667eea; color: white; }
+        .highlight { background: linear-gradient(135deg, #ffd700, #ffed4e); padding: 3px 10px; border-radius: 5px; font-weight: 700; }
+        .price-card { background: linear-gradient(135deg, #4caf50, #45a049); color: white; padding: 40px; border-radius: 25px; margin: 30px 0; box-shadow: 0 15px 40px rgba(76, 175, 80, 0.4); }
+        .price-card .price { font-size: 3.5em; font-weight: 800; margin: 20px 0; }
+        .checklist { text-align: right; max-width: 700px; margin: 30px auto; }
+        .checklist li { padding: 15px; margin: 10px 0; background: #f8f9ff; border-radius: 10px; border-right: 5px solid #667eea; font-size: 1.1em; transition: all 0.3s; }
+        .checklist li:hover { transform: translateX(-10px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .cta-box { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 50px; border-radius: 25px; margin-top: 40px; box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4); }
+        .cta-box h3 { font-size: 2em; margin-bottom: 20px; color: white; }
+        .cta-box p { font-size: 1.2em; margin-bottom: 30px; }
+        .contact-info { font-size: 1.3em; margin: 20px 0; font-weight: 600; }
+        .contact-info a { color: #ffd700; text-decoration: none; transition: all 0.3s; }
+        .contact-info a:hover { text-decoration: underline; }
+        .promo-badge { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 20px 30px; border-radius: 15px; margin: 20px 0; font-size: 1.3em; font-weight: 700; box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
             h2 { font-size: 1.8em; }
@@ -411,77 +85,35 @@
     </nav>
 
     <div class="container">
-        <!-- Hero Section -->
         <div class="section active" id="hero">
             <div class="section-content">
                 <h1>🚀 מהפכה בניהול פנסיון הכלבים שלך</h1>
-                <p class="subtitle">המערכת החכמה שתחסוך לך <span class="highlight">10+ שעות בשבוע</span> ותגדיל את ההכנסות ב-<span class="highlight">30%</span></p>
+                <p class="subtitle">המערכת החכמה שתחסוך לך <span class="highlight">8-12 שעות בשבוע</span> ותגדיל את ההכנסות ב-<span class="highlight">10-20%</span></p>
+                
+                <div class="promo-badge">🎁 החודש הראשון חינם + הדרכה אישית!</div>
                 
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">95%</div>
-                        <div class="stat-label">פחות טעויות</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">10+</div>
-                        <div class="stat-label">שעות חיסכון/שבוע</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">100%</div>
-                        <div class="stat-label">שליטה בנתונים</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">₪0</div>
-                        <div class="stat-label">עלויות שוטפות</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-number">95%</div><div class="stat-label">פחות טעויות</div></div>
+                    <div class="stat-card"><div class="stat-number">8-12</div><div class="stat-label">שעות חיסכון/שבוע</div></div>
+                    <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">שליטה בנתונים</div></div>
+                    <div class="stat-card"><div class="stat-number">24/7</div><div class="stat-label">הזמנות אוטומטיות</div></div>
                 </div>
-
-                <div class="nav-buttons">
-                    <button class="nav-btn" onclick="showSection('problem')">גלה איך ←</button>
-                </div>
+                <div class="nav-buttons"><button class="nav-btn" onclick="showSection('problem')">גלה איך ←</button></div>
             </div>
         </div>
 
-        <!-- Problem Section -->
         <div class="section" id="problem">
             <div class="section-content">
                 <h2>😰 הבעיות שאתה מתמודד איתן היום</h2>
-                
                 <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">📞</div>
-                        <h3>טלפונים אינסופיים</h3>
-                        <p>עשרות שיחות ביום, הפרעות מתמדות, לקוחות שמחפשים תורים</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📝</div>
-                        <h3>ניירת ובלגן</h3>
-                        <p>פתקים אבודים, Excel מבולגן, קושי לעקוב אחרי הזמנות</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">❌</div>
-                        <h3>טעויות יקרות</h3>
-                        <p>הזמנות כפולות, שכחת כלבים, אי הבנות עם לקוחות</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>אין נתונים</h3>
-                        <p>לא יודע מתי יש עומס, מי הלקוחות הטובים, איך לתכנן</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">💸</div>
-                        <h3>הפסד הכנסות</h3>
-                        <p>לקוחות מוותרים כי אין מענה, לא מקבלים הזמנות בזמן</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">😓</div>
-                        <h3>שעות עבודה ארוכות</h3>
-                        <p>עובד גם בערב, גם בסופ"ש, אין זמן לחיים</p>
-                    </div>
+                    <div class="feature-card"><div class="feature-icon">📞</div><h3>טלפונים אינסופיים</h3><p>עשרות שיחות ביום, הפרעות מתמדות, לקוחות שמחפשים תורים</p></div>
+                    <div class="feature-card"><div class="feature-icon">📝</div><h3>ניירת ובלגן</h3><p>פתקים אבודים, Excel מבולגן, קושי לעקוב אחרי הזמנות</p></div>
+                    <div class="feature-card"><div class="feature-icon">❌</div><h3>טעויות יקרות</h3><p>הזמנות כפולות, שכחת כלבים, אי הבנות עם לקוחות</p></div>
+                    <div class="feature-card"><div class="feature-icon">📊</div><h3>אין נתונים</h3><p>לא יודע מתי יש עומס, מי הלקוחות הטובים, איך לתכנן</p></div>
+                    <div class="feature-card"><div class="feature-icon">💸</div><h3>הפסד הכנסות</h3><p>לקוחות מוותרים כי אין מענה, לא מקבלים הזמנות בזמן</p></div>
+                    <div class="feature-card"><div class="feature-icon">😓</div><h3>שעות עבודה ארוכות</h3><p>עובד גם בערב, גם בסופ"ש, אין זמן לחיים</p></div>
                 </div>
-
                 <h3 style="font-size: 2em; color: #ff6b6b; margin-top: 40px;">האם זה מוכר? 😔</h3>
-
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('hero')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('solution')">יש לי פתרון! ←</button>
@@ -489,45 +121,18 @@
             </div>
         </div>
 
-        <!-- Solution Section -->
         <div class="section" id="solution">
             <div class="section-content">
                 <h2>✨ הפתרון שיחסוך לך את החיים</h2>
                 <p class="subtitle">מערכת ניהול חכמה שעושה הכל בשבילך - אוטומטית!</p>
-
                 <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🌐</div>
-                        <h3>הזמנות 24/7 אונליין</h3>
-                        <p>לקוחות מזמינים בעצמם, בכל שעה, ללא טלפונים</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-                        <h3>ניהול במקום אחד</h3>
-                        <p>כל ההזמנות, כל הפרטים, גישה מכל מכשיר</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🔔</div>
-                        <h3>זיהוי לקוחות אוטומטי</h3>
-                        <p>המערכת זוכרת לקוחות חוזרים, חוסכת זמן</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>דוחות ותובנות</h3>
-                        <p>תראה מתי יש עומס, מי הלקוחות הטובים, איך לגדול</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">💾</div>
-                        <h3>גיבוי בענן</h3>
-                        <p>כל המידע שמור באופן מאובטח בענן, לא תאבד כלום</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3>מהיר ופשוט</h3>
-                        <p>לא צריך התקנה, פשוט להיכנס מהדפדפן</p>
-                    </div>
+                    <div class="feature-card"><div class="feature-icon">🌐</div><h3>הזמנות 24/7 אונליין</h3><p>לקוחות מזמינים דרך טופס נוח בעברית, בכל שעה, ללא צורך בטלפונים</p></div>
+                    <div class="feature-card"><div class="feature-icon">🔄</div><h3>זיהוי אוטומטי של לקוחות</h3><p>המערכת זוכרת לקוח שהיה אצלך בעבר, מציגה את כלביו - חוסך המון זמן!</p></div>
+                    <div class="feature-card"><div class="feature-icon">📱</div><h3>WhatsApp אוטומטי</h3><p>הלקוח מקבל אישור הזמנה, אתה מקבל התראה - הכל אוטומטי</p></div>
+                    <div class="feature-card"><div class="feature-icon">📊</div><h3>פאנל ניהול חכם</h3><p>רואה הזמנות עתידיות, היסטוריה, כלבים שנמצאים עכשיו, תפוסה יומית</p></div>
+                    <div class="feature-card"><div class="feature-icon">💾</div><h3>שמירה בענן מאובטח</h3><p>כל המידע מגובה אוטומטית ב-Supabase, לעולם לא תאבד מידע</p></div>
+                    <div class="feature-card"><div class="feature-icon">⚡</div><h3>מהיר ונוח</h3><p>ממשק מהיר בעברית, עובד מכל מכשיר - מחשב, טאבלט או סמארטפון</p></div>
                 </div>
-
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('problem')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('demo')">תראה לי איך זה נראה ←</button>
@@ -535,35 +140,28 @@
             </div>
         </div>
 
-        <!-- Demo Section -->
         <div class="section" id="demo">
             <div class="section-content">
                 <h2>🖥️ ככה זה נראה בפועל</h2>
-                
                 <div class="demo-container">
                     <div class="demo-box">
                         <h3>📝 דף הזמנה ללקוח</h3>
                         <div class="demo-preview">
                             <div class="demo-icon">🐕</div>
-                            <p style="color: #666; margin-top: 10px;"><strong>ממשק נקי ופשוט</strong></p>
-                            <p style="color: #999; font-size: 0.9em; margin-top: 10px;">✓ הזנת טלפון<br>✓ המערכת זוכרת כלבים קודמים<br>✓ מילוי מהיר של פרטים<br>✓ בחירת תאריכים<br>✓ שליחה מיידית</p>
+                            <p style="color: #666; margin-top: 10px;"><strong>תהליך הזמנה חכם ב-4 שלבים</strong></p>
+                            <p style="color: #999; font-size: 0.9em; margin-top: 10px;">✓ זיהוי בטלפון - רואה כלבים קודמים<br>✓ פרטי בעלים (או דילוג לכלב מוכר)<br>✓ פרטי כלב - גיל, גודל, אופי<br>✓ תאריכים + צפייה בתפוסה<br>✓ WhatsApp אוטומטי ללקוח ולך</p>
                         </div>
                     </div>
-
                     <div class="demo-box">
                         <h3>⚙️ פאנל ניהול למנהל</h3>
                         <div class="demo-preview">
                             <div class="demo-icon">📊</div>
-                            <p style="color: #666; margin-top: 10px;"><strong>שליטה מלאה</strong></p>
-                            <p style="color: #999; font-size: 0.9em; margin-top: 10px;">✓ רשימת כל ההזמנות<br>✓ סטטוס (ממתין/מאושר/בוטל)<br>✓ כלבים שנמצאים עכשיו<br>✓ היסטוריה מלאה<br>✓ הערות מנהל</p>
+                            <p style="color: #666; margin-top: 10px;"><strong>שליטה מלאה על הפנסיון</strong></p>
+                            <p style="color: #999; font-size: 0.9em; margin-top: 10px;">✓ כלבים בפנסיון כרגע (מעודכן)<br>✓ הזמנות עתידיות + עריכה<br>✓ היסטוריה + חיפוש מתקדם<br>✓ שינוי סטטוס ומחירים<br>✓ הערות מנהל פרטיות<br>✓ קישור WhatsApp ישיר ללקוח</p>
                         </div>
                     </div>
                 </div>
-
-                <p style="font-size: 1.2em; color: #667eea; font-weight: 600; margin-top: 30px;">
-                    🎯 שני ממשקים פשוטים = ניהול מושלם
-                </p>
-
+                <p style="font-size: 1.2em; color: #667eea; font-weight: 600; margin-top: 30px;">🎯 ממשק ללקוח + ממשק למנהל = ניהול מושלם וחכם</p>
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('solution')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('benefits')">מה זה נותן לי? ←</button>
@@ -571,21 +169,19 @@
             </div>
         </div>
 
-        <!-- Benefits Section -->
         <div class="section" id="benefits">
             <div class="section-content">
                 <h2>🎁 מה זה אומר בשבילך?</h2>
-                
                 <ul class="checklist">
-                    <li>⏰ <strong>חוסך 10+ שעות בשבוע</strong> - פחות טלפונים, פחות ניירת, יותר זמן למה שחשוב</li>
-                    <li>💰 <strong>הגדל הכנסות ב-30%</strong> - לקוחות מזמינים גם בלילה, אף אחד לא מפספס</li>
-                    <li>😌 <strong>שקט נפשי</strong> - הכל מסודר, אין טעויות, אין בלגן</li>
-                    <li>📈 <strong>תובנות עסקיות</strong> - תדע מתי להגדיל מחירים, מתי יש עומס, מי הלקוחות הטובים</li>
-                    <li>⭐ <strong>שירות מקצועי</strong> - הלקוחות מרוצים, חוזרים, ממליצים</li>
-                    <li>📱 <strong>עבוד מהנייד</strong> - נסע לחופשה? אפשר לנהל הכל מכל מקום</li>
-                    <li>💾 <strong>בטיחות מלאה</strong> - גיבוי אוטומטי בענן, המידע שלך תמיד מוגן</li>
+                    <li>⏰ <strong>חוסך 8-12 שעות בשבוע</strong> - פחות טלפונים, פחות ניירת, יותר זמן למה שחשוב</li>
+                    <li>💰 <strong>הגדל הכנסות ב-10-20%</strong> - לקוחות מזמינים גם בלילה ובסופ"ש, אתה לא מפספס הזדמנויות</li>
+                    <li>😌 <strong>שקט נפשי מלא</strong> - הכל מסודר במקום אחד, אין בלגן, אין טעויות</li>
+                    <li>📊 <strong>ניהול חכם</strong> - רואה בדיוק מתי יש מקום פנוי, מי הכלבים שכרגע בפנסיון, היסטוריה מלאה</li>
+                    <li>⭐ <strong>שירות משופר ללקוחות</strong> - תהליך הזמנה מהיר ונוח, אישורים אוטומטיים, חוויה מקצועית</li>
+                    <li>📱 <strong>עבוד מכל מקום</strong> - נסע לחופשה? תוכל לנהל הכל מהטלפון בקלות</li>
+                    <li>💾 <strong>מידע תמיד מוגן</strong> - שכחת לגבות? המערכת עושה את זה בשבילך אוטומטית</li>
+                    <li>🎯 <strong>פחות טעויות</strong> - לא עוד הזמנות כפולות, שכחת פרטים או תאריכים מבולבלים</li>
                 </ul>
-
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('demo')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('roi')">תראה לי מספרים ←</button>
@@ -593,45 +189,21 @@
             </div>
         </div>
 
-        <!-- ROI Section -->
         <div class="section" id="roi">
             <div class="section-content">
                 <h2>💎 החזר ההשקעה - מספרים אמיתיים</h2>
-                
                 <div style="background: #f8f9ff; padding: 40px; border-radius: 20px; margin: 30px 0;">
-                    <h3 style="color: #667eea; font-size: 1.8em; margin-bottom: 30px;">נניח שיש לך פנסיון בינוני:</h3>
-                    
+                    <h3 style="color: #667eea; font-size: 1.8em; margin-bottom: 30px;">נניח שיש לך פנסיון בינוני (10-15 כלבים ביום):</h3>
                     <div style="text-align: right; max-width: 800px; margin: 0 auto;">
-                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;">
-                            <strong style="font-size: 1.2em; color: #2c3e50;">💸 חיסכון בזמן:</strong><br>
-                            <span style="color: #666;">10 שעות/שבוע × 4 שבועות = 40 שעות/חודש<br>
-                            בערך זמן של ₪100/שעה = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪4,000 לחודש</span></span>
-                        </div>
-
-                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;">
-                            <strong style="font-size: 1.2em; color: #2c3e50;">📈 הגדלת הכנסות:</strong><br>
-                            <span style="color: #666;">אם יש לך ממוצע של 15 כלבים/יום ב-₪100/לילה<br>
-                            30% יותר הזמנות = 4.5 כלבים נוספים/יום<br>
-                            4.5 × ₪100 × 30 יום = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪13,500 לחודש</span></span>
-                        </div>
-
-                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;">
-                            <strong style="font-size: 1.2em; color: #2c3e50;">❌ מניעת טעויות:</strong><br>
-                            <span style="color: #666;">טעות אחת בחודש (הזמנה כפולה, לקוח לא מרוצה) = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪1,000-3,000</span></span>
-                        </div>
-
-                        <div style="padding: 30px; margin: 30px 0; background: linear-gradient(135deg, #4caf50, #45a049); border-radius: 15px; color: white;">
-                            <strong style="font-size: 1.5em;">סה"כ תועלת חודשית:</strong><br>
-                            <span style="font-size: 2.5em; font-weight: 800;">₪18,500 - 20,500</span><br>
-                            <span style="font-size: 1.1em;">תועלת שנתית: <strong>₪222,000 - 246,000</strong></span>
-                        </div>
+                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;"><strong style="font-size: 1.2em; color: #2c3e50;">💸 חיסכון בזמן:</strong><br><span style="color: #666;">8-12 שעות/שבוע × 4 שבועות = 32-48 שעות/חודש<br>בערך זמן של ₪80/שעה = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪2,560-3,840 לחודש</span></span></div>
+                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;"><strong style="font-size: 1.2em; color: #2c3e50;">📈 הגדלת הכנסות:</strong><br><span style="color: #666;">לקוחות יכולים להזמין 24/7 - אפילו כשאתה ישן<br>2-3 הזמנות נוספות בשבוע = 8-12 לילות נוספים בחודש<br>10 לילות × ₪130 = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪1,300 לחודש</span></span></div>
+                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;"><strong style="font-size: 1.2em; color: #2c3e50;">❌ מניעת טעויות ובלבולים:</strong><br><span style="color: #666;">הזמנות כפולות, שכחת פרטי כלבים, בלגן בתאריכים<br>חיסכון בטעויות ותסכולים = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪500-1,000 לחודש</span></span></div>
+                        <div style="padding: 20px; margin: 15px 0; background: white; border-radius: 10px; border-right: 5px solid #4caf50;"><strong style="font-size: 1.2em; color: #2c3e50;">🎯 ניהול חכם:</strong><br><span style="color: #666;">רואה מתי יש מקום פנוי, מתכנן נכון, מזהה לקוחות חוזרים<br>ניצול מיטבי של התפוסה = <span style="color: #4caf50; font-weight: bold; font-size: 1.2em;">₪800-1,500 לחודש</span></span></div>
+                        <div style="padding: 30px; margin: 30px 0; background: linear-gradient(135deg, #4caf50, #45a049); border-radius: 15px; color: white;"><strong style="font-size: 1.5em;">סה"כ תועלת חודשית:</strong><br><span style="font-size: 2.5em; font-weight: 800;">₪5,160 - 7,640</span><br><span style="font-size: 1.1em;">תועלת שנתית: <strong>₪61,920 - 91,680</strong></span></div>
+                        <div style="padding: 20px; background: #fff3cd; border-radius: 10px; margin-top: 20px;"><p style="color: #856404; font-size: 1.1em; font-weight: 600;">💡 עלות המנוי: ₪99/חודש<br><span style="font-size: 1.3em; color: #4caf50;">ROI: פי 52-77 מהעלות!</span></p></div>
                     </div>
                 </div>
-
-                <p style="font-size: 1.3em; color: #667eea; font-weight: 600; margin-top: 30px;">
-                    🚀 ההשקעה משתלמת כבר בחודש הראשון!
-                </p>
-
+                <p style="font-size: 1.3em; color: #667eea; font-weight: 600; margin-top: 30px;">🚀 תחסוך הרבה יותר ממה שתשלם - כבר מהחודש הראשון!</p>
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('benefits')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('pricing')">כמה זה עולה? ←</button>
@@ -639,30 +211,38 @@
             </div>
         </div>
 
-        <!-- Pricing Section -->
         <div class="section" id="pricing">
             <div class="section-content">
                 <h2>💰 תמחור שקוף וישר</h2>
                 
+                <div class="promo-badge" style="font-size: 1.5em;">🎁 החודש הראשון חינם + הדרכה אישית!</div>
+                
                 <div class="price-card">
-                    <h3 style="font-size: 1.8em; margin-bottom: 20px; color: white;">📦 החבילה המלאה</h3>
-                    <div class="price">₪4,900</div>
-                    <p style="font-size: 1.2em; margin-bottom: 30px;">תשלום חד-פעמי, בלי עלויות חודשיות!</p>
-                    
+                    <h3 style="font-size: 1.8em; margin-bottom: 20px; color: white;">📦 מנוי חודשי פשוט</h3>
+                    <div class="price">₪99</div>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;">לחודש - ללא התחייבות!</p>
+                    <p style="font-size: 0.95em; margin-bottom: 30px; opacity: 0.9;">אפשר לבטל בכל רגע</p>
                     <div style="text-align: right; margin-top: 30px;">
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ מערכת הזמנות מלאה</p>
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ פאנל ניהול מתקדם</p>
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ גיבוי אוטומטי בענן</p>
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ התאמה אישית למותג שלך</p>
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ הדרכה מלאה</p>
-                        <p style="font-size: 1.1em; margin: 10px 0;">✅ תמיכה טכנית לחודש</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ דף הזמנות עם זיהוי אוטומטי</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ פאנל ניהול מתקדם למנהל</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ מסד נתונים מאובטח בענן</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ התראות WhatsApp ללקוח ולמנהל</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ מעקב אחר תפוסה יומית</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ ניהול היסטוריית לקוחות</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ תמיכה טכנית שוטפת</p>
+                        <p style="font-size: 1.1em; margin: 10px 0;">✅ עדכוני תכונות חינם</p>
                     </div>
                 </div>
-
-                <p style="font-size: 1.2em; color: #666; margin: 30px 0;">
-                    💡 <strong>בונוס:</strong> אפשרות להוסיף בעתיד SMS אוטומטיים, תשלומים אונליין ועוד
-                </p>
-
+                <div style="background: #f8f9ff; padding: 30px; border-radius: 20px; margin: 30px 0;">
+                    <h3 style="color: #667eea; font-size: 1.5em; margin-bottom: 20px;">למה מנוי חודשי?</h3>
+                    <div style="text-align: right;">
+                        <p style="margin: 12px 0; font-size: 1.05em;">💸 <strong>ללא השקעה ראשונית גדולה</strong> - התחל בסכום קטן</p>
+                        <p style="margin: 12px 0; font-size: 1.05em;">🔄 <strong>גמישות מלאה</strong> - לא מתאים? תבטל בלי בעיה</p>
+                        <p style="margin: 12px 0; font-size: 1.05em;">🛠️ <strong>תמיכה ועדכונים תמידיים</strong> - המערכת תמיד מעודכנת</p>
+                        <p style="margin: 12px 0; font-size: 1.05em;">📈 <strong>שדרוגים עתידיים</strong> - תכונות חדשות ללא עלות נוספת</p>
+                    </div>
+                </div>
+                <p style="font-size: 1.15em; color: #666; margin: 25px 0; line-height: 1.6;">💡 <strong>השוואה:</strong> חצי כוס קפה ביום = ₪100/חודש<br>המערכת שלנו עולה פחות וחוסכת לך שעות עבודה מדי שבוע!</p>
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('roi')">→ חזרה</button>
                     <button class="nav-btn" onclick="showSection('contact')">בוא נתחיל! ←</button>
@@ -670,47 +250,35 @@
             </div>
         </div>
 
-        <!-- Contact Section -->
         <div class="section" id="contact">
             <div class="section-content">
                 <h2>📞 בוא נדבר!</h2>
                 
+                <div class="promo-badge" style="font-size: 1.4em;">🎁 החודש הראשון חינם + הדרכה אישית!</div>
+                
                 <div class="cta-box">
-                    <h3>מוכן לשנות את העסק שלך?</h3>
-                    <p>אני כאן לענות על כל שאלה ולעזור לך להתחיל</p>
-                    
+                    <h3>מוכן לשדרג את הפנסיון שלך?</h3>
+                    <p>אני כאן כדי לעזור לך להתחיל - בלי התחייבות, בלי לחץ</p>
                     <div class="contact-info">
                         <p>📧 <a href="mailto:shaharsolutions@gmail.com">shaharsolutions@gmail.com</a></p>
-                        <p>📱 <a href="tel:+972528366744">052-8366744</a></p>
-                        <p style="margin-top: 30px;">שחר כהן</p>
+                        <p>📱 <a href="https://wa.me/972528366744">052-8366744 (WhatsApp)</a></p>
+                        <p style="margin-top: 30px; font-size: 0.95em;">שחר כהן - פיתוח מערכות ניהול</p>
                     </div>
-
-                    <p style="font-size: 1.1em; margin-top: 30px; opacity: 0.95;">
-                        💬 תתקשר עכשיו או שלח הודעת וואטסאפ - אשמח לתאם פגישת היכרות חינם
-                    </p>
+                    <p style="font-size: 1.05em; margin-top: 30px; opacity: 0.95;">💬 תשלח הודעת WhatsApp או תתקשר - אשמח לענות על שאלות ולתאם שיחת היכרות חינם (15-20 דקות)</p>
                 </div>
-
                 <div style="margin-top: 50px; background: #f8f9ff; padding: 40px; border-radius: 20px;">
                     <h3 style="color: #667eea; font-size: 1.8em; margin-bottom: 20px;">🚀 התהליך פשוט:</h3>
                     <div style="text-align: right; max-width: 600px; margin: 0 auto;">
-                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;">
-                            <strong style="color: #667eea;">1.</strong> פגישת היכרות (30 דקות, חינם)
-                        </p>
-                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;">
-                            <strong style="color: #667eea;">2.</strong> בנייה והתאמה אישית (3-5 ימים)
-                        </p>
-                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;">
-                            <strong style="color: #667eea;">3.</strong> הדרכה ומסירה (יום אחד)
-                        </p>
-                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;">
-                            <strong style="color: #667eea;">4.</strong> אתה עובד חכם יותר! 🎉
-                        </p>
+                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;"><strong style="color: #667eea;">1.</strong> שיחת היכרות (15-20 דקות, חינם)</p>
+                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;"><strong style="color: #667eea;">2.</strong> הגדרת חשבון והתאמות (יום עבודה אחד)</p>
+                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;"><strong style="color: #667eea;">3.</strong> הדרכה קצרה על המערכת (30 דקות)</p>
+                        <p style="padding: 15px; margin: 10px 0; background: white; border-radius: 10px; font-size: 1.1em;"><strong style="color: #667eea;">4.</strong> מתחילים לקבל הזמנות! 🎉</p>
                     </div>
+                    <p style="text-align: center; margin-top: 25px; font-size: 1.1em; color: #666;">⏱️ <strong>תוך 24-48 שעות אתה מוכן לעבודה</strong></p>
                 </div>
-
                 <div class="nav-buttons">
                     <button class="nav-btn secondary" onclick="showSection('pricing')">→ חזרה</button>
-                    <button class="nav-btn" onclick="window.location.href='tel:+972528366744'">התקשר עכשיו 📞</button>
+                    <button class="nav-btn" onclick="window.location.href='https://wa.me/972528366744'">התקשר עכשיו 📞</button>
                 </div>
             </div>
         </div>
@@ -718,31 +286,23 @@
 
     <script>
         function showSection(sectionId) {
-            // Hide all sections
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
-            
-            // Show target section
             const targetSection = document.getElementById(sectionId);
             if (targetSection) {
                 targetSection.classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-            
-            // Update navbar active state
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
                 if (link.getAttribute('href') === '#' + sectionId) {
                     link.classList.add('active');
                 }
             });
-            
-            // Update URL hash
             window.location.hash = sectionId;
         }
 
-        // Handle navbar clicks
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -751,7 +311,6 @@
             });
         });
 
-        // Handle initial page load with hash
         window.addEventListener('DOMContentLoaded', () => {
             const hash = window.location.hash.substring(1);
             if (hash && document.getElementById(hash)) {
@@ -759,7 +318,6 @@
             }
         });
 
-        // Handle browser back/forward
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.substring(1);
             if (hash && document.getElementById(hash)) {
