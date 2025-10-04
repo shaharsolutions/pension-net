@@ -284,11 +284,11 @@
     }
 
     .price-input {
-      width: 90px;
-      padding: 6px 30px 6px 8px;
+      width: 100%;
+      padding: 8px 28px 8px 12px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 16px;
       text-align: center;
       font-weight: 600;
       direction: rtl;
@@ -309,22 +309,61 @@
     }
 
     .price-wrapper {
-      position: relative;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 1.5px;
     }
     
-    .price-wrapper::after {
+    .price-input-container {
+      position: relative;
+      display: inline-block;
+      min-width: 100px;
+    }
+
+    .price-input-container::before {
       content: '₪';
       position: absolute;
-      left: 10px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
       font-weight: 700;
       color: #667eea;
-      font-size: 14px;
+      font-size: 16px;
       pointer-events: none;
+      z-index: 1;
+    }
+
+    .price-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .price-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid #d0d0d0;
+      background: #f5f5f5;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #666;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .price-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .price-btn:active {
+      transform: scale(0.95);
     }
 
     .days-input {
@@ -794,6 +833,22 @@
       return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone}</a>`;
     }
 
+    function updatePriceWithButtons(input, delta) {
+      const currentValue = parseInt(input.value) || 0;
+      const newValue = Math.max(0, currentValue + delta);
+      input.value = newValue;
+      
+      const row = input.closest('tr');
+      const daysInput = row.querySelector('.days-input');
+      const tooltip = row.querySelector('.tooltip');
+      
+      if (tooltip && daysInput) {
+        const days = parseInt(daysInput.value) || 0;
+        const total = newValue * days;
+        tooltip.textContent = `עלות שהייה: ${total}₪`;
+      }
+    }
+
     function filterPastOrdersData() {
       if (!window.pastOrdersRawData) return [];
       const term = (window.pastOrdersSearchTerm || '').trim();
@@ -850,7 +905,13 @@
           </td>
           <td class="price-cell">
             <div class="price-wrapper">
-              <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+              <div class="price-controls">
+                <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+                <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+              </div>
+              <div class="price-input-container">
+                <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+              </div>
             </div>
             <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
           </td>
@@ -948,7 +1009,6 @@
 
         console.log('Data loaded:', data.length, 'rows');
         
-        // לבדיקה - הצג דוגמה של הנתונים
         if (data.length > 0) {
           console.log('Sample data:', {
             dog_temperament: data[0].dog_temperament,
@@ -969,22 +1029,20 @@
         const orderedFuture = [...activeOrders, ...otherFutureOrders];
         
         orderedFuture.forEach(row => {
-          // --- extract temperament from notes if needed ---
           let temperament = row.dog_temperament ? row.dog_temperament.trim() : '';
           let notes = row.notes ? row.notes.trim() : '';
-          // אם notes כולל טקסט שמתחיל באופי:, נחלץ את זה ונעביר ל-temperament
+          
           if (!temperament && notes && /^אופי\s*:/m.test(notes)) {
             const temperamentMatch = notes.match(/^אופי\s*:\s*(.*)$/m);
             if (temperamentMatch && temperamentMatch[1]) {
               temperament = temperamentMatch[1].trim();
             }
-            // נסיר את שורת האופי מההערות
             notes = notes.replace(/^אופי\s*:.*$/m, '').trim();
           }
-          // נעדכן את הערכים לשימוש בהמשך
+          
           row.dog_temperament = temperament;
           row.notes = notes;
-          // --- end extraction ---
+          
           let tr = document.createElement("tr");
           const days = calculateDays(row.check_in, row.check_out);
           const pricePerDay = row.price_per_day || 130;
@@ -1008,7 +1066,13 @@
             </td>
             <td class="price-cell">
               <div class="price-wrapper">
-                <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+                <div class="price-controls">
+                  <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+                  <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+                </div>
+                <div class="price-input-container">
+                  <input type="number" class="price-input" data-id="${row.id}" value="${pricePerDay}" min="0" step="10" />
+                </div>
               </div>
               <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
             </td>
