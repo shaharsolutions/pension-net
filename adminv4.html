@@ -391,6 +391,45 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
+    .days-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.5px;
+    }
+
+    .days-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .days-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid #d0d0d0;
+      background: #f5f5f5;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #666;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .days-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .days-btn:active {
+      transform: scale(0.95);
+    }
+
     .price-cell {
       position: relative;
       cursor: help;
@@ -849,6 +888,22 @@
       }
     }
 
+    function updateDaysWithButtons(input, delta) {
+      const currentValue = parseInt(input.value) || 0;
+      const newValue = Math.max(1, currentValue + delta);
+      input.value = newValue;
+      
+      const row = input.closest('tr');
+      const priceInput = row.querySelector('.price-input');
+      const tooltip = row.querySelector('.tooltip');
+      
+      if (tooltip && priceInput) {
+        const price = parseInt(priceInput.value) || 0;
+        const total = newValue * price;
+        tooltip.textContent = `עלות שהייה: ${total}₪`;
+      }
+    }
+
     function filterPastOrdersData() {
       if (!window.pastOrdersRawData) return [];
       const term = (window.pastOrdersSearchTerm || '').trim();
@@ -916,7 +971,13 @@
             <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
           </td>
           <td>
-            <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+            <div class="days-wrapper">
+              <div class="days-controls">
+                <button class="days-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+                <button class="days-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+              </div>
+              <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+            </div>
           </td>
           <td class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">${row.status}</td>
           <td class="manager-note-column">
@@ -1077,7 +1138,13 @@
               <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
             </td>
             <td>
-              <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+              <div class="days-wrapper">
+                <div class="days-controls">
+                  <button class="days-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+                  <button class="days-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+                </div>
+                <input type="number" class="days-input" data-id="${row.id}" data-checkin="${row.check_in}" value="${days}" min="1" max="365" />
+              </div>
             </td>
             <td>
               <select data-id="${row.id}" class="${row.status === 'מאושר' ? 'status-approved' : row.status === 'בוטל' ? 'status-cancelled' : ''}">
