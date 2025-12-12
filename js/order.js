@@ -690,30 +690,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set initial state
   updateStepIndicator();
   
-  // Phone input listener with debounce
+  // Phone input listener - Enter key only
   const phoneInput = document.getElementById('identificationPhone');
   if (phoneInput) {
-    // Use debounce from utils.js if available, otherwise simple timeout
-    const debouncedIdentify = typeof debounce === 'function' 
-      ? debounce(identifyCustomer, 800)
-      : function() {
-          clearTimeout(window.phoneTimeout);
-          window.phoneTimeout = setTimeout(identifyCustomer, 800);
-        };
-        
-    phoneInput.addEventListener('input', debouncedIdentify);
-    
     phoneInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        identifyCustomer();
-      }
-    });
-    
-    // חיפוש אוטומטי אחרי הקלדת 10 ספרות
-    phoneInput.addEventListener('input', function() {
-      const phone = this.value.replace(/[\s\-]/g, '');
-      if (phone.length === 10) {
         identifyCustomer();
       }
     });

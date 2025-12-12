@@ -38,12 +38,15 @@
 
       
 
-      <div id="bookingForm">
+      <form id="bookingForm" onsubmit="return false" autocomplete="off">
         <div class="form-step active" data-step="0">
           <div class="form-group">
             <label class="required">מספר טלפון</label>
-            <input type="tel" id="identificationPhone" placeholder="050-1234567" required />
-            <div class="helper-text">הזן את מספר הטלפון שלך ולחץ Enter או המשך למטה</div>
+            <input type="tel" id="identificationPhone" name="identificationPhone" placeholder="050-1234567" required autocomplete="off" />
+            <div class="helper-text">הזן את מספר הטלפון שלך ולחץ על כפתור האישור</div>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" onclick="identifyCustomer()">אישור והמשך ✓</button>
           </div>
           <div id="searchingIndicator" style="display: none; text-align: center; margin: 20px 0; color: #667eea; font-weight: 600;">
             <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
@@ -204,7 +207,7 @@
             <button type="button" class="btn-primary" onclick="resetForm()" style="margin-top: 24px;">הזמנה חדשה</button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
