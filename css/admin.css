@@ -899,6 +899,17 @@
   transition: opacity 0.2s;
 }
 
-.password-toggle:hover {
-  opacity: 1;
+/* Password Toggle */
+/* ... existing password toggle styles ... */
+
+/* Fix for Calendar Navigation Buttons Visibility */
+#calendarHeader .header-btn {
+  color: #667eea;
+  border-color: #667eea;
+  background: white;
+}
+
+#calendarHeader .header-btn:hover {
+  background: #667eea;
+  color: white;
 }

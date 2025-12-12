@@ -211,13 +211,13 @@
         }
 
         let html =
-          '<div style="display: flex; flex-direction: column; gap: 20px;">';
+          '<div class="business-insights-container">';
         insights.forEach((insight) => {
           html += `
-          <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; border-left: 4px solid white;">
-            <div style="font-size: 24px; margin-bottom: 8px;">${insight.icon}</div>
-            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${insight.title}</div>
-            <div style="font-size: 15px; line-height: 1.6; opacity: 0.95;">${insight.text}</div>
+          <div class="insight-card">
+            <div class="insight-icon">${insight.icon}</div>
+            <div class="insight-title">${insight.title}</div>
+            <div class="insight-text">${insight.text}</div>
           </div>
         `;
         });
@@ -342,8 +342,17 @@
           document.getElementById("avgOccupancy").textContent =
             avgOccupancy + "%";
 
-          // לקוחות פעילים
-          const uniqueCustomers = new Set(allOrders.map((o) => o.phone)).size;
+          // צמיחה ושימור
+          const uniqueCustomersAll = new Set(allOrders.map((o) => o.phone)).size;
+          
+          // חישוב לקוחות חוזרים (מעל הזמנה אחת)
+          const customerOrderCounts = {};
+          allOrders.forEach(o => {
+            customerOrderCounts[o.phone] = (customerOrderCounts[o.phone] || 0) + 1;
+          });
+          const returningCustomersCount = Object.values(customerOrderCounts).filter(count => count > 1).length;
+          const retentionRate = uniqueCustomersAll > 0 ? ((returningCustomersCount / uniqueCustomersAll) * 100).toFixed(1) : 0;
+
           const newCustomersThisMonth = new Set(
             thisMonthOrders
               .filter((order) => {
@@ -360,11 +369,8 @@
               .map((o) => o.phone)
           ).size;
 
-          document.getElementById("activeCustomers").textContent =
-            uniqueCustomers;
-          document.getElementById(
-            "newCustomers"
-          ).textContent = `${newCustomersThisMonth} לקוחות חדשים החודש`;
+          document.getElementById("retentionRate").textContent = retentionRate + "%";
+          document.getElementById("newCustomers").textContent = `${newCustomersThisMonth} לקוחות חדשים החודש`;
 
           // תחזית הכנסות - בהתבסס על ממוצע 3 חודשים אחרונים
           const revenueByMonth = {};
@@ -543,7 +549,7 @@
             tr.innerHTML = `
             <td>${index + 1}</td>
             <td>${customer.name}</td>
-            <td>${customer.phone}</td>
+            <td><a href="https://wa.me/${customer.phone.replace(/\D/g, '').replace(/^0/, '972')}" target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">${customer.phone} 💬</a></td>
             <td>${customer.orders}</td>
             <td><strong>${formatCurrency(customer.revenue)}</strong></td>
             <td>${formatCurrency(Math.round(avgPerVisit))}</td>
@@ -572,40 +578,7 @@
             });
           document.getElementById("breedBreakdown").innerHTML = breedHtml;
 
-          // סטטיסטיקות כלליות
-          const totalRevenue = allOrders.reduce((sum, order) => {
-            const days = calculateDays(order.check_in, order.check_out);
-            const price = order.price_per_day || 130;
-            return sum + days * price;
-          }, 0);
 
-          const avgOrderValue = totalRevenue / allOrders.length;
-          const totalDays = allOrders.reduce(
-            (sum, order) =>
-              sum + calculateDays(order.check_in, order.check_out),
-            0
-          );
-
-          document.getElementById("generalStats").innerHTML = `
-          <div class="metric-row">
-            <span class="metric-label">סה"כ הכנסות מתחילת הפעילות</span>
-            <span class="metric-value">${formatCurrency(totalRevenue)}</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">סה"כ הזמנות</span>
-            <span class="metric-value">${allOrders.length}</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">ממוצע להזמנה</span>
-            <span class="metric-value">${formatCurrency(
-              Math.round(avgOrderValue)
-            )}</span>
-          </div>
-          <div class="metric-row">
-            <span class="metric-label">סה"כ ימי אירוח</span>
-            <span class="metric-value">${totalDays} ימים</span>
-          </div>
-        `;
 
           // ניתוח תובנות עסקיות
           generateBusinessInsights(

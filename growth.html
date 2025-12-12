@@ -21,6 +21,9 @@
     <div id="loadingIndicator" class="loading">טוען נתונים...</div>
 
     <div id="dashboardContent" style="display: none">
+      <!-- תובנות עסקיות חכמות -->
+      <div id="businessInsights" style="margin-bottom: 24px;"></div>
+
       <!-- KPIs עיקריים -->
       <div class="dashboard-grid">
         <div class="card">
@@ -38,12 +41,12 @@
         <div class="card">
           <h3>📈 תפוסה ממוצעת</h3>
           <div class="stat-value" id="avgOccupancy">0%</div>
-          <div class="stat-label">קיבולת מקסימלית: 15 כלבים</div>
+          <div class="stat-label">קיבולת מקסימלית: 10 כלבים</div>
         </div>
 
         <div class="card">
-          <h3>👥 לקוחות פעילים</h3>
-          <div class="stat-value" id="activeCustomers">0</div>
+          <h3>💎 צמיחה ושימור</h3>
+          <div class="stat-value" id="retentionRate">0%</div>
           <div class="stat-label" id="newCustomers">0 לקוחות חדשים החודש</div>
         </div>
       </div>
@@ -97,14 +100,9 @@
 
       <!-- ניתוח גזעים ופרטים -->
       <div class="dashboard-grid">
-        <div class="card">
-          <h3>🐶 פילוח לפי גודל</h3>
-          <div id="breedBreakdown"></div>
-        </div>
-
-        <div class="card">
-          <h3>📊 סטטיסטיקות כלליות</h3>
-          <div id="generalStats"></div>
+        <div class="card" style="grid-column: 1 / -1;">
+          <h3>🐶 פילוח שוק לפי סוג הכלב</h3>
+          <div id="breedBreakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;"></div>
         </div>
       </div>
     </div>

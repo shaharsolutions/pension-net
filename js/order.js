@@ -12,75 +12,145 @@ const supabase = getSupabase();
 let currentStep = 0;
 let previousOrders = [];
 let lastSearchedPhone = '';
+let currentCapacityDate = new Date();
 
 // --- Functions ---
 
-async function loadWeeklyCapacity() {
+async function loadMonthlyCapacity() {
   const MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const year = currentCapacityDate.getFullYear();
+  const month = currentCapacityDate.getMonth();
+  
+  // Update Title
+  const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+  const titleEl = document.getElementById('capacityMonthTitle');
+  if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
 
-  const endDate = new Date(today);
-  endDate.setDate(endDate.getDate() + 6);
-
+  // Calculate range
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  
   try {
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
       .eq('status', 'מאושר')
-      .gte('check_out', today.toISOString().split('T')[0])
-      .lte('check_in', endDate.toISOString().split('T')[0]);
+      .gte('check_out', firstDay.toISOString().split('T')[0])
+      .lte('check_in', lastDay.toISOString().split('T')[0]);
 
     if (error) throw error;
 
-    // Create map of days
     const capacityByDate = {};
-    for (let i=0; i<7; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() + i);
-      const str = d.toISOString().split('T')[0];
-      capacityByDate[str] = 0;
+    const totalDays = lastDay.getDate();
+    
+    // Initialize array
+    for (let i = 1; i <= totalDays; i++) {
+        capacityByDate[i] = 0;
     }
 
-    // Count orders
+    // Process orders
     orders.forEach(order => {
       const start = new Date(order.check_in);
       const end = new Date(order.check_out);
+      
+      // Iterate days of order
       for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-        const str = d.toISOString().split('T')[0];
-        if (capacityByDate[str] !== undefined) {
-          capacityByDate[str]++;
+        // Check if d is in current month
+        if (d.getMonth() === month && d.getFullYear() === year) {
+           capacityByDate[d.getDate()]++;
         }
       }
     });
 
-    // Build HTML
+    // Build HTML Grid
     let html = '';
-    Object.keys(capacityByDate).forEach(dateStr => {
-      const count = capacityByDate[dateStr];
-      const perc = (count / MAX_CAPACITY) * 100;
-      const d = new Date(dateStr);
-      const dayName = d.toLocaleDateString('he-IL', { weekday:'short' });
-      const dayNum = d.getDate();
-      const month = d.getMonth()+1;
-
-      let bgColor = '#4caf50';
-      if (perc >= 80) bgColor = '#ff9800';
-      if (perc >= 100) bgColor = '#f44336';
-
-      html += `
-        <div style="background:${bgColor}; color:white; border-radius:10px; padding:10px; text-align:center;">
-          <div style="font-size:14px; font-weight:700;">${dayNum}/${month}</div>
-          <div style="font-size:12px; opacity:0.9;">${dayName}</div>
-          <div style="font-size:16px; margin-top:4px;">${count}/${MAX_CAPACITY}</div>
+    
+    // Empty cells for start padding
+    const startDay = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
+    for (let i = 0; i < startDay; i++) {
+        html += `<div style="background:transparent;"></div>`;
+    }
+    
+    // Day cells
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    for (let day = 1; day <= totalDays; day++) {
+        const count = capacityByDate[day];
+        const perc = (count / MAX_CAPACITY) * 100;
+        
+        // Check if date is passed
+        const currentDate = new Date(year, month, day);
+        const isPast = currentDate < today;
+        
+        let bgColor = '#4caf50'; // Green (Free)
+        if (perc >= 80) bgColor = '#ff9800'; // Orange (Busy)
+        if (perc >= 100) bgColor = '#f44336'; // Red (Full)
+        
+        let opacity = isPast ? '0.3' : '1';
+        let border = (currentDate.getTime() === today.getTime()) ? '2px solid #667eea' : 'none';
+        
+        html += `
+        <div style="background:${bgColor}; color:white; border-radius:8px; padding:6px 2px; text-align:center; opacity: ${opacity}; border: ${border}; min-height: 45px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:12px; font-weight:700;">${day}</div>
+          <div style="font-size:10px;">${count}/${MAX_CAPACITY}</div>
         </div>
-      `;
-    });
-
+        `;
+    }
+    
     document.getElementById('capacityCalendar').innerHTML = html;
+    updateNavigationButtons();
+
   } catch (err) {
-    console.error("Error loading weekly capacity:", err);
+    console.error("Error loading capacity:", err);
   }
+}
+
+function changeCapacityMonth(offset) {
+    const today = new Date();
+    const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    
+    // Calculate target (normalized)
+    const targetDate = new Date(currentCapacityDate.getFullYear(), currentCapacityDate.getMonth() + offset, 1);
+
+    if (targetDate.getTime() < minDate.getTime() || targetDate.getTime() > maxDate.getTime()) {
+        return;
+    }
+
+    currentCapacityDate = targetDate;
+    loadMonthlyCapacity();
+}
+
+function updateNavigationButtons() {
+    const today = new Date();
+    const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    
+    const viewDate = new Date(currentCapacityDate.getFullYear(), currentCapacityDate.getMonth(), 1);
+    
+    const prevBtn = document.getElementById('prevMonthBtn');
+    const nextBtn = document.getElementById('nextMonthBtn');
+    
+    if (prevBtn) {
+        if (viewDate.getTime() <= minDate.getTime()) {
+             prevBtn.style.opacity = '0.3';
+             prevBtn.style.cursor = 'default';
+        } else {
+             prevBtn.style.opacity = '1';
+             prevBtn.style.cursor = 'pointer';
+        }
+    }
+    
+    if (nextBtn) {
+        if (viewDate.getTime() >= maxDate.getTime()) {
+             nextBtn.style.opacity = '0.3';
+             nextBtn.style.cursor = 'default';
+        } else {
+             nextBtn.style.opacity = '1';
+             nextBtn.style.cursor = 'pointer';
+        }
+    }
 }
 
 function updateDaysDisplay() {
@@ -614,7 +684,7 @@ function resetForm() {
 }
 
 // Global Listeners
-document.addEventListener('DOMContentLoaded', loadWeeklyCapacity);
+document.addEventListener('DOMContentLoaded', loadMonthlyCapacity);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Set initial state
