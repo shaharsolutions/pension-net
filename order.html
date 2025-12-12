@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>הזמנת מקום בפנסיון</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/order.css" />
+
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>הזמנת מקום בפנסיון</h1>
+      <p>מלאו את הפרטים בשלושה שלבים פשוטים</p>
+    </div>
+
+    <div class="form-content">
+      <div class="step-indicator">
+        <div class="step active" data-step="0">
+          <div class="step-circle">👤</div>
+          <div class="step-label">זיהוי</div>
+        </div>
+        <div class="step" data-step="1">
+          <div class="step-circle">1</div>
+          <div class="step-label">פרטי הבעלים</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-circle">2</div>
+          <div class="step-label">פרטי הכלב</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-circle">3</div>
+          <div class="step-label">תאריכים</div>
+        </div>
+      </div>
+
+      
+
+      <div id="bookingForm">
+        <div class="form-step active" data-step="0">
+          <div class="form-group">
+            <label class="required">מספר טלפון</label>
+            <input type="tel" id="identificationPhone" placeholder="050-1234567" required />
+            <div class="helper-text">הזן את מספר הטלפון שלך ולחץ Enter או המשך למטה</div>
+          </div>
+          <div id="searchingIndicator" style="display: none; text-align: center; margin: 20px 0; color: #667eea; font-weight: 600;">
+            <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
+            מחפש הזמנות קודמות...
+          </div>
+          <div id="previousDogsContainer" style="display: none; margin-top: 20px;">
+            <label class="required">מצאנו את הכלבים שלך! בחר כלב:</label>
+            <div id="dogSelectionButtons" class="dog-selection-buttons"></div>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="1">
+          <div class="form-group">
+            <label class="required">שם מלא</label>
+            <input type="text" name="ownerName" placeholder="לדוגמה: יוסי כהן" required />
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="2">
+          <div class="form-group">
+            <label class="required">שם הכלב</label>
+            <input type="text" name="dogName" placeholder="לדוגמה: מקס" required />
+          </div>
+          <div class="form-group">
+            <label class="required">גיל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="גור (עד שנה)" required />
+                <span class="radio-label">גור<br><small>עד שנה</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="צעיר (1-3)" required />
+                <span class="radio-label">צעיר<br><small>1-3</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="בוגר (4-7)" required />
+                <span class="radio-label">בוגר<br><small>4-7</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogAge" value="מבוגר (8+)" required />
+                <span class="radio-label">מבוגר<br><small>8+</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">גודל הכלב</label>
+            <div class="radio-group radio-group-4">
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="קטן" required />
+                <span class="radio-label">קטן<br><small>עד 10 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="בינוני" required />
+                <span class="radio-label">בינוני<br><small>10-25 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="גדול" required />
+                <span class="radio-label">גדול<br><small>25-40 ק"ג</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="dogSize" value="ענק" required />
+                <span class="radio-label">ענק<br><small>40+ ק"ג</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required">מין וסירוס/עיקור</label>
+            <div class="radio-group radio-group-neuter">
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מסורס" required />
+                <span class="radio-label">מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="מעוקרת" required />
+                <span class="radio-label">מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מסורס" required />
+                <span class="radio-label">לא מסורס<br><small>(זכר)</small></span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="neutered" value="לא מעוקרת" required />
+                <span class="radio-label">לא מעוקרת<br><small>(נקבה)</small></span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>אופי הכלב</label>
+            <textarea name="dogTemperament" placeholder="לדוגמה: ידידותי, אנרגטי, ביישן, דומיננטי, רגוע, משחקי, חרדתי מכלבים אחרים..."></textarea>
+            <div class="helper-text">תאר את האופי והתנהגות הכלב - זה יעזור לנו לדאוג לו בצורה הטובה ביותר</div>
+          </div>
+          <div class="form-group">
+            <label>הערות מיוחדות</label>
+            <textarea name="notes" placeholder="אלרגיות, תרופות, התנהגות מיוחדת וכו'"></textarea>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="nextStep()">המשך →</button>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="3">
+          <div class="date-group">
+            <div class="form-group">
+              <label class="required">תאריך כניסה</label>
+              <input type="date" name="checkIn" id="checkInDate" required />
+            </div>
+            <div class="form-group">
+              <label class="required">תאריך יציאה</label>
+              <input type="date" name="checkOut" id="checkOutDate" required />
+            </div>
+          </div>
+          
+          <div id="daysDisplay" class="days-display">
+            <span id="daysText"></span>
+          </div>
+          
+          <div class="helper-text" style="margin-top: 8px;">
+            * הכניסה בין השעות 08:00-18:00, היציאה עד 12:00
+          </div>
+
+          <div id="summaryPreview"></div>
+
+          <div class="button-group">
+            <button type="button" class="btn-secondary" onclick="prevStep()">← חזרה</button>
+            <button type="button" class="btn-primary" onclick="submitForm()">שלח הזמנה ✓</button>
+          </div>
+          <div class="form-group" style="margin-top:24px;">
+  <h3 style="color:#667eea; margin-bottom:12px;">תפוסת הפנסיון - 7 ימים הקרובים</h3>
+  <div id="capacityCalendar" style="display:grid; grid-template-columns: repeat(7,1fr); gap:10px;"></div>
+</div>
+
+        </div>
+
+        <div class="form-step" data-step="4">
+          <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>ההזמנה נשלחה בהצלחה!</h2>
+            <p>תקבלו אישור בהודעת וואטסאפ בהקדם.<br>מספר הטלפון שלנו: 052-8366744</p>
+            <div id="finalSummary"></div>
+            <button type="button" class="btn-primary" onclick="resetForm()" style="margin-top: 24px;">הזמנה חדשה</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/order.js"></script>
+</body>
+</html>

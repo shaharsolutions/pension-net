@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ניתוחים ותחזיות - פנסיון כלבים</title>
+    <meta name="description" content="דוחות ותחזיות עסקיות - מערכת ניהול פנסיון כלבים" />
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/reports.css" />
+  </head>
+  <body>
+    <header>
+      <a href="admin.html" class="back-btn left">← חזרה לניהול</a>
+      <a href="order.html" class="back-btn right">📝 מעבר להזמנה</a>
+      <h1>📊 דוחות ותחזיות עסקיות</h1>
+    </header>
+
+    <div id="loadingIndicator" class="loading">טוען נתונים...</div>
+
+    <div id="dashboardContent" style="display: none">
+      <!-- KPIs עיקריים -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3>💰 הכנסות החודש</h3>
+          <div class="stat-value" id="monthlyRevenue">₪0</div>
+          <div class="stat-change positive" id="revenueChange">+0%</div>
+        </div>
+
+        <div class="card">
+          <h3>🐕 כלבים החודש</h3>
+          <div class="stat-value" id="monthlyDogs">0</div>
+          <div class="stat-change positive" id="dogsChange">+0%</div>
+        </div>
+
+        <div class="card">
+          <h3>📈 תפוסה ממוצעת</h3>
+          <div class="stat-value" id="avgOccupancy">0%</div>
+          <div class="stat-label">קיבולת מקסימלית: 15 כלבים</div>
+        </div>
+
+        <div class="card">
+          <h3>👥 לקוחות פעילים</h3>
+          <div class="stat-value" id="activeCustomers">0</div>
+          <div class="stat-label" id="newCustomers">0 לקוחות חדשים החודש</div>
+        </div>
+      </div>
+
+      <!-- תחזית הכנסות -->
+      <div class="prediction-box">
+        <h3>🔮 תחזית הכנסות - 3 חודשים הבאים</h3>
+        <div class="prediction-item">
+          <span id="nextMonth1">חודש הבא</span>
+          <strong id="prediction1">₪0</strong>
+        </div>
+        <div class="prediction-item">
+          <span id="nextMonth2">חודשיים</span>
+          <strong id="prediction2">₪0</strong>
+        </div>
+        <div class="prediction-item">
+          <span id="nextMonth3">שלושה חודשים</span>
+          <strong id="prediction3">₪0</strong>
+        </div>
+      </div>
+
+      <!-- גרף הכנסות חודשיות -->
+      <div class="chart-container">
+        <h3>📊 הכנסות ב-6 חודשים אחרונים</h3>
+        <canvas id="revenueChart"></canvas>
+      </div>
+
+      <!-- גרף תפוסה -->
+      <div class="chart-container">
+        <h3>📅 תפוסה לפי חודש</h3>
+        <canvas id="occupancyChart"></canvas>
+      </div>
+
+      <!-- לקוחות מובילים -->
+      <div class="table-container">
+        <h3>⭐ 5 הלקוחות המובילים</h3>
+        <table id="topCustomersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>שם</th>
+              <th>טלפון</th>
+              <th>הזמנות</th>
+              <th>סה"כ הכנסות</th>
+              <th>ממוצע לביקור</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ניתוח גזעים ופרטים -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3>🐶 פילוח לפי גודל</h3>
+          <div id="breedBreakdown"></div>
+        </div>
+
+        <div class="card">
+          <h3>📊 סטטיסטיקות כלליות</h3>
+          <div id="generalStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="js/utils.js"></script>
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/reports.js"></script>
+  </body>
+</html>

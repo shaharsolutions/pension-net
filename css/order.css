@@ -1,0 +1,454 @@
+/* Order Form Specific Styles */
+
+/* Inherits .container from common.css but overrides specific properties */
+.container {
+  max-width: 600px;
+  /* margin assigned in common.css */
+  /* background assigned in common.css */
+  border-radius: 24px; /* More rounded than common */
+  /* box-shadow assigned in common.css */
+  overflow: hidden;
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px 30px;
+  text-align: center;
+  border-bottom: none; /* Override common.css */
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 800; /* Bolder */
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.form-content {
+  padding: 40px 30px;
+}
+
+/* Step Indicator - Enhanced */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.step-indicator::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: 0;
+  left: 0;
+  height: 3px; /* Thicker line */
+  background: #edf2f7;
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.step {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  flex: 1;
+}
+
+.step-circle {
+  width: 44px; /* Slightly larger */
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #edf2f7; /* Ring style */
+  color: #a0aec0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.step.active .step-circle {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.step.completed .step-circle {
+  background: #48bb78;
+  border-color: #48bb78;
+  color: white;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #a0aec0;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.step.active .step-label {
+  color: #667eea;
+}
+
+/* Form Steps & Animation */
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+  animation: fadeInRight 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: #f7fafc; /* Subtle background */
+  color: #2d3748;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+button {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+  color: white;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: #718096;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  color: #4a5568;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  background: #cbd5e0;
+}
+
+/* Summary Box */
+.summary-box {
+  background: #ebf4ff;
+  border: 2px solid #b3d7ff; /* Lighter blue border */
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.summary-box h3 {
+  color: #3182ce;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 1px solid #b3d7ff;
+  padding-bottom: 10px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px dashed #cbd5e0;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  color: #718096;
+  font-weight: 500;
+}
+
+.summary-value {
+  color: #2b6cb0;
+  font-weight: 700;
+  text-align: left;
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+/* Radio Groups */
+.date-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 12px;
+}
+
+.radio-group-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.radio-group-neuter {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 500px) {
+  .radio-group-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .radio-group-neuter {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.radio-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 2px solid transparent; /* No border by default */
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Card look */
+  position: relative;
+  overflow: hidden;
+}
+
+.radio-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: #e2e8f0;
+}
+
+.radio-option input[type="radio"] {
+  display: none;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+  background: #667eea;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+}
+
+.radio-label {
+  font-weight: 700;
+  font-size: 16px;
+  color: #4a5568;
+  transition: color 0.3s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.radio-label small {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #a0aec0;
+  margin-top: 4px;
+}
+
+.radio-option:has(input[type="radio"]:checked) .radio-label,
+.radio-option:has(input[type="radio"]:checked) .radio-label small {
+  color: white;
+}
+
+.required::after {
+  content: '*';
+  color: #e53e3e;
+  margin-right: 4px;
+}
+
+/* Dog Selection Buttons */
+.dog-selection-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dog-button {
+  padding: 16px 20px;
+  border: 2px solid white;
+  border-radius: 12px;
+  background: #f7fafc;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+  color: #4a5568;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.dog-button:hover {
+  border-color: #667eea;
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dog-button.selected {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.new-dog-button {
+  background: white;
+  color: #48bb78;
+  border: 2px dashed #48bb78;
+  text-align: center;
+}
+
+.new-dog-button:hover {
+  background: #f0fff4;
+  border-color: #38a169;
+  transform: translateY(-2px);
+}
+
+.helper-text {
+  font-size: 13px;
+  color: #718096;
+  margin-top: 6px;
+}
+
+/* Days Display */
+.days-display {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 24px;
+  display: none;
+  animation: slideUp 0.4s;
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.days-display.show {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .header {
+    padding: 30px 20px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .form-content {
+    padding: 24px 20px;
+  }
+
+  .date-group {
+    grid-template-columns: 1fr;
+  }
+
+  .button-group {
+    flex-direction: column-reverse; /* Stack buttons on mobile */
+  }
+}

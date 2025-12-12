@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ניהול פנסיון כלבים</title>
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/512/616/616408.png"
+      type="image/png"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/admin.css">
+  </head>
+  <body>
+    <div id="loginScreen" class="login-container">
+      <h1>🔒 כניסת מנהל</h1>
+      <div class="password-wrapper">
+        <input type="password" id="passwordInput" placeholder="הזן סיסמה" />
+        <span class="password-toggle" onclick="togglePasswordVisibility()">👁️</span>
+      </div>
+      <button onclick="attemptLogin()">כניסה</button>
+      <div class="error-message" id="errorMessage">סיסמה שגויה!</div>
+    </div>
+
+    <div id="mainContent">
+      <header>
+        <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
+        <a href="growth.html" class="header-btn right">📊 דוחות</a>
+        <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+      </header>
+
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('ongoing')">ניהול שוטף</button>
+        <button class="tab-btn" onclick="switchTab('history')">היסטוריית הזמנות</button>
+      </div>
+
+      <div id="tab-ongoing" class="tab-content active">
+        <div id="monthlyCalendarContainer" class="container">
+          <div class="container-header-row">
+            <h3 id="viewTitle">לוח זמנים חודשי (נוכחות כלבים)</h3>
+            <div id="calendarViewControls">
+              <button
+                id="toggleCalendarViewBtn"
+                class="calendar-toggle-btn"
+                onclick="toggleCalendarView(this)"
+              >
+                הצג כלבים נוכחיים 🐕
+              </button>
+              <button
+                id="toggleCalendarCollapseBtn"
+                class="calendar-toggle-btn"
+                onclick="toggleCalendarCollapse(this)"
+              >
+                כווץ ⬆️
+              </button>
+            </div>
+          </div>
+
+          <div id="calendarViewContent">
+            <div
+              id="calendarHeader"
+              style="text-align: center; margin-bottom: 20px"
+            >
+              <button
+                id="prevMonth"
+                class="header-btn"
+                style="position: static; margin-left: 10px"
+                onclick="changeMonth(-1)"
+              >
+                &lt; חודש קודם
+              </button>
+              <span
+                id="currentMonthYear"
+                style="font-size: 20px; font-weight: bold; color: #764ba2"
+                >טוען...</span
+              >
+              <button
+                id="nextMonth"
+                class="header-btn"
+                style="position: static; margin-right: 10px"
+                onclick="changeMonth(1)"
+              >
+                חודש הבא &gt;
+              </button>
+            </div>
+            <div id="monthlyCalendarGrid"></div>
+          </div>
+
+          <div id="currentDogsColumnView" style="display: none"></div>
+        </div>
+
+        <div class="container">
+          <h3>הזמנות עתידיות</h3>
+          <table id="futureOrdersTable">
+            <thead>
+              <tr>
+                <th>מועד הזמנה</th>
+                <th>שם הבעלים</th>
+                <th>טלפון</th>
+                <th class="wide-date-column">כניסה</th>
+                <th class="wide-date-column">יציאה</th>
+                <th>שם הכלב</th>
+                <th>גיל</th>
+                <th>גודל</th>
+                <th>מסורס / מעוקרת</th>
+                <th>הערות מיוחדות</th>
+                <th>אופי</th>
+                <th>מחיר ליום</th>
+                <th>ימים</th>
+                <th>סטטוס</th>
+                <th class="manager-note-column">הערות מנהל</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-history" class="tab-content">
+        <div class="container" id="historyTableContainer">
+          <h3>היסטוריית הזמנות</h3>
+          <div style="margin-bottom: 12px">
+            <label for="historySearchInput" style="font-weight: bold"
+              >חיפוש בהיסטוריית ההזמנות:</label
+            >
+            <input
+              type="text"
+              id="historySearchInput"
+              placeholder="הקלד לחיפוש..."
+              style="margin-top: 4px; margin-bottom: 8px; max-width: 300px"
+            />
+          </div>
+          <div id="pastOrdersTableWrapper">
+            <table id="pastOrdersTable">
+              <thead>
+                <tr>
+                  <th>מועד הזמנה</th>
+                  <th>שם הבעלים</th>
+                  <th>טלפון</th>
+                  <th class="wide-date-column">כניסה</th>
+                  <th class="wide-date-column">יציאה</th>
+                  <th>שם הכלב</th>
+                  <th>גיל</th>
+                  <th>גודל</th>
+                  <th>מסורס / מעוקרת</th>
+                  <th>הערות מיוחדות</th>
+                  <th>אופי</th>
+                  <th>מחיר ליום</th>
+                  <th>ימים</th>
+                  <th>סטטוס</th>
+                  <th class="manager-note-column">הערות מנהל</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div
+            id="historyPagination"
+            style="text-align: center; margin-top: 16px"
+          ></div>
+        </div>
+      </div>
+
+      <div id="saveButtonContainer">
+        <button id="saveButton">💾 שמור שינויים</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>
