@@ -1045,3 +1045,7 @@
   color: #333;
   transform: rotate(-180deg);
 }
+/* Fix line break on calendar title */
+#viewTitle {
+  white-space: nowrap;
+}

@@ -175,7 +175,7 @@ function generateWhatsAppConfirmationLink(row) {
   };
 
   const params = {
-      customer_name: row.owner_name || 'לקוח',
+      customer_name: (row.owner_name || 'לקוח').split(' ')[0],
       dog_name: row.dog_name || 'הכלב',
       check_in: formatDate(row.check_in),
       check_out: formatDate(row.check_out),
@@ -419,7 +419,8 @@ function renderMonthlyCalendar(allOrders) {
     }
 
     calendarHTML += `<td class="${classes}">
-          <div class="day-number">${dayCounter}${dogsInDay > 0 ? ` <span style="font-size: 0.8em; color: #666;">(${dogsInDay})</span>` : ''}</div>
+          <div class="day-number">${dayCounter}</div>
+          ${dogsInDay > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsInDay} כלבים</div>` : ''}
           <div class="day-content">${dogsContentHTML}</div>
       </td>`;
 
@@ -552,7 +553,7 @@ function toggleCalendarView(button) {
     dogsView.style.display = "none";
     calendarView.style.display = "block";
     title.textContent = "לוח זמנים חודשי (נוכחות כלבים)";
-    button.textContent = "הצג כלבים נוכחיים 🐕";
+    button.textContent = "הצג כלבים שכרגע בפנסיון 🐕";
     collapseBtn.style.display = "block";
     window.currentView = "calendar";
     renderMonthlyCalendar(window.allOrdersCache);
