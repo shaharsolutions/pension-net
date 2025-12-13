@@ -1,3 +1,16 @@
+      :root {
+        --primary: #2563eb; /* Blue 600 */
+        --primary-hover: #1d4ed8; /* Blue 700 */
+        --bg-body: #f8fafc; /* Slate 50 */
+        --bg-surface: #ffffff;
+        --text-main: #0f172a; /* Slate 900 */
+        --text-muted: #64748b; /* Slate 500 */
+        --border-color: #e2e8f0; /* Slate 200 */
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --radius: 12px;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
@@ -5,70 +18,79 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-          sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Heebo', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        background-color: var(--bg-body);
+        color: var(--text-main);
         min-height: 100vh;
         direction: rtl;
         padding: 20px;
         padding-bottom: 100px;
+        line-height: 1.5;
       }
 
       .login-container {
         max-width: 400px;
         margin: 100px auto;
-        background: white;
-        border-radius: 24px;
+        background: var(--bg-surface);
+        border-radius: var(--radius);
         padding: 40px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Soft deep shadow */
         text-align: center;
+        border: none; /* Removed border */
       }
 
       .login-container h1 {
-        color: #667eea;
+        color: var(--primary);
         margin-bottom: 30px;
         font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
       }
 
       .login-container input {
         width: 100%;
         padding: 14px 16px;
-        border: 2px solid #e0e0e0;
-        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
         font-size: 16px;
         margin-bottom: 20px;
-        transition: all 0.3s;
+        transition: all 0.2s;
+        background: #f8fafc;
       }
 
       .login-container input:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        background: white;
       }
 
       .login-container button {
         width: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-color: var(--primary);
         color: white;
         border: none;
         padding: 14px;
-        border-radius: 12px;
+        border-radius: 8px;
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
       }
 
       .login-container button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.4);
       }
 
       .error-message {
-        color: #f44336;
+        color: #ef4444;
         margin-top: 10px;
         font-size: 14px;
         display: none;
+        font-weight: 500;
       }
 
       #mainContent {
@@ -76,75 +98,79 @@
       }
 
       header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 30px;
+        background: var(--bg-surface);
+        color: var(--text-main);
+        padding: 30px 30px;
         text-align: center;
-        border-radius: 24px;
+        border-radius: var(--radius);
         margin-bottom: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: none; /* Removed border */
         position: relative;
       }
 
       header h1 {
         font-size: 32px;
-        font-weight: 700;
+        font-weight: 800;
         margin: 0;
+        color: #1e293b; /* Slate 800 */
+        letter-spacing: -1px;
       }
 
       .header-btn {
         position: absolute;
-        top: 20px;
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: 2px solid white;
-        padding: 8px 16px;
+        top: 30px;
+        background: #eff6ff; /* Blue 50 */
+        color: var(--primary);
+        border: none; /* Removed border */
+        padding: 10px 18px;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
         text-decoration: none;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .header-btn:hover {
-        background: white;
-        color: #667eea;
+        background: var(--primary);
+        color: white;
       }
 
-      .header-btn.left {
-        left: 20px;
-      }
-
-      .header-btn.right {
-        right: 20px;
-      }
+      .header-btn.left { left: 30px; }
+      .header-btn.right { right: 30px; }
 
       .container {
         margin: 20px auto;
         padding: 30px;
-        max-width: 95%;
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
+        background: var(--bg-surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border: none; /* Removed border */
         overflow-x: auto;
       }
 
       .container h3 {
-        color: #667eea;
+        color: #334155; /* Slate 700 */
         font-size: 24px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
       .container-header-row {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 20px;
         gap: 20px;
         flex-wrap: wrap;
       }
@@ -152,27 +178,28 @@
       /* --- CSS ללוח השנה החדש ולכפתורים --- */
       #calendarViewControls {
         display: flex;
-        gap: 10px;
+        gap: 12px;
       }
 
       .calendar-toggle-btn {
-        background: none;
-        border: 2px solid #667eea;
-        color: #667eea;
-        padding: 5px 10px;
+        background: #f1f5f9; /* Slate 100 */
+        border: none;
+        color: var(--text-muted);
+        padding: 8px 16px;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
       }
 
       .calendar-toggle-btn:hover {
-        background: #667eea;
+        background: var(--primary);
         color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       }
 
-      /* --- לוגיקת כיווץ לוח השנה (הסתרת גוף התצוגה של לוח השנה) --- */
+      /* --- לוגיקת כיווץ לוח השנה --- */
       #calendarViewContent.collapsed #calendarHeader,
       #calendarViewContent.collapsed #monthlyCalendarGrid {
         display: none;
@@ -180,49 +207,70 @@
 
       #monthlyCalendarContainer.collapsed .container-header-row {
         border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
       }
 
       .calendar-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 6px;
         table-layout: fixed;
+        margin-top: 10px;
       }
 
       .calendar-table th {
-        color: white;
-        font-size: 16px;
-        padding: 15px 5px;
-        border: 1px solid #e0e0e0;
+        color: var(--text-muted);
+        font-size: 14px;
+        padding: 10px;
+        border: none;
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .calendar-table td {
-        height: 120px;
-        border: 1px solid #e0e0e0;
+        height: 130px;
+        background: #ffffff;
+        border: 1px solid #f1f5f9; /* Very subtle border */
+        border-radius: 12px;
         vertical-align: top;
-        padding: 5px;
+        padding: 10px;
         position: relative;
-        transition: background-color 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02);
       }
 
       .calendar-table td:hover {
-        background-color: #f8f9ff;
+        border-color: var(--primary);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+        z-index: 1;
       }
 
       .calendar-table td.today {
-        border: 3px solid #667eea;
+        border: 2px solid var(--primary);
+        background-color: #eff6ff;
       }
 
       .calendar-table td.empty-day {
-        background-color: #fafafa;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
         cursor: default;
+      }
+      
+      .calendar-table td.empty-day:hover {
+          transform: none;
       }
 
       .day-number {
         font-size: 18px;
-        font-weight: 700;
-        color: #333;
+        font-weight: 800;
+        color: #334155;
         text-align: left;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
       }
 
       .day-content {
@@ -230,24 +278,31 @@
       }
 
       .dog-size-label {
-        background: #e6f3ff;
-        color: #004c99;
-        padding: 3px 6px;
-        margin-bottom: 4px;
-        border-radius: 4px;
+        background: #f1f5f9; /* Slate 100 */
+        color: #334155; /* Slate 700 */
+        padding: 5px 8px;
+        margin-bottom: 5px;
+        border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
         text-align: center;
         position: relative;
         display: block;
+        transition: 0.2s;
+        border: none;
+      }
+
+      .calendar-table td.busy .dog-size-label {
+          background: #dbeafe; /* Blue 100 */
+          color: #1e40af; /* Blue 800 */
       }
 
       .calendar-table td.busy .dog-size-label:hover {
-        background: #667eea;
+        background: var(--primary);
         color: white;
       }
 
-      /* Tooltip (ברירת מחדל לשמאל) */
+      /* Tooltip */
       .dog-tooltip {
         display: none;
         position: absolute;
@@ -255,35 +310,33 @@
         right: 100%;
         left: auto;
         transform: translateX(0);
-        background: #333;
+        background: #1e293b;
         color: white;
-        padding: 8px;
-        border-radius: 6px;
+        padding: 12px 16px;
+        border-radius: 8px;
         white-space: normal;
-        width: 180px;
-        z-index: 10;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        line-height: 1.4;
+        width: 220px;
+        z-index: 20;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        line-height: 1.5;
         text-align: right;
-        margin-left: 10px;
-        margin-right: 0;
+        margin-left: 12px;
+        font-size: 13px;
       }
 
       .dog-tooltip::after {
         content: "";
         position: absolute;
-        top: 10px;
+        top: 12px;
         right: -6px;
         border: 6px solid transparent;
-        border-left-color: #333;
-        left: auto;
+        border-left-color: #1e293b;
       }
 
-      /* היפוך Tooltip (לימין) */
       .dog-size-label.reverse-tooltip .dog-tooltip {
         right: auto;
         left: 100%;
-        margin-right: 10px;
+        margin-right: 12px;
         margin-left: 0;
       }
 
@@ -291,13 +344,13 @@
         right: auto;
         left: -6px;
         border-left-color: transparent;
-        border-right-color: #333;
+        border-right-color: #1f2937;
       }
 
       .dog-size-label:hover .dog-tooltip {
         display: block;
+        animation: fadeIn 0.2s ease-in-out;
       }
-      /* --- סוף CSS ללוח השנה --- */
 
       /* --- CSS לכלבים הנוכחיים (תצוגת עמודות) --- */
       #currentDogsColumnView {
@@ -310,175 +363,175 @@
       .dog-column {
         flex: 1 1 250px;
         min-width: 250px;
-        background: #f8f9ff;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 15px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
       }
 
       .dog-column h4 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px;
-        margin: -15px -15px 15px -15px;
-        border-radius: 12px 12px 0 0;
-        font-size: 18px;
+        background: #f3f4f6;
+        color: var(--text-main);
+        padding: 16px;
+        margin: 0;
+        font-size: 16px;
         text-align: center;
         font-weight: 700;
+        border-bottom: 1px solid var(--border-color);
       }
 
       .dog-entry {
         background: white;
-        border: 1px solid #dcdcdc;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
         font-size: 14px;
-        line-height: 1.4;
+        line-height: 1.5;
       }
 
       .dog-entry:last-child {
-        margin-bottom: 0;
+        border-bottom: none;
       }
 
       .dog-entry strong {
-        color: #333;
+        color: var(--text-main);
         display: block;
-        margin-bottom: 3px;
         font-size: 15px;
-        font-weight: 700;
+        font-weight: 600;
       }
 
       .dog-entry span {
-        color: #666;
+        color: var(--text-muted);
         display: block;
+        font-size: 13px;
+        margin-top: 2px;
       }
-      /* --- סוף CSS לכלבים הנוכחיים --- */
 
+      /* Tables */
       table {
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         width: 100%;
         min-width: 1400px;
-        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow-sm);
       }
 
-      th,
-      td {
-        padding: 14px 10px;
-        border: 1px solid #e0e0e0;
+      th, td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
         text-align: center;
         white-space: nowrap;
+        vertical-align: middle;
       }
 
       th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #f9fafb; /* Gray 50 */
+        color: var(--text-muted);
         font-weight: 600;
-        font-size: 14px;
+        font-size: 12px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
       }
 
       tbody tr {
-        transition: background 0.2s;
+        background: white;
+        transition: background 0.15s;
       }
 
       tbody tr:hover {
-        background: #f8f9ff;
+        background: #f9fafb;
+      }
+      
+      tbody tr:last-child td {
+          border-bottom: none;
       }
 
-      tbody tr:nth-child(even) {
-        background: #fafafa;
-      }
-
-      tbody tr:nth-child(even):hover {
-        background: #f8f9ff;
-      }
-
+      /* Inputs & Forms */
       input[type="text"],
-      textarea {
-        width: 95%;
+      textarea,
+      input[type="date"],
+      select {
+        width: 100%;
         box-sizing: border-box;
-        padding: 8px 12px;
-        border: 2px solid #e0e0e0;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         font-size: 14px;
-        transition: all 0.3s;
+        transition: all 0.2s;
+        background: white;
+        font-family: inherit;
+        color: var(--text-main);
       }
 
       input[type="text"]:focus,
       textarea:focus,
-      input[type="date"]:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      input[type="date"] {
-        padding: 8px 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.3s;
-        width: 100%;
-        direction: ltr;
-        text-align: center;
-      }
-
-      select {
-        padding: 8px 12px;
-        min-width: 110px;
-        width: 100%;
-        direction: rtl;
-        text-align: center;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s;
-        cursor: pointer;
-        background: white;
-      }
-
+      input[type="date"]:focus,
       select:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
       }
-
+      
+      input[type="date"] {
+        text-align: center;
+        direction: ltr; /* Keeping LTR for date inputs usually better for UX */
+      }
+      
       textarea.admin-note {
-        width: 80ch;
-        max-width: 100%;
-        font-family: monospace;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        resize: none;
-        font-size: 12px;
-        padding: 8px 12px;
-        line-height: 1.4;
-        min-height: 60px;
+        font-family: inherit;
+        border: 1px solid #e0e7ff; /* light indigo tint */
+        background: #f5f7ff;
+        resize: vertical;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+      
+      textarea.admin-note:focus {
+        background: white;
+        border-color: var(--primary);
       }
 
       .manager-note-column {
         min-width: 200px;
         max-width: 300px;
       }
+      
+      /* Price Inputs */
+      .price-input-container {
+        position: relative;
+        display: inline-block;
+        min-width: 140px;
+      }
+
+      .price-input-container::after {
+        content: "₪";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 14px;
+        z-index: 5;
+        pointer-events: none;
+      }
 
       .price-input {
         width: 100%;
-        padding: 8px 28px 8px 12px;
-        border: 2px solid #e0e0e0;
+        padding: 8px 32px; /* Symmetric padding */
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         font-size: 16px;
         text-align: center;
-        font-weight: 600;
-        direction: rtl;
-        transition: all 0.3s;
+        font-weight: 700;
         -moz-appearance: textfield;
+        appearance: textfield; /* Standard property */
+        background: white;
       }
 
       .price-input::-webkit-outer-spin-button,
@@ -487,122 +540,47 @@
         margin: 0;
       }
 
-      .price-input:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      .price-wrapper {
-        display: inline-flex;
-        align-items: center;
-        gap: 1.5px;
-      }
-
-      .price-input-container {
-        position: relative;
-        display: inline-block;
-        min-width: 100px;
-      }
-
-      .price-input-container::before {
-        content: "₪";
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-weight: 700;
-        color: #667eea;
-        font-size: 16px;
-        pointer-events: none;
-        z-index: 1;
-      }
-
-      .price-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
       .price-btn {
-        width: 18px;
-        height: 18px;
-        padding: 0;
-        border: 1px solid #d0d0d0;
-        background: #f5f5f5;
-        border-radius: 3px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        color: #666;
-        transition: all 0.2s;
-        line-height: 1;
+        width: 20px; height: 20px;
+        border: 1px solid var(--border-color);
+        background: #fff;
+        color: var(--text-muted);
+        border-radius: 4px;
       }
-
+      
       .price-btn:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-      }
-
-      .price-btn:active {
-        transform: scale(0.95);
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #f0fdf4;
       }
 
       .days-input {
         width: 60px;
-        padding: 6px 8px;
-        border: 2px solid #e0e0e0;
-        border-radius: 6px;
-        font-size: 14px;
-        text-align: center;
-        font-weight: 700;
-        color: #667eea;
-        direction: ltr;
-        -moz-appearance: textfield;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        background: #f9fafb;
+        color: var(--primary);
+        border-radius: 8px;
       }
-
-      .days-input::-webkit-outer-spin-button,
-      .days-input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
-
-      .days-input:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      .price-cell {
-        position: relative;
-        cursor: help;
-        padding: 14px 10px;
-      }
-
-      .price-cell:hover .tooltip {
-        display: block;
-        animation: fadeIn 0.2s;
-      }
-
+      
       .tooltip {
         display: none;
         position: absolute;
         bottom: 100%;
         left: 50%;
         transform: translateX(-50%);
-        background: #333;
-        color: white;
+        background: white;
+        color: var(--text-main);
         padding: 8px 12px;
         border-radius: 8px;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 500;
         white-space: nowrap;
         z-index: 1000;
         margin-bottom: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--border-color);
+        pointer-events: none;
       }
 
       .tooltip::after {
@@ -612,7 +590,8 @@
         left: 50%;
         transform: translateX(-50%);
         border: 6px solid transparent;
-        border-top-color: #333;
+        border-top-color: white; /* Match background */
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05)); /* Subtle shadow for arrow */
       }
 
       .wide-date-column {
@@ -636,39 +615,50 @@
       .date-input {
         width: 100%;
         padding: 8px;
-        border: 2px solid #667eea;
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         font-size: 13px;
         text-align: center;
-        transition: all 0.3s;
+        transition: all 0.2s;
+        background: white;
       }
 
       .date-input:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       }
 
       .status-approved {
-        color: #4caf50;
-        font-weight: bold;
+        color: #059669; /* Green 600 */
+        font-weight: 600;
+        background: #ecfdf5;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 13px;
       }
 
       .status-cancelled {
-        color: #f44336;
-        font-weight: bold;
+        color: #dc2626; /* Red 600 */
+        font-weight: 600;
+        background: #fef2f2;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 13px;
       }
 
       .whatsapp-link {
-        color: #25d366;
+        color: #059669;
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 500;
         transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
 
       .whatsapp-link:hover {
-        color: #128c7e;
-        text-decoration: underline;
+        color: #047857;
       }
 
       #saveButtonContainer {
@@ -680,27 +670,29 @@
       }
 
       #saveButton {
-        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        background-color: #10b981; /* Emerald 500 */
         color: white;
         border: none;
-        padding: 16px 48px;
-        font-size: 18px;
+        padding: 14px 40px;
+        font-size: 16px;
         font-weight: 700;
         border-radius: 50px;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
-        transition: all 0.3s;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        transition: all 0.2s;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
       }
 
       #saveButton:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(76, 175, 80, 0.5);
+        background-color: #059669; /* Emerald 600 */
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
       }
 
       #saveButton:active {
         transform: translateY(-1px);
+        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
       }
 
       .loading::after {
@@ -732,26 +724,28 @@
 
       #historySearchInput:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       }
 
       #historyPagination button {
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 10px 24px;
+        background: white;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 20px;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s;
-        margin: 0 8px;
+        transition: all 0.2s;
+        margin: 0 6px;
       }
 
       #historyPagination button:hover:not(:disabled) {
-        background: #5568d3;
-        transform: translateY(-2px);
+        background: var(--bg-body);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-1px);
       }
 
       #historyPagination button:disabled {
@@ -860,8 +854,8 @@
 }
 
 .tab-btn.active {
-  background: #ebf4ff;
-  color: #5a67d8;
+  background: #eff6ff;
+  color: var(--primary);
   font-weight: 700;
 }
 
@@ -904,15 +898,16 @@
 
 /* Fix for Calendar Navigation Buttons Visibility */
 #calendarHeader .header-btn {
-  color: #667eea;
-  border-color: #667eea;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
   background: white;
 }
 
 
 #calendarHeader .header-btn:hover {
-  background: #667eea;
+  background: var(--primary);
   color: white;
+  border-color: var(--primary);
 }
 
 /* WhatsApp Confirmation Button */
