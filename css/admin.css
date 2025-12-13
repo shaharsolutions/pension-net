@@ -1049,3 +1049,21 @@
 #viewTitle {
   white-space: nowrap;
 }
+
+/* Mobile Header Fix */
+@media (max-width: 600px) {
+  header {
+    padding: 70px 15px 30px 15px; /* More top padding for buttons */
+  }
+
+  .header-btn {
+    top: 15px; /* Move buttons higher */
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  header h1 {
+    font-size: 24px; /* Smaller title */
+    line-height: 1.3;
+  }
+}
