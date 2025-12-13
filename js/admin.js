@@ -46,6 +46,29 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("mainContent").style.display = "block";
     loadData();
   }
+  
+  // Event delegation for movement buttons
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.movement-action-btn');
+    if (btn) {
+      e.preventDefault();
+      console.log('Button clicked:', btn.id); // Debug log
+      const id = btn.id;
+      // Adjusted regex to match any ID format (numeric or UUID)
+      const match = id.match(/^movement-(entering|leaving)-(.+)$/);
+      if (match) {
+        const type = match[1];
+        const orderId = match[2]; // Keep as string to support UUIDs
+        // Only parse if it looks like a pure number, otherwise keep string
+        const finalId = /^\d+$/.test(orderId) ? parseInt(orderId, 10) : orderId;
+        
+        console.log('Toggling:', type, finalId); // Debug log
+        toggleMovementChecked(type, finalId);
+      } else {
+        console.warn('Regex did not match for ID:', id);
+      }
+    }
+  });
 });
 
 document
@@ -133,6 +156,136 @@ function createWhatsAppLink(phone) {
   const formattedPhone = formatPhoneForWhatsApp(phone);
   return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone}</a>`;
 }
+
+function generateWhatsAppConfirmationLink(row) {
+  if (!row.phone) return '';
+  
+  // Calculate total price
+  const days = calculateDays(row.check_in, row.check_out);
+  const pricePerDay = row.price_per_day || 130;
+  const totalPrice = days * pricePerDay;
+  
+  // Helper to format dates for message
+  const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      return `${day}/${month}/${d.getFullYear()}`;
+  };
+
+  const params = {
+      customer_name: row.owner_name || 'לקוח',
+      dog_name: row.dog_name || 'הכלב',
+      check_in: formatDate(row.check_in),
+      check_out: formatDate(row.check_out),
+      total_price: totalPrice
+  };
+
+  // Ultra-safe manual encoding strategy
+  // We avoid passing emojis to encodeURIComponent() entirely to prevent encoding mismatches
+  const enc = (str) => encodeURIComponent(str);
+  
+  // URL-encoded Emoji Sequences (Safe ASCII strings)
+  const DOG_CODE = '%F0%9F%90%B6';      // 🐶
+  const CALENDAR_CODE = '%F0%9F%93%85'; // 📅
+  const MONEY_CODE = '%F0%9F%92%B0';    // 💰
+  const SMILE_CODE = '%F0%9F%99%82';    // 🙂
+  const NEWLINE = '%0A';
+  
+  // Build pieces
+  const p1 = enc(`היי ${params.customer_name},`);
+  const p2 = enc(`מאשרים את ההזמנה של ${params.dog_name} `) + DOG_CODE;
+  // Note: Comma is inside the encoded text part or can be %2C
+  const p3 = CALENDAR_CODE + enc(', תאריכים: ' + params.check_in + ' עד ' + params.check_out);
+  const p4 = MONEY_CODE + enc(` מחיר כולל: ${params.total_price} ש"ח`);
+  const p5 = enc(`אם יש שאלה או שינוי - נשמח שתכתבו לנו כאן `) + SMILE_CODE;
+
+  // Concatenate without further encoding
+  const fullEncodedText = p1 + NEWLINE + p2 + NEWLINE + NEWLINE + p3 + NEWLINE + p4 + NEWLINE + NEWLINE + p5;
+  
+  const phone = formatPhoneForWhatsApp(row.phone);
+  const finalUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${fullEncodedText}`;
+  
+  // Check if already sent
+  const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
+  const isSent = sentConfirmations[row.id];
+  
+  if (isSent) {
+    return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
+      <span class="whatsapp-sent-badge">נשלח ✓</span>
+      <button class="whatsapp-reset-btn" data-reset-order="${row.id}" title="אפס סטטוס">↺</button>
+    </div>`;
+  }
+  
+  return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
+    <a href="${finalUrl}" target="_blank" class="whatsapp-confirm-btn" data-order-id="${row.id}"><span class="icon">📱</span> שלח אישור</a>
+  </div>`;
+}
+
+async function markConfirmationSent(orderId) {
+  const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
+  sentConfirmations[orderId] = Date.now();
+  localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
+  
+  // Update UI immediately
+  const container = document.getElementById(`confirm-container-${orderId}`);
+  if (container) {
+    container.innerHTML = `
+      <span class="whatsapp-sent-badge">נשלח ✓</span>
+      <button class="whatsapp-reset-btn" data-reset-order="${orderId}" title="אפס סטטוס">↺</button>
+    `;
+  }
+  
+  // Update order status to 'מאושר' in database
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'מאושר' })
+      .eq('id', orderId);
+    
+    if (error) {
+      console.error('Error updating order status:', error);
+    } else {
+      console.log('Order status updated to מאושר for order:', orderId);
+      // Reload data to update the status column in the table
+      loadData();
+    }
+  } catch (err) {
+    console.error('Error updating order status:', err);
+  }
+}
+
+function resetConfirmationState(orderId) {
+  const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
+  delete sentConfirmations[orderId];
+  localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
+  
+  // Reload data to refresh the button
+  loadData();
+}
+
+// Event delegation for WhatsApp confirmation buttons
+document.addEventListener('click', function(e) {
+  // Handle send confirmation click
+  const confirmBtn = e.target.closest('.whatsapp-confirm-btn[data-order-id]');
+  if (confirmBtn) {
+    const orderId = confirmBtn.getAttribute('data-order-id');
+    if (orderId) {
+      markConfirmationSent(orderId);
+    }
+  }
+  
+  // Handle reset button click
+  const resetBtn = e.target.closest('.whatsapp-reset-btn[data-reset-order]');
+  if (resetBtn) {
+    e.preventDefault();
+    const orderId = resetBtn.getAttribute('data-reset-order');
+    if (orderId) {
+      resetConfirmationState(orderId);
+    }
+  }
+});
 
 function getDogsForDay(data, date) {
   const targetDate = new Date(
@@ -266,7 +419,7 @@ function renderMonthlyCalendar(allOrders) {
     }
 
     calendarHTML += `<td class="${classes}">
-          <div class="day-number">${dayCounter}</div>
+          <div class="day-number">${dayCounter}${dogsInDay > 0 ? ` <span style="font-size: 0.8em; color: #666;">(${dogsInDay})</span>` : ''}</div>
           <div class="day-content">${dogsContentHTML}</div>
       </td>`;
 
@@ -298,11 +451,20 @@ function renderMonthlyCalendar(allOrders) {
 
 function renderCurrentDogsColumnView(allOrders) {
   const dogsView = document.getElementById("currentDogsColumnView");
+  const title = document.getElementById("viewTitle");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const dogsBySize = getDogsForDay(allOrders, today);
   const sizes = Object.keys(dogsBySize).sort();
+  
+  // Calculate total dogs count
+  const totalDogsCount = Object.values(dogsBySize).flat().length;
+
+  // Update title with count
+  if (title && window.currentView === "dogs") {
+    title.textContent = `כלבים בפנסיון היום (${totalDogsCount} כלבים)`;
+  }
 
   let dogsHTML = "";
 
@@ -463,6 +625,7 @@ function renderPastOrdersTable() {
     <td>${formatDateTime(row.order_date)}</td>
     <td>${row.owner_name}</td>
     <td>${createWhatsAppLink(row.phone)}</td>
+    <td>${generateWhatsAppConfirmationLink(row)}</td>
     <td class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
@@ -623,6 +786,62 @@ if (searchInput) {
 }
 
 // --- לוגיקת סטטיסטיקת תנועות (נכנסים/יוצאים) ---
+function getMovementStorageKey(type) {
+  const today = new Date().toISOString().split('T')[0];
+  return `movement_${type}_${today}`;
+}
+
+// Expose to global scope for onclick handlers
+window.toggleMovementChecked = toggleMovementChecked;
+
+async function toggleMovementChecked(type, orderId) {
+  // Find current state from cache
+  const order = window.allOrdersCache.find(o => o.id === parseInt(orderId) || o.id === orderId);
+  if (!order) return;
+
+  const field = type === 'entering' ? 'is_arrived' : 'is_departed';
+  const currentState = !!order[field];
+  const newState = !currentState;
+
+  // Optimistic UI Update
+  const btn = document.getElementById(`movement-${type}-${orderId}`);
+  const row = btn?.closest('.movement-row');
+  
+  if (btn && row) {
+      btn.textContent = 'מעדכן...';
+      btn.style.opacity = '0.7';
+  }
+
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ [field]: newState })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    // Update local cache
+    order[field] = newState;
+
+    // Re-render UI to reflect final state
+    if (btn && row) {
+        const isNowChecked = newState;
+        row.classList.toggle('completed', isNowChecked);
+        btn.classList.toggle('checked', isNowChecked);
+        
+        const actionText = type === 'entering' ? 'נכנס' : 'יצא';
+        btn.textContent = isNowChecked ? `${actionText} ✓` : `סמן ש${actionText}`;
+        btn.style.opacity = '1';
+    }
+
+  } catch (err) {
+    console.error('Error updating movement:', err);
+    alert('שגיאה בעדכון הסטטוס. אנא נסה שוב.');
+    // Revert UI if needed (simple reload or re-render)
+    loadData(); 
+  }
+}
+
 function renderMovementStats(data) {
   const enteringCountEl = document.getElementById("dogsEnteringCount");
   const enteringListEl = document.getElementById("dogsEnteringList");
@@ -659,13 +878,19 @@ function renderMovementStats(data) {
   if (enteringDogs.length === 0) {
     enteringListEl.innerHTML = '<span style="color: #999;">אין כניסות היום</span>';
   } else {
-    enteringListEl.innerHTML = enteringDogs.map(d => 
-      `<div style="padding: 6px 0; border-bottom: 1px solid #efefef;">
-         <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
-         <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-         ${d.admin_note ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;">⚠️ ${d.admin_note}</div>` : ''}
-       </div>`
-    ).join('');
+    enteringListEl.innerHTML = enteringDogs.map(d => {
+      const isChecked = !!d.is_arrived;
+      const btnText = isChecked ? 'נכנס ✓' : 'סמן שנכנס';
+      
+      return `<div class="movement-row${isChecked ? ' completed' : ''}" style="padding: 6px 0; border-bottom: 1px solid #efefef; display: flex; align-items: center; gap: 8px;">
+         <button class="movement-action-btn${isChecked ? ' checked' : ''}" id="movement-entering-${d.id}">${btnText}</button>
+         <div style="flex: 1;">
+           <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+           <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
+           ${d.admin_note ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;">⚠️ ${d.admin_note}</div>` : ''}
+         </div>
+       </div>`;
+    }).join('');
   }
 
   // Render Leaving
@@ -677,11 +902,16 @@ function renderMovementStats(data) {
       const days = calculateDays(d.check_in, d.check_out);
       const ppd = d.price_per_day || 130;
       const total = days * ppd;
+      const isChecked = !!d.is_departed;
+      const btnText = isChecked ? 'יצא ✓' : 'סמן שיצא';
       
-      return `<div style="padding: 6px 0; border-bottom: 1px solid #efefef;">
-         <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
-         <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-         <div style="font-size: 11px; color: #888;">לתשלום: ${total}₪</div>
+      return `<div class="movement-row${isChecked ? ' completed' : ''}" style="padding: 6px 0; border-bottom: 1px solid #efefef; display: flex; align-items: center; gap: 8px;">
+         <button class="movement-action-btn${isChecked ? ' checked' : ''}" id="movement-leaving-${d.id}">${btnText}</button>
+         <div style="flex: 1;">
+           <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+           <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
+           <div style="font-size: 11px; color: #888;">לתשלום: ${total}₪</div>
+         </div>
        </div>`;
     }).join('');
   }
@@ -764,6 +994,7 @@ async function loadData() {
       <td>${formatDateTime(row.order_date)}</td>
       <td>${row.owner_name || ""}</td>
       <td>${createWhatsAppLink(row.phone)}</td>
+      <td>${generateWhatsAppConfirmationLink(row)}</td>
       <td class="wide-date-column">
         <input type="date" class="date-input" data-id="${
           row.id

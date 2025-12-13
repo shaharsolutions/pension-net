@@ -1,8 +1,7 @@
 // Initialize constants from config (or fallbacks)
 const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.URL : 'https://smzgfffeehrozxsqtgqa.supabase.co';
 const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : '';
-const GREEN_API_INSTANCE = typeof GREEN_API_CONFIG !== 'undefined' ? GREEN_API_CONFIG.INSTANCE : '7105264953';
-const GREEN_API_TOKEN = typeof GREEN_API_CONFIG !== 'undefined' ? GREEN_API_CONFIG.TOKEN : 'c0e0fdbd81794dfc941722c133598333ad671ebe13af4fe181';
+
 const ADMIN_PHONE = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.ADMIN_PHONE : '972528366744';
 
 // Initialize Supabase
@@ -172,41 +171,7 @@ function updateDaysDisplay() {
   }
 }
 
-async function sendWhatsAppMessage(phone, message) {
-  let formattedPhone = phone.replace(/[\s\-]/g, '');
-  if (formattedPhone.startsWith('0')) {
-    formattedPhone = '972' + formattedPhone.substring(1);
-  }
-  
-  console.log('📞 Sending WhatsApp to:', formattedPhone);
-  
-  try {
-    const url = `https://api.green-api.com/waInstance${GREEN_API_INSTANCE}/sendMessage/${GREEN_API_TOKEN}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        chatId: `${formattedPhone}@c.us`,
-        message: message
-      })
-    });
-    
-    const result = await response.json();
-    console.log('📬 API Response:', result);
-    
-    if (!response.ok) {
-      throw new Error(`API Error: ${JSON.stringify(result)}`);
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('❌ Error sending WhatsApp message:', error);
-    throw error;
-  }
-}
+
 
 function updateStepIndicator() {
   document.querySelectorAll('.step').forEach(step => {
@@ -571,71 +536,12 @@ async function submitForm() {
   const numDays = calculateDays(formData.checkIn, formData.checkOut);
   
   // שליחת הודעה ללקוח
-  const whatsappMessage = `🐕 *הזמנה חדשה לפנסיון כלבים*
+  // ההודעה האוטומטית הוסרה - שליחה ידנית בלבד דרך הממשק
 
-שלום ${formData.ownerName}!
-
-קיבלנו את ההזמנה שלך לפנסיון.
-
-📋 *פרטי ההזמנה:*
-🐶 שם הכלב: ${formData.dogName}
-📅 כניסה: ${formatDateWithDay(formData.checkIn)}
-📅 יציאה: ${formatDateWithDay(formData.checkOut)}
-⏱️ מספר ימים: ${numDays} ימים
-🎂 גיל: ${formData.dogAge}
-📏 גודל: ${formData.dogSize}
-💉 מין וסטטוס: ${formData.neutered}
-${formData.dogTemperament ? `🐕 אופי: ${formData.dogTemperament}` : ''}
-${formData.notes ? `📝 הערות: ${formData.notes}` : ''}
-
-💰 *עלות משוערת:* ${numDays * 130}₪ (${130}₪ ליום)
-
-⏳ *סטטוס ההזמנה:* ממתין לאישור
-
-נחזור אליך בהקדם עם אישור סופי.
-
-📞 לשאלות: 052-8366744
-
-תודה שבחרת בנו! 🐾`;
-
-  try {
-    await sendWhatsAppMessage(finalPhone, whatsappMessage);
-    console.log('✅ WhatsApp message sent successfully to:', finalPhone);
-  } catch (whatsappError) {
-    console.error('❌ Failed to send WhatsApp message:', whatsappError);
-  }
   
   // שליחת התראה למנהל
-  const adminMessage = `🔔 *הזמנה חדשה התקבלה!*
+  // התראת מנהל הוסרה
 
-👤 *פרטי הלקוח:*
-שם: ${formData.ownerName}
-טלפון: ${finalPhone}
-
-🐕 *פרטי הכלב:*
-שם: ${formData.dogName}
-גיל: ${formData.dogAge}
-גודל: ${formData.dogSize}
-מין וסטטוס: ${formData.neutered}
-${formData.dogTemperament ? `אופי: ${formData.dogTemperament}` : ''}
-
-📅 *תאריכים:*
-כניסה: ${formatDateWithDay(formData.checkIn)}
-יציאה: ${formatDateWithDay(formData.checkOut)}
-מספר ימים: ${numDays}
-
-💰 *עלות משוערת:* ${numDays * 130}₪
-
-${formData.notes ? `📝 *הערות:* ${formData.notes}` : ''}
-
-⏰ ${new Date().toLocaleString('he-IL')}`;
-
-  try {
-    await sendWhatsAppMessage(ADMIN_PHONE, adminMessage);
-    console.log('✅ Admin notification sent successfully');
-  } catch (adminError) {
-    console.error('❌ Failed to send admin notification:', adminError);
-  }
   
   const checkIn = formatDateWithDay(formData.checkIn);
   const checkOut = formatDateWithDay(formData.checkOut);
