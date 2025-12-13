@@ -622,6 +622,71 @@ if (searchInput) {
   });
 }
 
+// --- לוגיקת סטטיסטיקת תנועות (נכנסים/יוצאים) ---
+function renderMovementStats(data) {
+  const enteringCountEl = document.getElementById("dogsEnteringCount");
+  const enteringListEl = document.getElementById("dogsEnteringList");
+  const leavingCountEl = document.getElementById("dogsLeavingCount");
+  const leavingListEl = document.getElementById("dogsLeavingList");
+  
+  if (!enteringCountEl || !leavingCountEl) return;
+
+  const today = new Date();
+  
+  // Helper to check if two dates are the same calendar day
+  const isSameDay = (d1, d2) => {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+  };
+
+  // Entering Today
+  const enteringDogs = data.filter(row => {
+    if (row.status !== "מאושר") return false;
+    const checkIn = new Date(row.check_in);
+    return isSameDay(checkIn, today);
+  });
+
+  // Leaving Today
+  const leavingDogs = data.filter(row => {
+     if (row.status !== "מאושר") return false;
+     const checkOut = new Date(row.check_out);
+     return isSameDay(checkOut, today);
+  });
+
+  // Render Entering
+  enteringCountEl.textContent = enteringDogs.length;
+  if (enteringDogs.length === 0) {
+    enteringListEl.innerHTML = '<span style="color: #999;">אין כניסות היום</span>';
+  } else {
+    enteringListEl.innerHTML = enteringDogs.map(d => 
+      `<div style="padding: 6px 0; border-bottom: 1px solid #efefef;">
+         <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+         <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
+         ${d.admin_note ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;">⚠️ ${d.admin_note}</div>` : ''}
+       </div>`
+    ).join('');
+  }
+
+  // Render Leaving
+  leavingCountEl.textContent = leavingDogs.length;
+  if (leavingDogs.length === 0) {
+    leavingListEl.innerHTML = '<span style="color: #999;">אין יציאות היום</span>';
+  } else {
+    leavingListEl.innerHTML = leavingDogs.map(d => {
+      const days = calculateDays(d.check_in, d.check_out);
+      const ppd = d.price_per_day || 130;
+      const total = days * ppd;
+      
+      return `<div style="padding: 6px 0; border-bottom: 1px solid #efefef;">
+         <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+         <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
+         <div style="font-size: 11px; color: #888;">לתשלום: ${total}₪</div>
+       </div>`;
+    }).join('');
+  }
+}
+
 async function loadData() {
   if (!checkAuth()) return;
 
@@ -642,6 +707,9 @@ async function loadData() {
     } else {
       renderCurrentDogsColumnView(data);
     }
+
+    // Render daily stats
+    renderMovementStats(data);
 
     if (data.length > 0) {
       console.log("Sample data:", {

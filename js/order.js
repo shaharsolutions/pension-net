@@ -461,9 +461,56 @@ async function identifyCustomer() {
       
       document.getElementById('previousDogsContainer').style.display = 'block';
     } else {
-      document.querySelector('input[name="ownerName"]').value = '';
-      currentStep = 1;
-      updateStepIndicator();
+      // לקוח חדש - הצג הודעת קבלת פנים
+      const container = document.getElementById('previousDogsContainer');
+      container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
+          <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+          <h3 style="margin: 0 0 15px 0; font-size: 20px;">ברוכים הבאים!</h3>
+          <p style="margin: 0; font-size: 16px; line-height: 1.6;">
+            זו הפעם הראשונה שלך איתנו 😊<br>
+            נעבור עכשיו למילוי פרטי ההזמנה שלך
+          </p>
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 14px; opacity: 0.9;">
+            הזמנתך תתקבל באישור אוטומטי ב-WhatsApp
+          </div>
+          
+          <!-- Progress Bar -->
+          <div style="margin-top: 20px;">
+            <div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
+              עובר לשלב הבא בעוד <span id="countdown">5</span> שניות...
+            </div>
+            <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px; overflow: hidden;">
+              <div id="progressBar" style="background: white; height: 100%; width: 100%; border-radius: 3px; transition: width 0.1s linear;"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.style.display = 'block';
+      
+      // ספירה לאחור והתקדמות ויזואלית
+      let timeLeft = 5;
+      const countdownEl = document.getElementById('countdown');
+      const progressBar = document.getElementById('progressBar');
+      
+      const interval = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.textContent = timeLeft;
+        if (progressBar) progressBar.style.width = `${(timeLeft / 5) * 100}%`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+        }
+      }, 1000);
+      
+      // המתן 4 שניות ואז עבור לשלב הבא
+      setTimeout(() => {
+        clearInterval(interval);
+        container.style.display = 'none';
+        document.querySelector('input[name="ownerName"]').value = '';
+        currentStep = 1;
+        updateStepIndicator();
+      }, 5000);
     }
     
   } catch (error) {
