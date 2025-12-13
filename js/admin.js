@@ -885,7 +885,7 @@ function renderMovementStats(data) {
       return `<div class="movement-row${isChecked ? ' completed' : ''}" style="padding: 6px 0; border-bottom: 1px solid #efefef; display: flex; align-items: center; gap: 8px;">
          <button class="movement-action-btn${isChecked ? ' checked' : ''}" id="movement-entering-${d.id}">${btnText}</button>
          <div style="flex: 1;">
-           <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+           <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
            ${d.admin_note ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;">⚠️ ${d.admin_note}</div>` : ''}
          </div>
@@ -908,7 +908,7 @@ function renderMovementStats(data) {
       return `<div class="movement-row${isChecked ? ' completed' : ''}" style="padding: 6px 0; border-bottom: 1px solid #efefef; display: flex; align-items: center; gap: 8px;">
          <button class="movement-action-btn${isChecked ? ' checked' : ''}" id="movement-leaving-${d.id}">${btnText}</button>
          <div style="flex: 1;">
-           <div style="font-weight: bold; color: #333;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
+           <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
            <div style="font-size: 11px; color: #888;">לתשלום: ${total}₪</div>
          </div>
