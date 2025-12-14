@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <title>מדריך תובנות ומדדים - מערכת פנסיון</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/common.css" />
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: 'Heebo', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            color: #1e40af;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #334155;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #0f172a;
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+        }
+
+        .description {
+            font-size: 0.95rem;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+
+        .value-prop {
+            font-size: 0.9rem;
+            color: #059669;
+            font-weight: 500;
+            background: #ecfdf5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .tag-auto { background: #dbeafe; color: #1e40af; } /* אוטומטי */
+        .tag-calc { background: #fef3c7; color: #92400e; } /* מחושב */
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .back-link:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📚 מדריך תובנות ומדדים</h1>
+      <div class="subtitle">הסבר מקיף למנהל הפנסיון על יכולות הניתוח והדוחות במערכת</div>
+    </header>
+
+    <!-- KPI Section -->
+    <div class="section">
+      <h2>📊 מדדים מרכזיים (KPIs)</h2>
+      <p style="margin-bottom: 20px;">המסך הראשי של הדוחות מציג באופן קבוע 4 מדדי ליבה שנותנים תמונת מצב מיידית על העסק:</p>
+      
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">💰</span> הכנסות החודש</div>
+          <p class="description">סיכום כל התשלומים הצפויים והתקבלו עבור החודש הנוכחי.</p>
+          <div class="value-prop">למה זה חשוב? מעקב אחר תזרים המזומנים והשוואה לחודש שעבר.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">🐕</span> כמות כלבים</div>
+          <p class="description">מספר הכלבים הייחודיים שהתארחו או צפויים להתארח החודש.</p>
+          <div class="value-prop">למה זה חשוב? מדידת היקף הפעילות והעומס התפעולי.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">📈</span> אחוז תפוסה</div>
+          <p class="description">חישוב ממוצע של ימי התפוסה ביחס לקיבולת המקסימלית (15 כלבים).</p>
+          <div class="value-prop">למה זה חשוב? זיהוי ימים ריקים שניתן למלא או עומס שמחייב היערכות.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">💎</span> שימור לקוחות</div>
+          <p class="description">אחוז הלקוחות שזו אינה הפעם הראשונה שלהם, ומספר הלקוחות החדשים.</p>
+          <div class="value-prop">למה זה חשוב? לקוחות חוזרים הם הבסיס ליציבות כלכלית.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Smart Insights Section -->
+    <div class="section">
+      <h2>🧠 תובנות עסקיות חכמות (AI Insights)</h2>
+      <p style="margin-bottom: 20px;">המערכת מנתחת את הנתונים ומציגה באופן <strong>אוטומטי</strong> כרטיסי תובנות רק כאשר היא מזהה חריגה או הזדמנות:</p>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🚀</span> צמיחה מרשימה</div>
+          <p class="description">מופיע כאשר ההכנסות עלו ב-10% או יותר לעומת החודש הקודם.</p>
+          <div class="value-prop">פעולה מומלצת: לנצל את המומנטום ולהגביר פרסום.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">⚠️</span> ירידה בהכנסות</div>
+          <p class="description">מופיע כאשר יש ירידה של יותר מ-10% בהכנסות.</p>
+          <div class="value-prop">פעולה מומלצת: בדיקת עונתיות או יציאה במבצע ללקוחות עבר.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🎯</span> תפוסה גבוהה / נמוכה</div>
+          <p class="description">התראה על תפוסה מעל 80% (עומס) או מתחת ל-50% (פוטנציאל לא מנוצל).</p>
+          <div class="value-prop">פעולה מומלצת: העלאת מחירים (בביקוש שיא) או מבצעים (בשפל).</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">❤️</span> נאמנות לקוחות</div>
+          <p class="description">ניתוח המזהה אם מעל 30% מהלקוחות הם "קבועים" (3+ ביקורים).</p>
+          <div class="value-prop">פעולה מומלצת: יצירת מועדון לקוחות או כרטיסייה משתלמת.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">⭐</span> חוק פארטו (80/20)</div>
+          <p class="description">זיהוי מצב בו מעט לקוחות (20%) אחראים לרוב ההכנסות.</p>
+          <div class="value-prop">פעולה מומלצת: "פינוק" הלקוחות הגדולים (VIP) והקטנת התלות בהם.</div>
+        </div>
+
+         <div class="insight-card">
+          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🐶</span> התמחות בנישה</div>
+          <p class="description">זיהוי אם גזע או גודל מסוים מהווה רוב משמעותי (40%+) מההזמנות.</p>
+          <div class="value-prop">פעולה מומלצת: מיתוג כמומחה לגזע/גודל זה.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts & Predictions -->
+    <div class="section">
+      <h2>📉 גרפים ותחזיות עתידיות</h2>
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">🔮</span> תחזית הכנסות (3 חודשים)</div>
+          <p class="description">חישוב צפי הכנסות עתידי המבוסס על ממוצע 3 החודשים האחרונים ומקדם צמיחה.</p>
+          <div class="value-prop">עוזר לתכנן תזרים מזומנים והוצאות עתידיות.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">📊</span> היסטוריית הכנסות ותפוסה</div>
+          <p class="description">גרפים ויזואליים המציגים את המגמה ב-6 החודשים האחרונים.</p>
+          <div class="value-prop">מאפשר לראות עונתיות ומגמות ארוכות טווח במבט מהיר.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables -->
+    <div class="section">
+      <h2>📋 פילוחים ונתונים מפורטים</h2>
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">🏆</span> 5 הלקוחות המובילים</div>
+          <p class="description">טבלה המציגה מי הלקוחות שהכניסו הכי הרבה כסף לעסק.</p>
+          <div class="value-prop">כולל כפתור מהיר לוואטסאפ לשמירת קשר אישי.</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header"><span class="insight-icon">🐕</span> פילוח לפי סוג/גודל</div>
+          <p class="description">התפלגות הכלבים לפי גזע או גודל (קטן, בינוני, גדול).</p>
+          <div class="value-prop">עוזר בהיערכות לוגיסטית (סוגי כלובים, כמויות אוכל).</div>
+        </div>
+      </div>
+    </div>
+
+    <center>
+        <a href="admin.html" class="back-link">← חזרה למערכת הניהול</a> | 
+        <a href="growth.html" class="back-link">📊 צפייה בדוחות בפועל</a>
+    </center>
+
+  </body>
+</html>

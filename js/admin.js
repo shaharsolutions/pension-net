@@ -1052,7 +1052,7 @@ async function loadData() {
       }" value="${days}" min="1" max="365" />
       </td>
       <td>
-        <select data-id="${row.id}" class="${
+        <select data-id="${row.id}" class="status-select ${
         row.status === "מאושר"
           ? "status-approved"
           : row.status === "בוטל"
