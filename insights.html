@@ -2,251 +2,464 @@
 <html lang="he">
   <head>
     <meta charset="UTF-8" />
-    <title>מדריך תובנות ומדדים - מערכת פנסיון</title>
+    <title>מערכת הפנסיון - מדריך תובנות</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
-    
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/512/616/616408.png"
+      type="image/png"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- External CSS -->
     <link rel="stylesheet" href="css/common.css" />
     <style>
-        body {
-            background-color: #f8fafc;
-            color: #1e293b;
-            font-family: 'Heebo', sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-        }
+      :root {
+        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --glass-bg: rgba(255, 255, 255, 0.92);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+        --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --accent-success: #10b981;
+        --accent-warning: #f59e0b;
+        --accent-danger: #ef4444;
+        --accent-info: #3b82f6;
+      }
 
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
+      body {
+        /* Gradient inhereted from common.css, but we refine defaults here */
+        font-family: "Heebo", sans-serif;
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding: 40px 20px;
+        line-height: 1.6;
+      }
 
-        h1 {
-            color: #1e40af;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
+      /* Main Layout */
+      .main-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
 
-        .subtitle {
-            color: #64748b;
-            font-size: 1.2rem;
-        }
+      header {
+        text-align: center;
+        margin-bottom: 60px;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        animation: fadeInDown 0.8s ease-out;
+      }
 
-        .section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+      header h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+        letter-spacing: -1px;
+        background: linear-gradient(to right, #fff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        drop-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
 
-        h2 {
-            color: #334155;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      header .subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        font-weight: 300;
+        max-width: 600px;
+        margin: 0 auto;
+      }
 
-        .insight-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
+      /* Sections & Cards */
+      .section {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: var(--card-shadow);
+        border: var(--glass-border);
+        animation: fadeInUp 0.8s ease-out both;
+      }
 
-        .insight-card {
-            background: #f1f5f9;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            transition: transform 0.2s;
-        }
+      /* Stagger animations for sections */
+      .section:nth-child(2) { animation-delay: 0.1s; }
+      .section:nth-child(3) { animation-delay: 0.3s; }
+      .section:nth-child(4) { animation-delay: 0.5s; }
+      .section:nth-child(5) { animation-delay: 0.7s; }
 
-        .insight-card:hover {
-            transform: translateY(-2px);
-            border-color: #cbd5e1;
-        }
+      h2 {
+        font-family: 'Outfit', sans-serif;
+        color: var(--text-primary);
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        padding-bottom: 15px;
+      }
 
-        .insight-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: #0f172a;
-        }
+      h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 60px;
+        height: 4px;
+        background: var(--primary-gradient);
+        border-radius: 2px;
+      }
 
-        .insight-icon {
-            font-size: 1.5rem;
-        }
+      .intro-text {
+        color: var(--text-secondary);
+        font-size: 1.05rem;
+        margin-bottom: 30px;
+        max-width: 800px;
+      }
 
-        .description {
-            font-size: 0.95rem;
-            color: #475569;
-            margin-bottom: 10px;
-        }
+      .insight-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+      }
 
-        .value-prop {
-            font-size: 0.9rem;
-            color: #059669;
-            font-weight: 500;
-            background: #ecfdf5;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: inline-block;
-        }
+      .insight-card {
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
 
-        .tag {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
+      .insight-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+        border-color: #e2e8f0;
+      }
 
-        .tag-auto { background: #dbeafe; color: #1e40af; } /* אוטומטי */
-        .tag-calc { background: #fef3c7; color: #92400e; } /* מחושב */
+      .insight-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--text-primary);
+      }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        
-        .back-link:hover { text-decoration: underline; }
+      .insight-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border-radius: 14px;
+        font-size: 1.5rem;
+        transition: transform 0.3s;
+      }
+
+      .insight-card:hover .insight-icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+        background: #eef2ff;
+      }
+
+      .description {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        line-height: 1.6;
+      }
+
+      .value-prop {
+        font-size: 0.85rem;
+        color: #0f5132;
+        font-weight: 600;
+        background: linear-gradient(to left, #d1fae5, #ecfdf5);
+        padding: 10px 14px;
+        border-radius: 12px;
+        display: block;
+        margin-top: auto;
+        position: relative;
+        border-right: 4px solid var(--accent-success);
+      }
+
+      /* Tags */
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 10px;
+        transform: translateY(-2px);
+      }
+
+      .tag-auto {
+        background: #dbeafe;
+        color: #1e40af;
+        box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+      }
+
+      /* Navigation */
+      .nav-footer {
+        text-align: center;
+        margin-top: 60px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        animation: fadeIn 1s 1s backwards;
+      }
+
+      .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 14px 28px;
+        border-radius: 50px;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: 1px solid rgba(255,255,255,0.4);
+      }
+
+      .nav-btn:hover {
+        background: white;
+        color: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      }
+
+      .nav-btn.primary {
+        background: white;
+        color: #6366f1;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      .nav-btn.primary:hover {
+        background: #f8fafc;
+        transform: translateY(-2px) scale(1.05);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        header h1 { font-size: 2.5rem; }
+        .section { padding: 24px; }
+        .insight-grid { grid-template-columns: 1fr; }
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
     </style>
   </head>
   <body>
-    <header>
-      <h1>📚 מדריך תובנות ומדדים</h1>
-      <div class="subtitle">הסבר מקיף למנהל הפנסיון על יכולות הניתוח והדוחות במערכת</div>
-    </header>
+    
+    <div class="main-wrapper">
+      <header>
+        <h1>מדריך תובנות חכמות</h1>
+        <div class="subtitle">הסבר מקיף למנהל הפנסיון על יכולות הניתוח והדוחות במערכת</div>
+      </header>
 
-    <!-- KPI Section -->
-    <div class="section">
-      <h2>📊 מדדים מרכזיים (KPIs)</h2>
-      <p style="margin-bottom: 20px;">המסך הראשי של הדוחות מציג באופן קבוע 4 מדדי ליבה שנותנים תמונת מצב מיידית על העסק:</p>
-      
-      <div class="insight-grid">
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">💰</span> הכנסות החודש</div>
-          <p class="description">סיכום כל התשלומים הצפויים והתקבלו עבור החודש הנוכחי.</p>
-          <div class="value-prop">למה זה חשוב? מעקב אחר תזרים המזומנים והשוואה לחודש שעבר.</div>
-        </div>
+      <!-- KPI Section -->
+      <div class="section">
+        <h2>📊 מדדים מרכזיים (KPIs)</h2>
+        <p class="intro-text">המסך הראשי של הדוחות מציג באופן קבוע 4 מדדי ליבה שנותנים תמונת מצב מיידית על העסק:</p>
+        
+        <div class="insight-grid">
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">💰</div> 
+              הכנסות החודש
+            </div>
+            <p class="description">סיכום כל התשלומים הצפויים והתקבלו עבור החודש הנוכחי.</p>
+            <div class="value-prop">למה זה חשוב? מעקב אחר תזרים המזומנים והשוואה לחודש שעבר.</div>
+          </div>
 
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">🐕</span> כמות כלבים</div>
-          <p class="description">מספר הכלבים הייחודיים שהתארחו או צפויים להתארח החודש.</p>
-          <div class="value-prop">למה זה חשוב? מדידת היקף הפעילות והעומס התפעולי.</div>
-        </div>
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">🐕</div>
+              כמות כלבים
+            </div>
+            <p class="description">מספר הכלבים הייחודיים שהתארחו או צפויים להתארח החודש.</p>
+            <div class="value-prop">למה זה חשוב? מדידת היקף הפעילות והעומס התפעולי.</div>
+          </div>
 
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">📈</span> אחוז תפוסה</div>
-          <p class="description">חישוב ממוצע של ימי התפוסה ביחס לקיבולת המקסימלית (15 כלבים).</p>
-          <div class="value-prop">למה זה חשוב? זיהוי ימים ריקים שניתן למלא או עומס שמחייב היערכות.</div>
-        </div>
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">📈</div>
+              אחוז תפוסה
+            </div>
+            <p class="description">חישוב ממוצע של ימי התפוסה ביחס לקיבולת המקסימלית (15 כלבים).</p>
+            <div class="value-prop">למה זה חשוב? זיהוי ימים ריקים שניתן למלא או עומס שמחייב היערכות.</div>
+          </div>
 
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">💎</span> שימור לקוחות</div>
-          <p class="description">אחוז הלקוחות שזו אינה הפעם הראשונה שלהם, ומספר הלקוחות החדשים.</p>
-          <div class="value-prop">למה זה חשוב? לקוחות חוזרים הם הבסיס ליציבות כלכלית.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Smart Insights Section -->
-    <div class="section">
-      <h2>🧠 תובנות עסקיות חכמות (AI Insights)</h2>
-      <p style="margin-bottom: 20px;">המערכת מנתחת את הנתונים ומציגה באופן <strong>אוטומטי</strong> כרטיסי תובנות רק כאשר היא מזהה חריגה או הזדמנות:</p>
-
-      <div class="insight-grid">
-        <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🚀</span> צמיחה מרשימה</div>
-          <p class="description">מופיע כאשר ההכנסות עלו ב-10% או יותר לעומת החודש הקודם.</p>
-          <div class="value-prop">פעולה מומלצת: לנצל את המומנטום ולהגביר פרסום.</div>
-        </div>
-
-        <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">⚠️</span> ירידה בהכנסות</div>
-          <p class="description">מופיע כאשר יש ירידה של יותר מ-10% בהכנסות.</p>
-          <div class="value-prop">פעולה מומלצת: בדיקת עונתיות או יציאה במבצע ללקוחות עבר.</div>
-        </div>
-
-        <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🎯</span> תפוסה גבוהה / נמוכה</div>
-          <p class="description">התראה על תפוסה מעל 80% (עומס) או מתחת ל-50% (פוטנציאל לא מנוצל).</p>
-          <div class="value-prop">פעולה מומלצת: העלאת מחירים (בביקוש שיא) או מבצעים (בשפל).</div>
-        </div>
-
-        <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">❤️</span> נאמנות לקוחות</div>
-          <p class="description">ניתוח המזהה אם מעל 30% מהלקוחות הם "קבועים" (3+ ביקורים).</p>
-          <div class="value-prop">פעולה מומלצת: יצירת מועדון לקוחות או כרטיסייה משתלמת.</div>
-        </div>
-
-        <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">⭐</span> חוק פארטו (80/20)</div>
-          <p class="description">זיהוי מצב בו מעט לקוחות (20%) אחראים לרוב ההכנסות.</p>
-          <div class="value-prop">פעולה מומלצת: "פינוק" הלקוחות הגדולים (VIP) והקטנת התלות בהם.</div>
-        </div>
-
-         <div class="insight-card">
-          <div class="insight-header"><span class="tag tag-auto">אוטומטי</span> <span class="insight-icon">🐶</span> התמחות בנישה</div>
-          <p class="description">זיהוי אם גזע או גודל מסוים מהווה רוב משמעותי (40%+) מההזמנות.</p>
-          <div class="value-prop">פעולה מומלצת: מיתוג כמומחה לגזע/גודל זה.</div>
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">💎</div>
+              שימור לקוחות
+            </div>
+            <p class="description">אחוז הלקוחות שזו אינה הפעם הראשונה שלהם, ומספר הלקוחות החדשים.</p>
+            <div class="value-prop">למה זה חשוב? לקוחות חוזרים הם הבסיס ליציבות כלכלית.</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Charts & Predictions -->
-    <div class="section">
-      <h2>📉 גרפים ותחזיות עתידיות</h2>
-      <div class="insight-grid">
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">🔮</span> תחזית הכנסות (3 חודשים)</div>
-          <p class="description">חישוב צפי הכנסות עתידי המבוסס על ממוצע 3 החודשים האחרונים ומקדם צמיחה.</p>
-          <div class="value-prop">עוזר לתכנן תזרים מזומנים והוצאות עתידיות.</div>
-        </div>
+      <!-- Smart Insights Section -->
+      <div class="section">
+        <h2>🧠 תובנות עסקיות חכמות (AI)</h2>
+        <p class="intro-text">המערכת מנתחת את הנתונים ומציגה באופן <strong>אוטומטי</strong> כרטיסי תובנות רק כאשר היא מזהה חריגה או הזדמנות:</p>
 
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">📊</span> היסטוריית הכנסות ותפוסה</div>
-          <p class="description">גרפים ויזואליים המציגים את המגמה ב-6 החודשים האחרונים.</p>
-          <div class="value-prop">מאפשר לראות עונתיות ומגמות ארוכות טווח במבט מהיר.</div>
+        <div class="insight-grid">
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">🚀</div>
+              צמיחה מרשימה
+            </div>
+            <p class="description">מופיע כאשר ההכנסות עלו ב-10% או יותר לעומת החודש הקודם.</p>
+            <div class="value-prop">פעולה מומלצת: לנצל את המומנטום ולהגביר פרסום.</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">⚠️</div>
+              ירידה בהכנסות
+            </div>
+            <p class="description">מופיע כאשר יש ירידה של יותר מ-10% בהכנסות.</p>
+            <div class="value-prop" style="border-right-color: var(--accent-danger); background: linear-gradient(to left, #fee2e2, #fff1f2); color: #991b1b;">
+              פעולה מומלצת: בדיקת עונתיות או יציאה במבצע.
+            </div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">🎯</div>
+              תפוסה חריגה
+            </div>
+            <p class="description">התראה על תפוסה מעל 80% (עומס) או מתחת ל-50% (פוטנציאל לא מנוצל).</p>
+            <div class="value-prop" style="border-right-color: var(--accent-info); background: linear-gradient(to left, #dbeafe, #eff6ff); color: #1e40af;">
+               פעולה מומלצת: העלאת מחירים (בביקוש שיא) או מבצעים (בשפל).
+            </div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">❤️</div>
+              נאמנות לקוחות
+            </div>
+            <p class="description">ניתוח המזהה אם מעל 30% מהלקוחות הם "קבועים" (3+ ביקורים).</p>
+            <div class="value-prop">פעולה מומלצת: יצירת מועדון לקוחות או כרטיסייה משתלמת.</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">⭐</div>
+              חוק פארטו (80/20)
+            </div>
+            <p class="description">זיהוי מצב בו מעט לקוחות (20%) אחראים לרוב ההכנסות.</p>
+            <div class="value-prop">פעולה מומלצת: "פינוק" הלקוחות הגדולים והקטנת התלות בהם.</div>
+          </div>
+
+           <div class="insight-card">
+            <div class="insight-header">
+              <span class="tag tag-auto">אוטומטי</span>
+              <div class="insight-icon-wrapper">🐶</div>
+              התמחות בנישה
+            </div>
+            <p class="description">זיהוי אם גזע או גודל מסוים מהווה רוב משמעותי (40%+) מההזמנות.</p>
+            <div class="value-prop">פעולה מומלצת: מיתוג כמומחה לגזע/גודל זה.</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Tables -->
-    <div class="section">
-      <h2>📋 פילוחים ונתונים מפורטים</h2>
-      <div class="insight-grid">
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">🏆</span> 5 הלקוחות המובילים</div>
-          <p class="description">טבלה המציגה מי הלקוחות שהכניסו הכי הרבה כסף לעסק.</p>
-          <div class="value-prop">כולל כפתור מהיר לוואטסאפ לשמירת קשר אישי.</div>
-        </div>
+      <!-- Charts & Predictions -->
+      <div class="section">
+        <h2>📉 גרפים ותחזיות עתידיות</h2>
+        <div class="insight-grid">
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">🔮</div>
+              תחזית הכנסות
+            </div>
+            <p class="description">חישוב צפי הכנסות עתידי המבוסס על ממוצע 3 החודשים האחרונים ומקדם צמיחה.</p>
+            <div class="value-prop">עוזר לתכנן תזרים מזומנים והוצאות עתידיות.</div>
+          </div>
 
-        <div class="insight-card">
-          <div class="insight-header"><span class="insight-icon">🐕</span> פילוח לפי סוג/גודל</div>
-          <p class="description">התפלגות הכלבים לפי גזע או גודל (קטן, בינוני, גדול).</p>
-          <div class="value-prop">עוזר בהיערכות לוגיסטית (סוגי כלובים, כמויות אוכל).</div>
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">📊</div>
+              היסטוריית הכנסות
+            </div>
+            <p class="description">גרפים ויזואליים המציגים את המגמה ב-6 החודשים האחרונים.</p>
+            <div class="value-prop">מאפשר לראות עונתיות ומגמות ארוכות טווח במבט מהיר.</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <center>
-        <a href="admin.html" class="back-link">← חזרה למערכת הניהול</a> | 
-        <a href="growth.html" class="back-link">📊 צפייה בדוחות בפועל</a>
-    </center>
+      <!-- Tables -->
+      <div class="section">
+        <h2>📋 פילוחים ונתונים מפורטים</h2>
+        <div class="insight-grid">
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">🏆</div>
+              5 הלקוחות המובילים
+            </div>
+            <p class="description">טבלה המציגה מי הלקוחות שהכניסו הכי הרבה כסף לעסק.</p>
+            <div class="value-prop">כולל כפתור מהיר לוואטסאפ לשמירת קשר אישי.</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-icon-wrapper">🐕</div>
+              פילוח לפי סוג/גודל
+            </div>
+            <p class="description">התפלגות הכלבים לפי גזע או גודל (קטן, בינוני, גדול).</p>
+            <div class="value-prop">עוזר בהיערכות לוגיסטית (סוגי כלובים, כמויות אוכל).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-footer">
+          <a href="admin.html" class="nav-btn">← חזרה למערכת הניהול</a>
+          <a href="growth.html" class="nav-btn primary">📊 צפייה בדוחות בפועל</a>
+      </div>
+    
+    </div>
 
   </body>
 </html>

@@ -107,6 +107,39 @@ function calculateDays(checkIn, checkOut) {
   return diffDays;
 }
 
+function updateCheckOutFromDays(row) {
+  const daysInput = row.querySelector(".days-input");
+  const checkInInput = row.querySelector('.date-input[data-field="check_in"]');
+  const checkOutInput = row.querySelector('.date-input[data-field="check_out"]');
+
+  if (!daysInput || !checkInInput || !checkOutInput) return;
+
+  const days = parseInt(daysInput.value);
+  const checkInDate = checkInInput.value;
+
+  if (!checkInDate || isNaN(days)) return;
+
+  const parts = checkInDate.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+
+  const date = new Date(year, month, day);
+  date.setDate(date.getDate() + days);
+
+  const newYear = date.getFullYear();
+  const newMonth = String(date.getMonth() + 1).padStart(2, "0");
+  const newDay = String(date.getDate()).padStart(2, "0");
+
+  checkOutInput.value = `${newYear}-${newMonth}-${newDay}`;
+
+  const displayDiv = checkOutInput.nextElementSibling;
+  if (displayDiv) {
+    const dayName = date.toLocaleDateString("he-IL", { weekday: "long" });
+    displayDiv.textContent = `${newDay}/${newMonth}/${newYear} (${dayName})`;
+  }
+}
+
 function addDaysToDate(dateStr, days) {
   const date = new Date(dateStr);
   date.setDate(date.getDate() + days);
@@ -723,6 +756,9 @@ function renderPastOrdersTable() {
     .forEach((input) => {
       input.addEventListener("input", function () {
         const row = this.closest("tr");
+        if (this.classList.contains("days-input")) {
+          updateCheckOutFromDays(row);
+        }
         const priceInput = row.querySelector(".price-input");
         const daysInput = row.querySelector(".days-input");
         const priceCell = row.querySelector(".price-cell");
@@ -1086,6 +1122,9 @@ async function loadData() {
       .forEach((input) => {
         input.addEventListener("input", function () {
           const row = this.closest("tr");
+          if (this.classList.contains("days-input")) {
+            updateCheckOutFromDays(row);
+          }
           const priceInput = row.querySelector(".price-input");
           const daysInput = row.querySelector(".days-input");
           const priceCell = row.querySelector(".price-cell");
