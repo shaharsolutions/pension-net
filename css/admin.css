@@ -501,11 +501,25 @@ textarea.admin-note:focus {
   max-width: 300px;
 }
 
+/* Common wrapper for inputs with buttons */
+.price-wrapper, .days-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.price-controls, .days-controls {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
 /* Price Inputs */
 .price-input-container {
   position: relative;
   display: inline-block;
-  min-width: 140px;
+  min-width: 105px;
 }
 
 .price-input-container::after {
@@ -554,13 +568,31 @@ textarea.admin-note:focus {
   background: #f0fdf4;
 }
 
+/* Days Inputs */
+.days-input-container {
+  position: relative;
+  display: inline-block;
+  min-width: 75px;
+}
+
 .days-input {
-  width: 60px;
+  width: 100%;
   padding: 8px;
   border: 1px solid var(--border-color);
-  background: #f9fafb;
-  color: var(--primary);
   border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background: white;
+  color: var(--text-main);
+}
+
+.days-input::-webkit-outer-spin-button,
+.days-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .tooltip {

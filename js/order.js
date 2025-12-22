@@ -1,11 +1,11 @@
 // Initialize constants from config (or fallbacks)
 const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.URL : 'https://smzgfffeehrozxsqtgqa.supabase.co';
-const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : '';
+const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
 
 const ADMIN_PHONE = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.ADMIN_PHONE : '972528366744';
 
 // Initialize Supabase
-const supabase = getSupabase();
+const pensionNetSupabase = getSupabase();
 
 // State variables
 let currentStep = 0;
@@ -30,7 +30,7 @@ async function loadMonthlyCapacity() {
   const lastDay = new Date(year, month + 1, 0);
   
   try {
-    const { data: orders, error } = await supabase
+    const { data: orders, error } = await pensionNetSupabase
       .from('orders')
       .select('*')
       .eq('status', 'מאושר')
@@ -341,7 +341,7 @@ async function identifyCustomer() {
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await pensionNetSupabase
       .from('orders')
       .select('*')
       .eq('phone', phone) // חיפוש עם מספר נקי
@@ -443,7 +443,7 @@ async function identifyCustomer() {
           <!-- Progress Bar -->
           <div style="margin-top: 20px;">
             <div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
-              עובר לשלב הבא בעוד <span id="countdown">5</span> שניות...
+              עובר לשלב הבא בעוד <span id="countdown">8</span> שניות...
             </div>
             <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px; overflow: hidden;">
               <div id="progressBar" style="background: white; height: 100%; width: 100%; border-radius: 3px; transition: width 0.1s linear;"></div>
@@ -454,28 +454,28 @@ async function identifyCustomer() {
       container.style.display = 'block';
       
       // ספירה לאחור והתקדמות ויזואלית
-      let timeLeft = 5;
+      let timeLeft = 8;
       const countdownEl = document.getElementById('countdown');
       const progressBar = document.getElementById('progressBar');
       
       const interval = setInterval(() => {
         timeLeft--;
         if (countdownEl) countdownEl.textContent = timeLeft;
-        if (progressBar) progressBar.style.width = `${(timeLeft / 5) * 100}%`;
+        if (progressBar) progressBar.style.width = `${(timeLeft / 8) * 100}%`;
         
         if (timeLeft <= 0) {
           clearInterval(interval);
         }
       }, 1000);
       
-      // המתן 4 שניות ואז עבור לשלב הבא
+      // המתן 8 שניות ואז עבור לשלב הבא
       setTimeout(() => {
         clearInterval(interval);
         container.style.display = 'none';
         document.querySelector('input[name="ownerName"]').value = '';
         currentStep = 1;
         updateStepIndicator();
-      }, 5000);
+      }, 8000);
     }
     
   } catch (error) {
@@ -520,7 +520,7 @@ async function submitForm() {
     notes: formData.notes || ''
   };
   
-  const { data, error } = await supabase
+  const { data, error } = await pensionNetSupabase
     .from('orders')
     .insert([orderData])
     .select();

@@ -79,11 +79,11 @@ document
     }
   });
 
-const SUPABASE_URL = "https://smzgfffeehrozxsqtgqa.supabase.co";
-const SUPABASE_ANON_KEY =
+const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.URL : "https://smzgfffeehrozxsqtgqa.supabase.co";
+const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : 
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4";
 
-const supabase = window.supabase.createClient(
+const pensionNetSupabase = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
@@ -272,7 +272,7 @@ async function markConfirmationSent(orderId) {
   
   // Update order status to 'מאושר' in database
   try {
-    const { error } = await supabase
+    const { error } = await pensionNetSupabase
       .from('orders')
       .update({ status: 'מאושר' })
       .eq('id', orderId);
@@ -615,6 +615,24 @@ function updatePriceWithButtons(input, delta) {
   }
 }
 
+function updateDaysWithButtons(input, delta) {
+  const currentValue = parseInt(input.value) || 1;
+  const newValue = Math.max(1, currentValue + delta);
+  input.value = newValue;
+
+  const row = input.closest("tr");
+  updateCheckOutFromDays(row);
+  
+  const priceInput = row.querySelector(".price-input");
+  const tooltip = row.querySelector(".tooltip");
+
+  if (tooltip && priceInput) {
+    const price = parseInt(priceInput.value) || 0;
+    const total = newValue * price;
+    tooltip.textContent = `עלות שהייה: ${total}₪`;
+  }
+}
+
 function filterPastOrdersData() {
   if (!window.pastOrdersRawData) return [];
   const term = (window.pastOrdersSearchTerm || "").trim();
@@ -709,11 +727,19 @@ function renderPastOrdersTable() {
       <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
     </td>
     <td>
-      <input type="number" class="days-input" data-id="${
-        row.id
-      }" data-checkin="${
-      row.check_in
-    }" value="${days}" min="1" max="365" />
+      <div class="days-wrapper">
+        <div class="days-controls">
+          <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+          <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+        </div>
+        <div class="days-input-container">
+          <input type="number" class="days-input" data-id="${
+            row.id
+          }" data-checkin="${
+          row.check_in
+        }" value="${days}" min="1" max="365" />
+        </div>
+      </div>
     </td>
     <td class="${
       row.status === "מאושר"
@@ -850,7 +876,7 @@ async function toggleMovementChecked(type, orderId) {
   }
 
   try {
-    const { error } = await supabase
+    const { error } = await pensionNetSupabase
       .from('orders')
       .update({ [field]: newState })
       .eq('id', orderId);
@@ -958,7 +984,7 @@ async function loadData() {
   if (!checkAuth()) return;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await pensionNetSupabase
       .from("orders")
       .select("*")
       .order("check_out", { ascending: true });
@@ -1081,11 +1107,19 @@ async function loadData() {
         <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
       </td>
       <td>
-        <input type="number" class="days-input" data-id="${
-          row.id
-        }" data-checkin="${
-        row.check_in
-      }" value="${days}" min="1" max="365" />
+        <div class="days-wrapper">
+          <div class="days-controls">
+            <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+            <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+          </div>
+          <div class="days-input-container">
+            <input type="number" class="days-input" data-id="${
+              row.id
+            }" data-checkin="${
+            row.check_in
+          }" value="${days}" min="1" max="365" />
+          </div>
+        </div>
       </td>
       <td>
         <select data-id="${row.id}" class="status-select ${
@@ -1223,7 +1257,7 @@ document
         }
 
         if (Object.keys(updateData).length > 0) {
-          const { error } = await supabase
+          const { error } = await pensionNetSupabase
             .from("orders")
             .update(updateData)
             .eq("id", id);
