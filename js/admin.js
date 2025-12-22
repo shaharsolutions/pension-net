@@ -13,16 +13,22 @@ function simpleHash(str) {
 function checkAuth() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('demo') === 'true') return true;
-  const stored = sessionStorage.getItem("adminAuth");
-  return stored === ADMIN_PASSWORD_HASH;
+  const storedSession = sessionStorage.getItem("adminAuth");
+  const storedLocal = localStorage.getItem("adminAuth");
+  return storedSession === ADMIN_PASSWORD_HASH || storedLocal === ADMIN_PASSWORD_HASH;
 }
 
 function attemptLogin() {
   const input = document.getElementById("passwordInput").value;
+  const rememberMe = document.getElementById("rememberMe")?.checked;
   const inputHash = simpleHash(input);
 
   if (inputHash === ADMIN_PASSWORD_HASH) {
-    sessionStorage.setItem("adminAuth", inputHash);
+    if (rememberMe) {
+      localStorage.setItem("adminAuth", inputHash);
+    } else {
+      sessionStorage.setItem("adminAuth", inputHash);
+    }
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
     loadData();
@@ -37,6 +43,7 @@ function attemptLogin() {
 
 function logout() {
   sessionStorage.removeItem("adminAuth");
+  localStorage.removeItem("adminAuth");
   location.reload();
 }
 
@@ -257,6 +264,7 @@ function generateWhatsAppConfirmationLink(row) {
 }
 
 async function markConfirmationSent(orderId) {
+  const finalId = /^\d+$/.test(orderId) ? parseInt(orderId, 10) : orderId;
   const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
   sentConfirmations[orderId] = Date.now();
   localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
@@ -275,27 +283,44 @@ async function markConfirmationSent(orderId) {
     const { error } = await pensionNetSupabase
       .from('orders')
       .update({ status: 'מאושר' })
-      .eq('id', orderId);
+      .eq('id', finalId);
     
     if (error) {
       console.error('Error updating order status:', error);
     } else {
-      console.log('Order status updated to מאושר for order:', orderId);
+      console.log('Order status updated to מאושר for order:', finalId);
       // Reload data to update the status column in the table
-      loadData();
+      await loadData();
     }
   } catch (err) {
     console.error('Error updating order status:', err);
   }
 }
 
-function resetConfirmationState(orderId) {
+async function resetConfirmationState(orderId) {
+  const finalId = /^\d+$/.test(orderId) ? parseInt(orderId, 10) : orderId;
   const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
   delete sentConfirmations[orderId];
   localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
   
-  // Reload data to refresh the button
-  loadData();
+  // Update order status back to 'ממתין' in database
+  try {
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ status: 'ממתין' })
+      .eq('id', finalId);
+    
+    if (error) {
+      console.error('Error resetting order status:', error);
+    } else {
+      console.log('Order status reset to ממתין for order:', finalId);
+    }
+  } catch (err) {
+    console.error('Error resetting order status:', err);
+  }
+  
+  // Reload data to refresh the button and status
+  await loadData();
 }
 
 // Event delegation for WhatsApp confirmation buttons

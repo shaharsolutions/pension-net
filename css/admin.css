@@ -93,6 +93,32 @@ body {
   font-weight: 500;
 }
 
+.remember-me-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 0 5px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.remember-me-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 0;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.remember-me-wrapper label {
+  cursor: pointer;
+  user-select: none;
+}
+
 #mainContent {
   display: none;
 }
