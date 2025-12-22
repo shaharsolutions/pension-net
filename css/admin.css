@@ -551,19 +551,19 @@ textarea.admin-note:focus {
 .price-input-container::after {
   content: "₪";
   position: absolute;
-  right: 12px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   font-weight: 600;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
   z-index: 5;
   pointer-events: none;
 }
 
 .price-input {
   width: 100%;
-  padding: 8px 32px;
+  padding: 8px 24px 8px 8px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 16px;
