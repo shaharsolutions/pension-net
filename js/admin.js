@@ -412,6 +412,7 @@ function renderMonthlyCalendar(allOrders) {
   let calendarHTML = '<table class="calendar-table"><thead><tr>';
   // ימי השבוע ב-JavaScript מתחילים מ-0 (ראשון)
   const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+  const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   dayNames.forEach((day) => {
     calendarHTML += `<th>${day}</th>`;
   });
@@ -433,6 +434,7 @@ function renderMonthlyCalendar(allOrders) {
       date.getMonth(),
       dayCounter
     );
+    const dayName = dayLabels[currentDate.getDay()];
     const dogsBySize = getDogsForDay(allOrders, currentDate);
 
     const isToday = currentDate.toDateString() === today.toDateString();
@@ -477,7 +479,7 @@ function renderMonthlyCalendar(allOrders) {
     }
 
     calendarHTML += `<td class="${classes}">
-          <div class="day-number">${dayCounter}</div>
+          <div class="day-number">${dayCounter} (${dayName})</div>
           ${dogsInDay > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsInDay} כלבים</div>` : ''}
           <div class="day-content">${dogsContentHTML}</div>
       </td>`;
