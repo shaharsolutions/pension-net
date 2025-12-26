@@ -1,138 +1,334 @@
 <!DOCTYPE html>
-<html lang="he">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>מצגת סטארט-אפ – מערכת ניהול פנסיון לכלבים</title>
-    <link rel="stylesheet" href="css/presentation.css">
-  </head>
-  <body>
-    <section class="slide active">
-      <h1>🐕 Pension-Net</h1>
-      <h2>מערכת ניהול חכמה לפנסיונים לכלבים</h2>
-      <p>
-        פתרון דיגיטלי מקיף המייעל את כל תהליכי הניהול – מהזמנות לקוחות ועד דוחות עסקיים מתקדמים.
-        <br><br>
-        <strong>חוסכים זמן, מגדילים רווחיות, משפרים שירות.</strong>
-      </p>
-    </section>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pension-Net Presentation</title>
+    <!-- ייבוא פונט Heebo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- ייבוא אייקונים -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --accent-color: #e94560;
+            --text-color: #ffffff;
+            --secondary-text: #aeb2b8;
+            --highlight: #0f3460;
+        }
 
-    <section class="slide">
-      <h2>💡 הבעיה שאנחנו פוחרים</h2>
-      <p>
-        <strong>בעלי פנסיונים מתמודדים עם אתגרים יומיומיים:</strong>
-      </p>
-      <ul style="text-align: right; margin: 20px auto; max-width: 700px; font-size: 1.1em; line-height: 1.8;">
-        <li>📋 ניהול הזמנות בדפים/אקסל – גורם לטעויות ולכפל הזמנות</li>
-        <li>📞 שעות של תיאום ותקשורת ידנית עם לקוחות</li>
-        <li>❓ חוסר ראייה ברורה על תפוסה והכנסות</li>
-        <li>📊 קושי לזהות הזדמנויות צמיחה ולקוחות נאמנים</li>
-        <li>⏰ בזבוז זמן על משימות מנהליות במקום להתמקד בכלבים</li>
-      </ul>
-    </section>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    <section class="slide">
-      <h2>✨ הפתרון – Pension-Net</h2>
-      <p>
-        <strong>מערכת וובית All-in-One שמנהלת את כל העסק:</strong>
-      </p>
-      <ul style="text-align: right; margin: 20px auto; max-width: 700px; font-size: 1.1em; line-height: 1.8;">
-        <li>🎯 <strong>טופס הזמנות דיגיטלי</strong> – לקוחות מזמינים בעצמם 24/7</li>
-        <li>📅 <strong>לוח שנה חודשי</strong> – תצוגה מלאה של תפוסה ומצב הזמנות</li>
-        <li>💬 <strong>התראות WhatsApp אוטומטיות</strong> – ללקוח ולמנהל</li>
-        <li>📊 <strong>דוחות ותחזיות עסקיות</strong> – הכנסות, שימור לקוחות, תובנות חכמות</li>
-        <li>⚡ <strong>פשוט ומהיר</strong> – אפס התקנה, עובד מכל דפדפן</li>
-      </ul>
-      <p style="margin-top: 30px; font-size: 1.2em; color: #667eea;">
-        <strong>תוצאה: חיסכון של 5-10 שעות שבועיות + גידול ברווחיות</strong>
-      </p>
-    </section>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* מונע גלילה */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-    <section class="slide">
-      <h2>🎨 מסך הזמנה – חוויית לקוח</h2>
-      <p>
-        <strong>לקוחות מזמינים מקום בתהליך פשוט ואינטואיטיבי:</strong><br>
-        זיהוי אוטומטי של לקוחות חוזרים | תצוגת תפוסה חודשית בזמן אמת | אישור מיידי בWhatsApp
-      </p>
-      <iframe src="order.html" title="מסך הזמנה"></iframe>
-    </section>
+        /* קונטיינר המצגת */
+        .presentation-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    <section class="slide">
-      <h2>⚙️ ממשק ניהול – בעל הפנסיון</h2>
-      <p>
-        <strong>ניהול מרכזי של כל העסק במסך אחד:</strong><br>
-        לוח שנה אינטראקטיבי | עדכון סטטוס הזמנות | תקשורת WhatsApp ישירה | ניהול לקוחות וכלבים
-      </p>
-      <img src="images/admin_1.png" class="slide-image" alt="ממשק ניהול">
-    </section>
+        /* עיצוב שקף בודד */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: none; /* מונע אינטראקציה עם שקפים מוסתרים */
+        }
 
-    <section class="slide">
-      <h2>📈 דוחות ותחזיות עסקיות</h2>
-      <p>
-        <strong>BI מתקדם המספק תובנות עסקיות מעשיות:</strong><br>
-        ניתוח הכנסות חודשי | אחוז תפוסה ממוצע | זיהוי לקוחות מובילים | תחזיות צמיחה | המלצות מותאמות אישית
-      </p>
-      <iframe src="growth.html" title="דוחות עסקיים"></iframe>
-    </section>
+        /* המצב הפעיל של שקף */
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+            z-index: 10;
+        }
 
-    <section class="slide">
-      <h2>🎯 שוק יעד והזדמנות</h2>
-      <p style="text-align: right; margin: 20px auto; max-width: 750px; font-size: 1.05em; line-height: 1.7;">
-        <strong>שוק הפנסיונים לכלבים בישראל:</strong><br>
-        • אלפי פנסיונים פעילים ברחבי הארץ<br>
-        • צמיחה של 15-20% בשנה בשוק חיות המחמד<br>
-        • רוב העסקים עדיין עובדים בשיטות מיושנות (אקסל/דפים)<br>
-        • הפתרונות הקיימים יקרים (300-500₪/חודש) או באנגלית<br>
-        • הביקוש: פתרון פשוט, בעברית, במחיר סביר<br><br>
-        <strong style="color: #667eea; font-size: 1.15em;">פנסיון ממוצע יכול לחסוך 10 שעות שבועיות ולהגדיל הכנסות ב-15-25%</strong>
-      </p>
-    </section>
+        /* אלמנטים בתוך השקף */
+        .icon-container {
+            font-size: 5rem;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 10px rgba(233, 69, 96, 0.3));
+        }
 
-    <section class="slide">
-      <h2>💰 מודל עסקי</h2>
-      <p style="text-align: right; margin: 20px auto; max-width: 700px; font-size: 1.1em; line-height: 1.8;">
-        <strong>מנוי SaaS חודשי/שנתי:</strong><br><br>
-        📦 <strong>Basic</strong> – 79₪/חודש: עד 10 כלבים, כל התכונות הבסיסיות<br>
-        🚀 <strong>Pro</strong> – 149₪/חודש: עד 25 כלבים, דוחות מתקדמים, שמירת היסטוריה<br>
-        💎 <strong>Enterprise</strong> – 249₪/חודש: ללא הגבלה + תמיכה ייעודית<br><br>
+        h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: var(--secondary-text);
+            max-width: 800px;
+            line-height: 1.4;
+        }
+
+        .highlight-text {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        /* בקרי שליטה */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* מד התקדמות */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* התאמה לנייד */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1.5rem; }
+            .icon-container { font-size: 3.5rem; }
+            .presentation-container { width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
         
-        <strong>הכנסות נוספות:</strong><br>
-        • הטמעה והדרכה: 500-1,500₪ חד פעמי<br>
-        • התאמות אישיות: לפי פרויקט<br>
-        • תוספות (שכר, תשלומים): 29-49₪/חודש<br><br>
+        <!-- שקף 1 -->
+        <div class="slide active">
+            <div class="icon-container"><i class="fa-solid fa-paw"></i></div>
+            <h1>Pension-Net</h1>
+            <h2>מערכת ניהול חכמה לפנסיון כלבים</h2>
+        </div>
+
+        <!-- חלק 1: הבעיה -->
         
-        <strong style="color: #667eea;">יעד: 100 פנסיונים בשנה ראשונה = 150,000₪ הכנסה חודשית חוזרת</strong>
-      </p>
-    </section>
+        <!-- שקף 2 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-regular fa-file-excel"></i></div>
+            <h1>האתגר היומיומי</h1>
+            <h2>ניהול ידני באקסל ובדפים מוביל <span class="highlight-text">לטעויות וכפל הזמנות</span>.</h2>
+        </div>
 
-    <section class="slide">
-      <h2>🔮 חזון והמשך פיתוח</h2>
-      <p style="text-align: right; margin: 20px auto; max-width: 700px; font-size: 1.1em; line-height: 1.8;">
-        <strong>שלב 1 (6 חודשים):</strong> אימות מוצר עם 20-30 פנסיונים<br>
-        <strong>שלב 2 (שנה):</strong> הרחבה ל-100 לקוחות, פיתוח אפליקציה לנייד<br>
-        <strong>שלב 3:</strong> התרחבות לתחומים נוספים – מלונות חתולים, אילוף, טיפוח<br><br>
-        
-        <strong style="color: #667eea; font-size: 1.2em;">
-        החזון: להפוך את Pension-Net לפלטפורמה המובילה לניהול עסקים בתחום חיות המחמד בישראל
-        </strong>
-      </p>
-    </section>
+        <!-- שקף 3 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-regular fa-clock"></i></div>
+            <h1>בזבוז זמן יקר</h1>
+            <h2>שעות של תיאום טלפוני והתכתבויות<br>במקום להתמקד <span class="highlight-text">בטיפול בכלבים</span>.</h2>
+        </div>
 
-    <section class="slide">
-      <h2>🙏 תודה!</h2>
-      <p style="font-size: 1.2em; line-height: 2;">
-        <strong>שחר כהן</strong> – מייסד ומפתח<br>
-        📧 shaharc94@gmail.com<br>
-        📱 052-8366744<br><br>
-        <span style="color: #667eea; font-size: 1.1em;">מוכן לשאלות והדגמה חיה של המערכת!</span>
-      </p>
-    </section>
+        <!-- שקף 4 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-eye-slash"></i></div>
+            <h1>חוסר וודאות</h1>
+            <h2>בלי תמונה ברורה של התפוסה וההכנסות,<br>קשה לזהות <span class="highlight-text">הזדמנויות צמיחה</span>.</h2>
+        </div>
 
-    <nav>
-      <button id="prevBtn">הקודם</button>
-      <button id="nextBtn">הבא</button>
-    </nav>
+        <!-- חלק 2: הפתרון -->
 
-    <script src="js/presentation.js"></script>
-  </body>
+        <!-- שקף 5 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h1>הפתרון שלנו</h1>
+            <h2>מערכת <span class="highlight-text">All-in-One</span><br>שמנהלת את העסק בשבילך.</h2>
+        </div>
+
+        <!-- שקף 6 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <h1>הזמנות אונליין 24/7</h1>
+            <h2>הלקוחות מזמינים לבד, בקלות,<br>ומקבלים <span class="highlight-text">אישור מיידי</span>.</h2>
+        </div>
+
+        <!-- שקף 7 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-brands fa-whatsapp"></i></div>
+            <h1>שקט נפשי</h1>
+            <h2>התראות <span class="highlight-text">WhatsApp</span> אוטומטיות<br>ללקוח ולמנהל בכל שלב.</h2>
+        </div>
+
+        <!-- שקף 8 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-regular fa-calendar-check"></i></div>
+            <h1>שליטה מלאה</h1>
+            <h2>לוח שנה חכם המציג תפוסה,<br>סטטוס הזמנות וניהול לקוחות <span class="highlight-text">במסך אחד</span>.</h2>
+        </div>
+
+        <!-- שקף 9 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-chart-pie"></i></div>
+            <h1>חוכמה עסקית (BI)</h1>
+            <h2>דוחות רווחיות, זיהוי לקוחות נאמנים<br>ותחזיות צמיחה <span class="highlight-text">בלחיצת כפתור</span>.</h2>
+        </div>
+
+        <!-- חלק 3: הערך -->
+
+        <!-- שקף 10 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-rocket"></i></div>
+            <h1>התוצאה</h1>
+            <h2>חיסכון של <span class="highlight-text">5-10 שעות</span> עבודה בשבוע<br>וגידול משמעותי ברווחיות.</h2>
+        </div>
+
+        <!-- שקף 11 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <h1>ההזדמנות</h1>
+            <h2>שוק חיות המחמד בצמיחה,<br>אך הניהול בו עדיין <span class="highlight-text">מיושן</span>.</h2>
+        </div>
+
+        <!-- שקף 12 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-check-circle"></i></div>
+            <h1>היתרון שלנו</h1>
+            <h2>פשוט, בעברית, ללא התקנה<br>ובמחיר <span class="highlight-text">שווה לכל נפש</span>.</h2>
+        </div>
+
+        <!-- חלק 4: עסקי וחזון -->
+
+        <!-- שקף 13 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-sack-dollar"></i></div>
+            <h1>מודל עסקי</h1>
+            <h2>מנוי חודשי פשוט (<span class="highlight-text">SaaS</span>)<br>המותאם לגודל העסק.</h2>
+        </div>
+
+        <!-- שקף 14 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-binoculars"></i></div>
+            <h1>החזון</h1>
+            <h2>להפוך לפלטפורמה המובילה בישראל<br>לניהול עסקי <span class="highlight-text">חיות מחמד</span>.</h2>
+        </div>
+
+        <!-- שקף 15 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-handshake"></i></div>
+            <h1>תודה!</h1>
+            <h2>שחר כהן – מייסד ומפתח<br><br>
+            <span style="font-size: 0.8em; opacity: 0.8;">shaharc94@gmail.com | 052-8366744</span>
+            </h2>
+        </div>
+
+    </div>
+
+    <!-- כפתורי שליטה -->
+    <div class="controls">
+        <button onclick="prevSlide()"><i class="fa-solid fa-chevron-right"></i> הקודם</button>
+        <button onclick="nextSlide()">הבא <i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <!-- בר התקדמות -->
+    <div class="progress-bar" id="progress"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            // טיפול בגבולות
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            
+            currentSlide = index;
+
+            // הסרת המחלקה active מכולם והוספה לנוכחי
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+
+            // עדכון בר התקדמות
+            const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // האזנה למקלדת
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft' || event.key === ' ') {
+                nextSlide(); // בעברית חץ שמאלה זה "הבא" בגלל כיוון הקריאה, אבל לוגית זה הפוך. נלך לפי האינטואיציה:
+                // כאן נגדיר שחץ שמאלה = מתקדם (הבא), חץ ימינה = חוזר (הקודם) שזה תואם RTL
+            } else if (event.key === 'ArrowRight') {
+                prevSlide();
+            }
+        });
+
+        // אתחול ראשוני
+        showSlide(0);
+    </script>
+</body>
 </html>
