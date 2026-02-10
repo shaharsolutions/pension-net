@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כניסה למערכת | Pension-Net</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--primary-gradient);
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            padding: 48px;
+            border-radius: 32px;
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            animation: cardAppear 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: #4f46e5;
+        }
+
+        input[type="password"], input[type="text"] {
+            padding-left: 45px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .footer-link {
+            margin-top: 24px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .footer-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">Pension-Net</div>
+        <div class="subtitle">ניהול פנסיון כלבים חכם</div>
+
+        <div class="tabs">
+            <div id="loginTab" class="tab active" onclick="switchMode('login')">כניסה</div>
+            <div id="signupTab" class="tab" onclick="switchMode('signup')">הרשמה</div>
+        </div>
+
+        <div id="errorMessage" class="error-msg"></div>
+
+        <form id="authForm" onsubmit="handleAuth(event)">
+            <div class="form-group">
+                <label for="email">אימייל</label>
+                <input type="email" id="email" placeholder="example@gmail.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">סיסמה</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="••••••••" required minlength="6">
+                    <i class="far fa-eye password-toggle" id="togglePassword" onclick="togglePasswordVisibility()"></i>
+                </div>
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary">כניסה</button>
+        </form>
+
+        <div class="footer-link" id="toggleLink">
+            עוד לא רשומים? <a href="#" onclick="switchMode('signup')">צרו חשבון עכשיו</a>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let mode = 'login';
+
+        function switchMode(newMode) {
+            mode = newMode;
+            document.getElementById('loginTab').classList.toggle('active', mode === 'login');
+            document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
+            
+            document.getElementById('submitBtn').textContent = mode === 'login' ? 'כניסה' : 'הרשמה';
+            document.getElementById('toggleLink').innerHTML = mode === 'login' ? 
+                'עוד לא רשומים? <a href="#" onclick="switchMode(\'signup\')">צרו חשבון עכשיו</a>' :
+                'כבר יש לכם חשבון? <a href="#" onclick="switchMode(\'login\')">היכנסו כאן</a>';
+            
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        async function handleAuth(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const submitBtn = document.getElementById('submitBtn');
+
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            submitBtn.textContent = 'טוען...';
+
+            try {
+                let result;
+                if (mode === 'login') {
+                    result = await Auth.login(email, password);
+                } else {
+                    result = await Auth.signUp(email, password);
+                }
+
+                if (result.error) {
+                    throw result.error;
+                }
+
+                if (mode === 'signup' && result.data.user && !result.data.session) {
+                    errorDiv.textContent = 'נשלחה הודעת אימות למייל שלך. אנא אשר אותה כדי להיכנס.';
+                    errorDiv.style.background = '#dcfce7';
+                    errorDiv.style.color = '#166534';
+                    errorDiv.style.display = 'block';
+                    submitBtn.textContent = (mode === 'login' ? 'כניסה' : 'הרשמה');
+                } else {
+                    // Success
+                    window.location.href = 'admin.html';
+                }
+
+            } catch (error) {
+                console.error(error);
+                errorDiv.textContent = error.message === 'Invalid login credentials' ? 'אימייל או סיסמה שגויים' : error.message;
+                errorDiv.style.background = '#fee2e2';
+                errorDiv.style.color = '#dc2626';
+                errorDiv.style.display = 'block';
+                submitBtn.textContent = (mode === 'login' ? 'כניסה' : 'הרשמה');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePassword');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Check if already logged in - removed automatic redirect to allow seeing the login page
+        /*
+        Auth.getSession().then(session => {
+            if (session) window.location.href = 'admin.html';
+        });
+        */
+    </script>
+</body>
+</html>

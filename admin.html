@@ -20,27 +20,21 @@
     <meta http-equiv="Expires" content="0" />
     <link rel="stylesheet" href="css/common.css?v=3">
     <link rel="stylesheet" href="css/admin.css?v=46">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   </head>
   <body>
-    <div id="loginScreen" class="login-container">
-      <h1>🔒 כניסת מנהל</h1>
-      <div class="password-wrapper">
-        <input type="password" id="passwordInput" placeholder="הזן סיסמה" />
-        <span class="password-toggle" onclick="togglePasswordVisibility()">👁️</span>
-      </div>
-      <div class="remember-me-wrapper">
-        <input type="checkbox" id="rememberMe" />
-        <label for="rememberMe">זכור אותי</label>
-      </div>
-      <button onclick="attemptLogin()">כניסה</button>
-      <div class="error-message" id="errorMessage">סיסמה שגויה!</div>
-    </div>
+
 
     <div id="mainContent">
       <header>
-        <button class="header-btn left" onclick="logout()">יציאה 🚪</button>
-        <a href="growth.html" class="header-btn right">📊 דוחות</a>
+        <div class="header-actions">
+          <button class="header-btn logout-btn" type="button" onclick="logout()">יציאה 🚪</button>
+          <button class="header-btn" type="button" onclick="copyBookingLink(event)">🔗 קישור להזמנות</button>
+        </div>
         <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+        <div class="header-actions">
+          <a href="growth.html" class="header-btn">📊 דוחות</a>
+        </div>
       </header>
 
       <div class="tabs-nav">
@@ -205,6 +199,8 @@
 
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/admin.js?v=34" defer></script>
   </body>
 </html>

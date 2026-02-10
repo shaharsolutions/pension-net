@@ -1,0 +1,42 @@
+-- Add user_id column to orders table if it doesn't exist
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' AND COLUMN_NAME = 'user_id') THEN
+        ALTER TABLE orders ADD COLUMN user_id UUID REFERENCES auth.users(id);
+    END IF;
+END $$;
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Drop all existing policies to start fresh
+DROP POLICY IF EXISTS "Allow broad access to orders" ON orders;
+DROP POLICY IF EXISTS "Users can only see their own orders" ON orders;
+DROP POLICY IF EXISTS "Users can only insert their own orders" ON orders;
+DROP POLICY IF EXISTS "Users can only update their own orders" ON orders;
+DROP POLICY IF EXISTS "Users can only delete their own orders" ON orders;
+DROP POLICY IF EXISTS "Anyone can insert orders with user_id" ON orders;
+
+-- 1. AUTHENTICATED USERS (Owners)
+CREATE POLICY "Owners have full access to their own data"
+ON orders
+FOR ALL
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- 2. ANONYMOUS USERS (Customers)
+-- Customers need to see existing orders for a specific owner to check capacity and identify their own previous dogs
+CREATE POLICY "Anon can see orders for specific user_id"
+ON orders
+FOR SELECT
+TO anon
+USING (user_id IS NOT NULL); -- In practice, the app will filter by a specific owner UUID
+
+-- Customers can insert new orders if they specify a user_id
+CREATE POLICY "Anon can insert orders with user_id"
+ON orders
+FOR INSERT
+TO anon
+WITH CHECK (user_id IS NOT NULL);
+

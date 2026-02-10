@@ -1,58 +1,48 @@
-const ADMIN_PASSWORD_HASH = "60275c47";
-
-function simpleHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
+// --- Supabase Auth Integration ---
+async function checkAuthStatus() {
+  const session = await Auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return null;
   }
-  return Math.abs(hash).toString(16);
+  return session;
 }
 
-function checkAuth() {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('demo') === 'true') return true;
-  const storedSession = sessionStorage.getItem("adminAuth");
-  const storedLocal = localStorage.getItem("adminAuth");
-  return storedSession === ADMIN_PASSWORD_HASH || storedLocal === ADMIN_PASSWORD_HASH;
+async function logout() {
+  await Auth.logout();
 }
 
-function attemptLogin() {
-  const input = document.getElementById("passwordInput").value;
-  const rememberMe = document.getElementById("rememberMe")?.checked;
-  const inputHash = simpleHash(input);
-
-  if (inputHash === ADMIN_PASSWORD_HASH) {
-    if (rememberMe) {
-      localStorage.setItem("adminAuth", inputHash);
-    } else {
-      sessionStorage.setItem("adminAuth", inputHash);
+async function copyBookingLink(event) {
+  if (event) event.preventDefault();
+  
+  const session = await Auth.getSession();
+  if (session && session.user) {
+    const baseUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
+    const bookingUrl = `${baseUrl}/order.html?owner=${session.user.id}`;
+    
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(bookingUrl);
+        // Using showToast from utils.js
+        showToast('הקישור הועתק בהצלחה! שלח אותו ללקוחות שלך.', 'success');
+      } else {
+        throw new Error('Clipboard API not available');
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      prompt('העתק את הקישור שלך:', bookingUrl);
     }
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainContent").style.display = "block";
-    loadData();
-  } else {
-    const errorMsg = document.getElementById("errorMessage");
-    errorMsg.style.display = "block";
-    setTimeout(() => {
-      errorMsg.style.display = "none";
-    }, 3000);
   }
 }
 
-function logout() {
-  sessionStorage.removeItem("adminAuth");
-  localStorage.removeItem("adminAuth");
-  location.reload();
-}
 
-document.addEventListener("DOMContentLoaded", function () {
-  if (checkAuth()) {
-    document.getElementById("loginScreen").style.display = "none";
+document.addEventListener("DOMContentLoaded", async function () {
+  const session = await checkAuthStatus();
+  if (session) {
     document.getElementById("mainContent").style.display = "block";
     loadData();
   }
+
   
   // Event delegation for movement buttons
   document.addEventListener('click', function(e) {
@@ -78,22 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-document
-  .getElementById("passwordInput")
-  ?.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      attemptLogin();
-    }
-  });
+// Login is now handled by login.html
 
-const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.URL : "https://smzgfffeehrozxsqtgqa.supabase.co";
-const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4";
 
-const pensionNetSupabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+const pensionNetSupabase = supabaseClient;
+
 
 const HISTORY_ROWS_PER_PAGE = 10;
 window.pastOrdersSearchTerm = "";
@@ -194,7 +173,7 @@ function formatPhoneForWhatsApp(phone) {
 function createWhatsAppLink(phone) {
   if (!phone) return "";
   const formattedPhone = formatPhoneForWhatsApp(phone);
-  return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone}</a>`;
+  return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone} <i class="fab fa-whatsapp"></i></a>`;
 }
 
 function generateWhatsAppConfirmationLink(row) {
@@ -259,7 +238,7 @@ function generateWhatsAppConfirmationLink(row) {
   }
   
   return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
-    <a href="${finalUrl}" target="_blank" class="whatsapp-confirm-btn" data-order-id="${row.id}"><span class="icon">📱</span> שלח אישור</a>
+    <a href="${finalUrl}" target="_blank" class="whatsapp-confirm-btn" data-order-id="${row.id}"><span class="icon"><i class="fab fa-whatsapp"></i></span> שלח אישור</a>
   </div>`;
 }
 
@@ -1008,12 +987,14 @@ function renderMovementStats(data) {
 }
 
 async function loadData() {
-  if (!checkAuth()) return;
+  const session = await Auth.getSession();
+  if (!session) return;
 
   try {
     const { data, error } = await pensionNetSupabase
       .from("orders")
       .select("*")
+      .eq("user_id", session.user.id) // חיפוש רק של המשתמש הנוכחי
       .order("check_out", { ascending: true });
 
     if (error) throw error;

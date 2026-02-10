@@ -126,26 +126,32 @@ body {
 header {
   background: var(--bg-surface);
   color: var(--text-main);
-  padding: 30px 30px;
+  padding: 20px 30px;
   text-align: center;
   border-radius: var(--radius);
   margin-bottom: 30px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: none;
-  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 header h1 {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 800;
   margin: 0;
   color: #1e293b;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .header-btn {
-  position: absolute;
-  top: 30px;
   background: #eff6ff;
   color: var(--primary);
   border: none;
@@ -159,6 +165,7 @@ header h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .header-btn:hover {
@@ -166,8 +173,15 @@ header h1 {
   color: white;
 }
 
-.header-btn.left { left: 30px; }
-.header-btn.right { right: 30px; }
+.header-btn.logout-btn {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.header-btn.logout-btn:hover {
+  background: #dc2626;
+  color: white;
+}
 
 .container {
   margin: 20px auto;

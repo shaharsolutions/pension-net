@@ -21,7 +21,5 @@ const SUPABASE_CONFIG = {
 };
 
 
-const AUTH_CONFIG = {
-  PASSWORD_HASH: "60275c47",
-  SESSION_KEY: "adminAuth"
-};
+// Auth is now handled by Supabase Auth
+

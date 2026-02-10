@@ -13,6 +13,16 @@ let previousOrders = [];
 let lastSearchedPhone = '';
 let currentCapacityDate = new Date();
 
+// Get owner ID from URL (e.g. order.html?owner=UUID)
+const urlParams = new URLSearchParams(window.location.search);
+const PENSION_OWNER_ID = urlParams.get('owner');
+
+if (!PENSION_OWNER_ID) {
+    console.warn("Owner ID not specified in URL. Booking might not be saved correctly.");
+    // Optionally redirect or show a message to the user
+}
+
+
 // --- Functions ---
 
 async function loadMonthlyCapacity() {
@@ -34,6 +44,7 @@ async function loadMonthlyCapacity() {
       .from('orders')
       .select('*')
       .eq('status', 'מאושר')
+      .eq('user_id', PENSION_OWNER_ID)
       .gte('check_out', firstDay.toISOString().split('T')[0])
       .lte('check_in', lastDay.toISOString().split('T')[0]);
 
@@ -345,6 +356,7 @@ async function identifyCustomer() {
       .from('orders')
       .select('*')
       .eq('phone', phone) // חיפוש עם מספר נקי
+      .eq('user_id', PENSION_OWNER_ID)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -517,7 +529,8 @@ async function submitForm() {
     dog_breed: formData.dogSize || '',
     neutered: formData.neutered || 'לא צוין',
     dog_temperament: formData.dogTemperament || '',
-    notes: formData.notes || ''
+    notes: formData.notes || '',
+    user_id: PENSION_OWNER_ID
   };
   
   const { data, error } = await pensionNetSupabase

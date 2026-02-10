@@ -144,9 +144,16 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
 
 async function loadAnalytics() {
     try {
+        const session = await Auth.getSession();
+        if (!session) {
+            window.location.href = "login.html";
+            return;
+        }
+
         const { data: allOrders, error } = await pNetSupabase
             .from("orders")
             .select("*")
+            .eq("user_id", session.user.id)
             .eq("status", "מאושר")
             .order("check_in", { ascending: true });
 
@@ -350,7 +357,7 @@ async function loadAnalytics() {
             tr.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${customer.name}</td>
-                <td><a href="https://wa.me/${customer.phone.replace(/\D/g, '').replace(/^0/, '972')}" target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">${customer.phone} 💬</a></td>
+                <td><a href="https://wa.me/${customer.phone.replace(/\D/g, '').replace(/^0/, '972')}" target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">${customer.phone} <i class="fab fa-whatsapp"></i></a></td>
                 <td>${customer.orders}</td>
                 <td><strong>${formatCurrencyLocal(customer.revenue)}</strong></td>
                 <td>${formatCurrencyLocal(Math.round(avgPerVisit))}</td>

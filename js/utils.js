@@ -114,6 +114,9 @@ function debounce(func, wait) {
 
 // --- Supabase Helper ---
 function getSupabase() {
+  // If auth.js is loaded and initialized supabaseClient, use it
+  if (typeof supabaseClient !== 'undefined') return supabaseClient;
+  
   // Return cached instance if available
   if (window._supabaseInstance) return window._supabaseInstance;
   
