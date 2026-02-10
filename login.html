@@ -145,6 +145,29 @@
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            justify-content: flex-start;
+            text-align: right;
+        }
+
+        .remember-me input {
+            width: 18px !important;
+            height: 18px !important;
+            margin: 0 !important;
+            cursor: pointer;
+            accent-color: #6366f1;
+        }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -221,12 +244,20 @@
                 <label for="email">אימייל</label>
                 <input type="email" id="email" placeholder="example@gmail.com" required>
             </div>
+            <div id="phoneGroup" class="form-group" style="display: none;">
+                <label for="phone">מספר טלפון (עבור הודעות ווטסאפ ללקוחות)</label>
+                <input type="tel" id="phone" placeholder="050-1234567" pattern="[0-9]{3}-?[0-9]{7}">
+            </div>
             <div class="form-group">
                 <label for="password">סיסמה</label>
                 <div class="password-wrapper">
                     <input type="password" id="password" placeholder="••••••••" required minlength="6">
                     <i class="far fa-eye password-toggle" id="togglePassword" onclick="togglePasswordVisibility()"></i>
                 </div>
+            </div>
+            <div id="rememberMeGroup" class="remember-me">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe">זכור אותי</label>
             </div>
             <button type="submit" id="submitBtn" class="btn btn-primary">כניסה</button>
         </form>
@@ -247,6 +278,11 @@
             document.getElementById('loginTab').classList.toggle('active', mode === 'login');
             document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
             
+            document.getElementById('phoneGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('phone').required = mode === 'signup';
+            
+            document.getElementById('rememberMeGroup').style.display = mode === 'login' ? 'flex' : 'none';
+            
             document.getElementById('submitBtn').textContent = mode === 'login' ? 'כניסה' : 'הרשמה';
             document.getElementById('toggleLink').innerHTML = mode === 'login' ? 
                 'עוד לא רשומים? <a href="#" onclick="switchMode(\'signup\')">צרו חשבון עכשיו</a>' :
@@ -259,6 +295,7 @@
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const phone = document.getElementById('phone').value;
             const errorDiv = document.getElementById('errorMessage');
             const submitBtn = document.getElementById('submitBtn');
 
@@ -272,7 +309,7 @@
                 if (mode === 'login') {
                     result = await Auth.login(email, password);
                 } else {
-                    result = await Auth.signUp(email, password);
+                    result = await Auth.signUp(email, password, { phone });
                 }
 
                 if (result.error) {

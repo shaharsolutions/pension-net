@@ -39,6 +39,7 @@ async function copyBookingLink(event) {
 document.addEventListener("DOMContentLoaded", async function () {
   const session = await checkAuthStatus();
   if (session) {
+    window.currentUserSession = session; // Cache session
     document.getElementById("mainContent").style.display = "block";
     loadData();
   }
@@ -215,10 +216,14 @@ function generateWhatsAppConfirmationLink(row) {
   // Build pieces
   const p1 = enc(`היי ${params.customer_name},`);
   const p2 = enc(`מאשרים את ההזמנה של ${params.dog_name} `) + DOG_CODE;
-  // Note: Comma is inside the encoded text part or can be %2C
+  
+  // Get owner phone from session metadata if available
+  const ownerPhone = window.currentUserSession?.user?.user_metadata?.phone || '';
+  const ownerContact = ownerPhone ? enc(` (טלפון לבירורים: ${ownerPhone})`) : '';
+
   const p3 = CALENDAR_CODE + enc(', תאריכים: ' + params.check_in + ' עד ' + params.check_out);
   const p4 = MONEY_CODE + enc(` מחיר כולל: ${params.total_price} ש"ח`);
-  const p5 = enc(`אם יש שאלה או שינוי - נשמח שתכתבו לנו כאן `) + SMILE_CODE;
+  const p5 = enc(`אם יש שאלה או שינוי - נשמח שתכתבו לנו כאן`) + ownerContact + enc(` `) + SMILE_CODE;
 
   // Concatenate without further encoding
   const fullEncodedText = p1 + NEWLINE + p2 + NEWLINE + NEWLINE + p3 + NEWLINE + p4 + NEWLINE + NEWLINE + p5;

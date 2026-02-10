@@ -6,10 +6,13 @@
 const supabaseClient = supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
 
 const Auth = {
-  async signUp(email, password) {
+  async signUp(email, password, metadata = {}) {
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
+      options: {
+        data: metadata
+      }
     });
     return { data, error };
   },
