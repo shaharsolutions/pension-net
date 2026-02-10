@@ -48,7 +48,7 @@ async function loadOwnerInfo() {
   try {
     const { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('phone, business_name')
+      .select('phone, business_name, location')
       .eq('user_id', PENSION_OWNER_ID)
       .single();
     
@@ -58,12 +58,14 @@ async function loadOwnerInfo() {
       if (profile.phone) ADMIN_PHONE = profile.phone;
       if (profile.business_name) {
         BUSINESS_NAME = profile.business_name;
-        document.querySelector('.header h1').textContent = `הזמנת מקום ב${BUSINESS_NAME}`;
+        document.querySelector('.header h1').textContent = `הזמנת מקום בפנסיון כלבים`;
         document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
         
-        // Update new subtitle element
+        // Update subtitle with name and location
         const headerSub = document.getElementById('header-business-name');
-        if (headerSub) headerSub.textContent = BUSINESS_NAME;
+        if (headerSub) {
+          headerSub.textContent = profile.location ? `${BUSINESS_NAME} - ${profile.location}` : BUSINESS_NAME;
+        }
       }
       
       // Update phone display in success message if it exists
