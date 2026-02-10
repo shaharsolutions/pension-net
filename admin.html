@@ -34,6 +34,10 @@
         <div class="header-center">
           <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
           <div id="header-business-name" class="header-subtitle"></div>
+          <div class="mode-indicator" id="modeToggleContainer">
+            <span id="modeStatusLabel" class="mode-badge staff">🔐 מצב עובד</span>
+            <button onclick="toggleAdminMode()" class="toggle-mode-btn">שנה מצב</button>
+          </div>
         </div>
         <div class="header-actions">
           <a href="growth.html" class="header-btn">📊 דוחות</a>
@@ -219,6 +223,11 @@
                 <div class="form-group">
                   <label for="settings-location"><i class="fas fa-map-marker-alt"></i> מיקום הפנסיון:</label>
                   <input type="text" id="settings-location" placeholder="למשל: תל אביב / מושב בשרון">
+                </div>
+                <div class="form-group">
+                  <label for="settings-admin-pin"><i class="fas fa-key"></i> קוד PIN לניהול (4 ספרות):</label>
+                  <input type="password" id="settings-admin-pin" maxlength="4" placeholder="למשל: 1234">
+                  <div class="helper-text">קוד זה יידרש למחיקת הערות ולשינוי מצב 'עובד/מנהל'</div>
                 </div>
               </div>
 

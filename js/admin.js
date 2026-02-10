@@ -1155,7 +1155,7 @@ async function loadData() {
         </select>
       </td>
       <td class="manager-note-column">
-        <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}')">
+        <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
           <i class="fas fa-comments"></i> הערות (${(() => {
             try {
               const notes = row.admin_note ? JSON.parse(row.admin_note) : [];
@@ -1339,6 +1339,7 @@ function switchTab(tabName) {
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (globalSaveBtn) {
     globalSaveBtn.style.display = tabName === 'settings' ? 'none' : 'block';
+    globalSaveBtn.classList.add('only-manager'); // Only manager can see this anyway in CSS if staff mode is on
   }
 
   // Load settings if opening the settings tab
@@ -1395,12 +1396,60 @@ function removeStaffMember(index) {
   renderStaffList();
 }
 
+// --- Mode Toggle Logic ---
+window.isAdminMode = false; // Default to staff mode
+window.managerPin = '';
+
+function updateModeUI() {
+  const badge = document.getElementById('modeStatusLabel');
+  if (!badge) return;
+
+  if (window.isAdminMode) {
+    badge.textContent = '🔓 מצב מנהל';
+    badge.className = 'mode-badge manager';
+    document.body.classList.remove('staff-mode');
+  } else {
+    badge.textContent = '🔐 מצב עובד';
+    badge.className = 'mode-badge staff';
+    document.body.classList.add('staff-mode');
+  }
+  
+  // Refresh notes view if open to show/hide delete buttons
+  if (window.currentlyEditingOrderId) {
+    loadOrderNotes(window.currentlyEditingOrderId);
+  }
+}
+
+async function toggleAdminMode() {
+  if (window.isAdminMode) {
+    // Switch to staff mode (no PIN needed)
+    window.isAdminMode = false;
+    updateModeUI();
+  } else {
+    // Switching to manager mode - ask for PIN
+    if (!window.managerPin) {
+      alert('נא להגדיר קוד PIN בטאב ההגדרות תחילה');
+      return;
+    }
+    const input = prompt('נא להזין קוד PIN לניהול:');
+    if (input === window.managerPin) {
+      window.isAdminMode = true;
+      updateModeUI();
+    } else {
+      alert('קוד PIN שגוי');
+    }
+  }
+}
+
+// Ensure staff mode on start
+document.addEventListener('DOMContentLoaded', updateModeUI);
+
 // --- Admin Notes Modal Logic ---
 window.currentlyEditingOrderId = null;
 
-async function openNotesModal(orderId, dogName) {
+async function openNotesModal(orderId, dogName, ownerName) {
   window.currentlyEditingOrderId = orderId;
-  document.getElementById('modalDogName').textContent = dogName;
+  document.getElementById('modalDogName').textContent = `${dogName} (${ownerName})`;
   document.getElementById('notesModal').style.display = 'block';
   document.getElementById('newNoteContent').value = '';
   document.getElementById('noteAuthorSelect').selectedIndex = 0;
@@ -1447,18 +1496,64 @@ function loadOrderNotes(orderId) {
   // Sort by date descending
   notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
   
-  notes.forEach(note => {
+  notes.forEach((note, index) => {
     const item = document.createElement('div');
     item.className = 'note-item';
+    
+    // Add delete button only for manager
+    const deleteBtn = window.isAdminMode ? 
+      `<button class="delete-note-btn" onclick="deleteOrderNote(${index})" title="מחק הערה"><i class="fas fa-trash"></i></button>` : '';
+
     item.innerHTML = `
       <div class="note-header">
         <span class="note-author"><i class="fas fa-user-edit"></i> ${note.author}</span>
-        <span class="note-time">${formatDateTime(note.timestamp)}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="note-time">${formatDateTime(note.timestamp)}</span>
+          ${deleteBtn}
+        </div>
       </div>
       <div class="note-content">${note.content}</div>
     `;
     historyDiv.appendChild(item);
   });
+}
+
+async function deleteOrderNote(indexInSorted) {
+  if (!window.isAdminMode) return;
+  
+  if (!confirm('האם אתה בטוח שברצונך למחוק הערה זו?')) return;
+
+  const orderId = window.currentlyEditingOrderId;
+  const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+  if (!order) return;
+
+  let notes = [];
+  try {
+    notes = JSON.parse(order.admin_note);
+  } catch(e) { return; }
+
+  // Need to find the actual index in original array (sorted is decending)
+  notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  notes.splice(indexInSorted, 1);
+
+  try {
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ admin_note: JSON.stringify(notes) })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    order.admin_note = JSON.stringify(notes);
+    loadOrderNotes(orderId);
+    
+    // Update table button
+    const btn = document.querySelector(`button[onclick*="openNotesModal('${orderId}'"]`);
+    if (btn) btn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
+
+  } catch (err) {
+    alert('שגיאה במחיקת הערה: ' + err.message);
+  }
 }
 
 document.getElementById('saveNoteBtn')?.addEventListener('click', async function() {
@@ -1528,7 +1623,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin')
       .eq('user_id', session.user.id)
       .single();
 
@@ -1561,8 +1656,11 @@ async function loadSettings() {
         'settings-full-name': profile.full_name,
         'settings-business-name': profile.business_name,
         'settings-location': profile.location,
-        'settings-default-price': profile.default_price
+        'settings-default-price': profile.default_price,
+        'settings-admin-pin': profile.manager_pin
       };
+
+      window.managerPin = profile.manager_pin || '';
 
       for (const [id, value] of Object.entries(fieldMapping)) {
         const el = document.getElementById(id);
@@ -1603,7 +1701,8 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     business_name: document.getElementById('settings-business-name').value,
     location: document.getElementById('settings-location').value,
     default_price: parseInt(document.getElementById('settings-default-price').value),
-    staff_members: window.currentStaffMembers
+    staff_members: window.currentStaffMembers,
+    manager_pin: document.getElementById('settings-admin-pin').value
   };
 
   try {

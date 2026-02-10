@@ -1497,3 +1497,73 @@ textarea.admin-note:focus {
 .save-settings-btn i {
   font-size: 20px;
 }
+
+/* Mode Indicator & Toggle */
+.mode-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+  margin-top: 8px;
+}
+
+.mode-badge {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.mode-badge.staff {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.mode-badge.manager {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.toggle-mode-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* Note Deletion */
+.delete-note-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px;
+}
+
+.delete-note-btn:hover {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+/* Protection States */
+body.staff-mode .only-manager {
+  display: none !important;
+}
+
+body.staff-mode .price-input,
+body.staff-mode .days-input,
+body.staff-mode .date-input,
+body.staff-mode .status-select,
+body.staff-mode .price-btn {
+  pointer-events: none;
+  background-color: #f8fafc !important;
+  color: #94a3b8 !important;
+}

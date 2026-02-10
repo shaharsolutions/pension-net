@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS staff_members JSONB DEFAULT '[]';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS manager_pin TEXT;
 -- We will keep orders.admin_note as TEXT for now but store JSON string inside it for compatibility,
 -- or just use a new column if we want to be safe, but let's stick to JSON within the existing column.
 
