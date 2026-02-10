@@ -1337,16 +1337,20 @@ async function switchTab(tabName) {
     selectedBtn.classList.add('active');
   }
 
-  // Hide global save button on settings tab
+  // Hide global save button on settings/audit tabs
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (globalSaveBtn) {
-    globalSaveBtn.style.display = tabName === 'settings' ? 'none' : 'block';
-    globalSaveBtn.classList.add('only-manager'); // Only manager can see this anyway in CSS if staff mode is on
+    globalSaveBtn.style.display = (tabName === 'settings' || tabName === 'audit') ? 'none' : 'block';
+    globalSaveBtn.classList.add('only-manager');
   }
 
-  // Load settings if opening the settings tab
+  // Handle data loading for specific tabs
   if (tabName === 'settings') {
     loadSettings();
+  } else if (tabName === 'payments') {
+    renderPaymentsTable();
+  } else if (tabName === 'audit') {
+    loadAuditLogs();
   }
 }
 
@@ -1386,14 +1390,50 @@ function renderStaffList() {
 async function verifyManagerAccess() {
   if (window.isAdminMode) return true;
   
-  const pin = prompt('פעולה זו דורשת קוד PIN לניהול:');
-  if (pin === window.managerPin) {
-    window.isAdminMode = true;
-    updateModeUI();
-    return true;
-  }
-  alert('קוד PIN שגוי');
-  return false;
+  return new Promise((resolve) => {
+    const modal = document.getElementById('pinModal');
+    const input = document.getElementById('pinInput');
+    const confirmBtn = document.getElementById('pinConfirmBtn');
+    const cancelBtn = document.getElementById('pinCancelBtn');
+    const errorMsg = document.getElementById('pinError');
+    
+    input.value = '';
+    errorMsg.textContent = '';
+    modal.style.display = 'block';
+    input.focus();
+    
+    const cleanup = () => {
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      input.onkeydown = null;
+      modal.style.display = 'none';
+    };
+    
+    const handleConfirm = () => {
+      if (input.value === window.managerPin) {
+        window.isAdminMode = true;
+        updateModeUI();
+        cleanup();
+        createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות PIN מוצלח)');
+        resolve(true);
+      } else {
+        errorMsg.textContent = 'קוד PIN שגוי';
+        input.value = '';
+        input.focus();
+      }
+    };
+    
+    confirmBtn.onclick = handleConfirm;
+    cancelBtn.onclick = () => {
+      cleanup();
+      resolve(false);
+    };
+    
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') handleConfirm();
+      if (e.key === 'Escape') { cleanup(); resolve(false); }
+    };
+  });
 }
 
 async function addStaffMember() {
@@ -1403,6 +1443,7 @@ async function addStaffMember() {
   const name = input.value.trim();
   if (name && !window.currentStaffMembers.includes(name)) {
     window.currentStaffMembers.push(name);
+    createAuditLog('UPDATE', `הוספת חבר צוות חדש: ${name}`);
     input.value = '';
     renderStaffList();
   }
@@ -1411,7 +1452,9 @@ async function addStaffMember() {
 async function removeStaffMember(index) {
   if (!(await verifyManagerAccess())) return;
   
+  const name = window.currentStaffMembers[index];
   window.currentStaffMembers.splice(index, 1);
+  createAuditLog('UPDATE', `הסרת חבר צוות: ${name}`);
   renderStaffList();
 }
 
@@ -1439,6 +1482,9 @@ function updateModeUI() {
   }
 }
 
+// Ensure staff mode on start
+document.addEventListener('DOMContentLoaded', updateModeUI);
+
 async function toggleAdminMode() {
   if (window.isAdminMode) {
     // Switch to staff mode (no PIN needed)
@@ -1447,21 +1493,13 @@ async function toggleAdminMode() {
   } else {
     // Switching to manager mode - ask for PIN
     if (!window.managerPin) {
-      alert('נא להגדיר קוד PIN בטאב ההגדרות תחילה');
+      showToast('נא להגדיר קוד PIN בטאב ההגדרות תחילה', 'error');
       return;
     }
-    const input = prompt('נא להזין קוד PIN לניהול:');
-    if (input === window.managerPin) {
-      window.isAdminMode = true;
-      updateModeUI();
-    } else {
-      alert('קוד PIN שגוי');
-    }
+    
+    await verifyManagerAccess();
   }
 }
-
-// Ensure staff mode on start
-document.addEventListener('DOMContentLoaded', updateModeUI);
 
 // --- Admin Notes Modal Logic ---
 window.currentlyEditingOrderId = null;
@@ -1754,4 +1792,197 @@ function togglePasswordVisibility() {
     input.type = "password";
     icon.textContent = "👁️";
   }
+}
+
+// --- Audit Logs ---
+async function createAuditLog(actionType, description, orderId = null) {
+    const session = window.currentUserSession || await Auth.getSession();
+    if (!session) return;
+
+    const staffName = window.isAdminMode ? "מנהל" : "צוות עובדים";
+
+    try {
+        await pensionNetSupabase.from('audit_logs').insert([{
+            user_id: session.user.id,
+            action_type: actionType,
+            description: description,
+            order_id: orderId ? String(orderId) : null,
+            staff_name: staffName
+        }]);
+    } catch (err) {
+        console.error("Error creating audit log:", err);
+    }
+}
+
+async function loadAuditLogs() {
+    const logsList = document.getElementById('auditLogsList');
+    if (!logsList) return;
+
+    try {
+        const { data: logs, error } = await pensionNetSupabase
+            .from('audit_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        if (!logs || logs.length === 0) {
+            logsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #94a3b8;">אין פעולות מתועדות עדיין.</div>';
+            return;
+        }
+
+        logsList.innerHTML = logs.map(log => {
+            let iconClass = 'update';
+            let icon = '📝';
+            if (log.action_type === 'INSERT') { iconClass = 'insert'; icon = '✅'; }
+            if (log.action_type === 'DELETE') { iconClass = 'delete'; icon = '🗑️'; }
+
+            return `
+                <div class="audit-item">
+                    <div class="audit-icon ${iconClass}">${icon}</div>
+                    <div class="audit-info">
+                        <div class="audit-header">
+                            <span class="audit-staff">${log.staff_name}</span>
+                            <span class="audit-time">${formatDateTime(log.created_at)}</span>
+                        </div>
+                        <div class="audit-desc">${log.description}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Error loading audit logs:", err);
+        logsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #ef4444;">שגיאה בטעינת יומן הפעולות.</div>';
+    }
+}
+
+// --- Payments ---
+function renderPaymentsTable() {
+    const tbody = document.querySelector("#paymentsTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const searchTerm = (document.getElementById('paymentSearchInput')?.value || "").toLowerCase();
+    const statusFilter = document.getElementById('paymentStatusFilter')?.value || "all";
+
+    const filtered = window.allOrdersCache.filter(row => {
+        const matchesSearch = String(row.owner_name || "").toLowerCase().includes(searchTerm) || 
+                              String(row.dog_name || "").toLowerCase().includes(searchTerm);
+        
+        const isPaid = row.is_paid === true;
+        const matchesStatus = statusFilter === "all" || 
+                              (statusFilter === "paid" && isPaid) || 
+                              (statusFilter === "unpaid" && !isPaid);
+
+        return matchesSearch && matchesStatus;
+    });
+
+    filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        const days = calculateDays(row.check_in, row.check_out);
+        const pricePerDay = row.price_per_day || 130;
+        const totalAmount = days * pricePerDay;
+        const isPaid = row.is_paid === true;
+
+        tr.innerHTML = `
+            <td>${row.owner_name}</td>
+            <td>${row.dog_name}</td>
+            <td style="font-size: 11px;">${formatDateOnly(row.check_in)} - ${formatDateOnly(row.check_out)}</td>
+            <td>${days} ימים</td>
+            <td>${pricePerDay}₪</td>
+            <td style="font-weight: bold;">${totalAmount}₪</td>
+            <td>
+                <span class="${isPaid ? 'paid-badge' : 'unpaid-badge'}">
+                    ${isPaid ? 'שולם' : 'טרם שולם'}
+                </span>
+            </td>
+            <td>
+                <select onchange="updatePaymentMethod('${row.id}', this.value)" class="payment-input">
+                    <option value="" ${!row.payment_method ? 'selected' : ''}>בחר...</option>
+                    <option value="מזומן" ${row.payment_method === 'מזומן' ? 'selected' : ''}>מזומן</option>
+                    <option value="אפליקציה" ${row.payment_method === 'אפליקציה' ? 'selected' : ''}>אפליקציה (Bit/Pay)</option>
+                    <option value="העברה" ${row.payment_method === 'העברה' ? 'selected' : ''}>העברה בנקאית</option>
+                    <option value="אחר" ${row.payment_method === 'אחר' ? 'selected' : ''}>אחר</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" value="${row.amount_paid || 0}" 
+                       onchange="updateAmountPaid('${row.id}', this.value)" 
+                       class="payment-input">
+            </td>
+            <td>
+                <button onclick="togglePaidStatus('${row.id}', ${!isPaid})" 
+                        class="header-btn" 
+                        style="background: ${isPaid ? '#64748b' : '#10b981'}; color: white; padding: 5px 10px; font-size: 12px; border-radius: 6px;">
+                    ${isPaid ? 'בטל סימון שולם' : 'סמן כסולק ✓'}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterPayments() {
+    renderPaymentsTable();
+}
+
+async function updatePaymentMethod(orderId, method) {
+    try {
+        const { error } = await pensionNetSupabase
+            .from('orders')
+            .update({ payment_method: method })
+            .eq('id', orderId);
+
+        if (error) throw error;
+        
+        const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+        if (order) {
+            order.payment_method = method;
+            createAuditLog('UPDATE', `עדכון שיטת תשלום ל-${method} עבור ${order.dog_name} (${order.owner_name})`, orderId);
+        }
+    } catch (err) {
+        console.error("Error updating payment method:", err);
+    }
+}
+
+async function updateAmountPaid(orderId, amount) {
+    try {
+        const { error } = await pensionNetSupabase
+            .from('orders')
+            .update({ amount_paid: parseInt(amount) || 0 })
+            .eq('id', orderId);
+
+        if (error) throw error;
+
+        const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+        if (order) {
+            order.amount_paid = parseInt(amount) || 0;
+            createAuditLog('UPDATE', `עדכון סכום ששולם ל-${amount}₪ עבור ${order.dog_name}`, orderId);
+        }
+    } catch (err) {
+        console.error("Error updating amount paid:", err);
+    }
+}
+
+async function togglePaidStatus(orderId, newStatus) {
+    try {
+        const { error } = await pensionNetSupabase
+            .from('orders')
+            .update({ is_paid: newStatus })
+            .eq('id', orderId);
+
+        if (error) throw error;
+
+        const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+        if (order) {
+            order.is_paid = newStatus;
+            const statusText = newStatus ? "שולם" : "לא שולם";
+            createAuditLog('UPDATE', `שינוי סטטוס תשלום ל-${statusText} עבור ${order.dog_name}`, orderId);
+            renderPaymentsTable();
+        }
+    } catch (err) {
+        console.error("Error toggling paid status:", err);
+    }
 }

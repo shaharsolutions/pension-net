@@ -47,6 +47,8 @@
       <div class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('ongoing')">ניהול שוטף</button>
         <button class="tab-btn" onclick="switchTab('history')">היסטוריית הזמנות</button>
+        <button class="tab-btn" onclick="switchTab('payments')">💰 גבייה</button>
+        <button class="tab-btn" onclick="switchTab('audit')">📜 יומן פעולות</button>
         <button class="tab-btn" onclick="switchTab('settings')">⚙️ הגדרות</button>
       </div>
 
@@ -200,6 +202,63 @@
         </div>
       </div>
 
+      <!-- Payments Tab -->
+      <div id="tab-payments" class="tab-content">
+        <div class="container">
+          <h3>💰 ניהול גבייה ותשלומים</h3>
+          <p style="color: #64748b; margin-bottom: 20px;">מעקב אחר תשלומים, יתרות ושיטות תשלום של לקוחות</p>
+          
+          <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+              <div style="flex: 2;">
+                  <label style="font-weight: bold; display: block; margin-bottom: 5px;">חיפוש לקוח/כלב:</label>
+                  <input type="text" id="paymentSearchInput" placeholder="חפש לפי שם..." oninput="filterPayments()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              </div>
+              <div style="flex: 1;">
+                  <label style="font-weight: bold; display: block; margin-bottom: 5px;">סינון סטטוס:</label>
+                  <select id="paymentStatusFilter" onchange="filterPayments()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: white;">
+                      <option value="all">כל ההזמנות</option>
+                      <option value="unpaid">טרם שולמו</option>
+                      <option value="paid">שולמו</option>
+                  </select>
+              </div>
+          </div>
+
+          <div class="table-container">
+            <table id="paymentsTable">
+              <thead>
+                <tr>
+                  <th>לקוח</th>
+                  <th>כלב</th>
+                  <th>תקופה</th>
+                  <th>סה"כ ימים</th>
+                  <th>מחיר ליום</th>
+                  <th>סה"כ לתשלום</th>
+                  <th>סטטוס תשלום</th>
+                  <th>שיטת תשלום</th>
+                  <th>סכום ששולם (₪)</th>
+                  <th>עדכון</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Tab -->
+      <div id="tab-audit" class="tab-content">
+        <div class="container">
+          <h3>📜 יומן פעולות מערכת</h3>
+          <p style="color: #64748b; margin-bottom: 20px;">תיעוד בזמן אמת של כל הפעולות שבוצעו במערכת על ידי הצוות והמנהל</p>
+          <div id="auditLogsList" class="audit-logs-list">
+              <!-- Logs will be loaded here -->
+              <div style="padding: 40px; text-align: center; color: #94a3b8;">
+                טוען יומן פעולות...
+              </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Settings Tab -->
       <div id="tab-settings" class="tab-content">
         <div class="settings-container">
@@ -302,10 +361,30 @@
       </div>
     </div>
 
+    <!-- PIN Entry Modal -->
+    <div id="pinModal" class="modal">
+      <div class="modal-content" style="max-width: 350px; text-align: center; padding: 25px;">
+        <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 20px;">
+          <h3 style="font-size: 20px;"><i class="fas fa-lock" style="color: #6366f1;"></i> אימות מנהל</h3>
+        </div>
+        <p style="margin-bottom: 20px; color: #64748b; font-weight: 500;">נא להזין קוד PIN לביצוע פעולות מנהל</p>
+        <div style="margin-bottom: 20px;">
+          <input type="password" id="pinInput" maxlength="4" placeholder="••••" 
+                 style="text-align: center; font-size: 32px; letter-spacing: 12px; width: 180px; 
+                        padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: monospace;">
+        </div>
+        <div id="pinError" style="color: #ef4444; font-size: 14px; margin-bottom: 20px; min-height: 20px; font-weight: 600;"></div>
+        <div style="display: flex; gap: 12px;">
+          <button id="pinCancelBtn" class="btn" style="flex: 1; background: #f1f5f9; color: #64748b; padding: 12px; border-radius: 10px; font-weight: 600;">ביטול</button>
+          <button id="pinConfirmBtn" class="btn" style="flex: 1; background: #6366f1; color: white; padding: 12px; border-radius: 10px; font-weight: 600;">אישור</button>
+        </div>
+      </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/auth.js"></script>
     <script src="js/utils.js"></script>
-    <script src="js/admin.js?v=34" defer></script>
+    <script src="js/admin.js?v=35" defer></script>
   </body>
 </html>
