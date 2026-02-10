@@ -1562,8 +1562,13 @@ body.staff-mode .price-input,
 body.staff-mode .days-input,
 body.staff-mode .date-input,
 body.staff-mode .status-select,
-body.staff-mode .price-btn {
+body.staff-mode .price-btn,
+body.staff-mode #new-staff-name,
+body.staff-mode #settings-admin-pin,
+body.staff-mode .staff-manager button,
+body.staff-mode .remove-staff {
   pointer-events: none;
   background-color: #f8fafc !important;
   color: #94a3b8 !important;
+  opacity: 0.7;
 }

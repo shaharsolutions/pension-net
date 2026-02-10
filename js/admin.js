@@ -531,9 +531,6 @@ function renderCurrentDogsColumnView(allOrders) {
                   <span>בעלים: ${d.owner_name || "לא ידוע"}</span>
                   <span>יוצא ב: ${checkOutDate}</span>
                   <span>טלפון: ${contactLink}</span>
-                  <span style="font-size: 12px; color: #a0a0a0; margin-top: 5px;">הערות מנהל: ${
-                    d.admin_note || "אין"
-                  }</span>
               </div>
           `;
         })
@@ -1317,7 +1314,12 @@ document
 
 loadData();
 
-function switchTab(tabName) {
+async function switchTab(tabName) {
+  // If moving to settings, verify PIN first
+  if (tabName === 'settings') {
+    if (!(await verifyManagerAccess())) return;
+  }
+
   document.querySelectorAll('.tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
@@ -1381,7 +1383,22 @@ function renderStaffList() {
   }
 }
 
-function addStaffMember() {
+async function verifyManagerAccess() {
+  if (window.isAdminMode) return true;
+  
+  const pin = prompt('פעולה זו דורשת קוד PIN לניהול:');
+  if (pin === window.managerPin) {
+    window.isAdminMode = true;
+    updateModeUI();
+    return true;
+  }
+  alert('קוד PIN שגוי');
+  return false;
+}
+
+async function addStaffMember() {
+  if (!(await verifyManagerAccess())) return;
+  
   const input = document.getElementById('new-staff-name');
   const name = input.value.trim();
   if (name && !window.currentStaffMembers.includes(name)) {
@@ -1391,7 +1408,9 @@ function addStaffMember() {
   }
 }
 
-function removeStaffMember(index) {
+async function removeStaffMember(index) {
+  if (!(await verifyManagerAccess())) return;
+  
   window.currentStaffMembers.splice(index, 1);
   renderStaffList();
 }
