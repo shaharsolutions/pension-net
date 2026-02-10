@@ -46,9 +46,19 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     phone TEXT,
     full_name TEXT,
+    business_name TEXT,
+    location TEXT,
+    default_price INTEGER DEFAULT 130,
+    max_capacity INTEGER DEFAULT 10,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(user_id)
 );
+
+-- For existing tables, add new columns if they don't exist
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS business_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS default_price INTEGER DEFAULT 130;
+
 
 -- Enable RLS on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -60,16 +70,23 @@ CREATE POLICY "Users can view their own profile" ON public.profiles
 CREATE POLICY "Users can update their own profile" ON public.profiles
     FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert their own profile" ON public.profiles
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
 -- --- TRIGGER FOR AUTOMATIC PROFILE CREATION ---
 -- This function runs every time a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, phone, full_name)
+  INSERT INTO public.profiles (user_id, phone, full_name, max_capacity, business_name, location, default_price)
   VALUES (
     new.id,
     new.raw_user_meta_data->>'phone',
-    new.raw_user_meta_data->>'full_name'
+    new.raw_user_meta_data->>'full_name',
+    COALESCE((new.raw_user_meta_data->>'max_capacity')::integer, 10),
+    new.raw_user_meta_data->>'business_name',
+    new.raw_user_meta_data->>'location',
+    COALESCE((new.raw_user_meta_data->>'default_price')::integer, 130)
   );
   RETURN new;
 END;

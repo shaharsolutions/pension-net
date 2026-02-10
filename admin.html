@@ -40,6 +40,7 @@
       <div class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('ongoing')">ניהול שוטף</button>
         <button class="tab-btn" onclick="switchTab('history')">היסטוריית הזמנות</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ הגדרות</button>
       </div>
 
       <div id="tab-ongoing" class="tab-content active">
@@ -189,6 +190,60 @@
             id="historyPagination"
             style="text-align: center; margin-top: 16px"
           ></div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="tab-settings" class="tab-content">
+        <div class="settings-container">
+          <div class="settings-card">
+            <div class="settings-header">
+              <h3>⚙️ הגדרות פנסיון</h3>
+              <p>נהל את פרטי העסק והגדרות המערכת שלך</p>
+            </div>
+            
+            <div class="settings-grid">
+              <div class="settings-section">
+                <h4>🏠 פרטי עסק</h4>
+                <div class="form-group">
+                  <label for="settings-business-name"><i class="fas fa-store"></i> שם הפנסיון / העסק:</label>
+                  <input type="text" id="settings-business-name" placeholder="למשל: הפנסיון של שחר">
+                </div>
+                <div class="form-group">
+                  <label for="settings-full-name"><i class="fas fa-user"></i> שם מנהל המערכת:</label>
+                  <input type="text" id="settings-full-name" placeholder="השם המלא שלך">
+                </div>
+                <div class="form-group">
+                  <label for="settings-location"><i class="fas fa-map-marker-alt"></i> מיקום הפנסיון:</label>
+                  <input type="text" id="settings-location" placeholder="למשל: תל אביב / מושב בשרון">
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h4>🔧 הגדרות תפעוליות</h4>
+                <div class="form-group">
+                  <label for="settings-phone"><i class="fab fa-whatsapp"></i> טלפון לווטסאפ (לקוחות יחזרו אליו):</label>
+                  <input type="tel" id="settings-phone" placeholder="050-1234567">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="settings-capacity"><i class="fas fa-dog"></i> קיבולת (כלבים):</label>
+                    <input type="number" id="settings-capacity" min="1" max="100">
+                  </div>
+                  <div class="form-group">
+                    <label for="settings-default-price"><i class="fas fa-shekel-sign"></i> מחיר ברירת מחדל ליום:</label>
+                    <input type="number" id="settings-default-price" min="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button id="saveSettingsBtn" class="save-settings-btn">
+                <i class="fas fa-check-circle"></i> שמור את כל השינויים
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

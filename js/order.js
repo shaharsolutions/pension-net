@@ -26,7 +26,20 @@ if (!PENSION_OWNER_ID) {
 // --- Functions ---
 
 async function loadMonthlyCapacity() {
-  const MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
+  let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
+  
+  if (PENSION_OWNER_ID) {
+    const { data: profile } = await pensionNetSupabase
+      .from('profiles')
+      .select('max_capacity')
+      .eq('user_id', PENSION_OWNER_ID)
+      .single();
+    
+    if (profile && profile.max_capacity) {
+      MAX_CAPACITY = profile.max_capacity;
+    }
+  }
+
   const year = currentCapacityDate.getFullYear();
   const month = currentCapacityDate.getMonth();
   

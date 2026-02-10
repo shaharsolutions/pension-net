@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     window.currentUserSession = session; // Cache session
     document.getElementById("mainContent").style.display = "block";
     loadData();
+    loadSettings(); // Load profile settings
   }
 
   
@@ -1328,7 +1329,115 @@ function switchTab(tabName) {
   if (selectedBtn) {
     selectedBtn.classList.add('active');
   }
+
+  // Hide global save button on settings tab
+  const globalSaveBtn = document.getElementById('saveButtonContainer');
+  if (globalSaveBtn) {
+    globalSaveBtn.style.display = tabName === 'settings' ? 'none' : 'block';
+  }
+
+  // Load settings if opening the settings tab
+  if (tabName === 'settings') {
+    loadSettings();
+  }
 }
+
+async function loadSettings() {
+  console.log('Attempting to load settings...');
+  const session = window.currentUserSession || await Auth.getSession();
+  if (!session || !session.user) {
+    console.warn('No session found for loadSettings');
+    return;
+  }
+
+  try {
+    let { data: profile, error } = await pensionNetSupabase
+      .from('profiles')
+      .select('max_capacity, phone, full_name, business_name, location, default_price')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      console.log('Profile not found, creating default profile...');
+      const { data: newProfile, error: insertError } = await pensionNetSupabase
+        .from('profiles')
+        .insert([{ 
+          user_id: session.user.id,
+          full_name: session.user.user_metadata?.full_name || '',
+          phone: session.user.user_metadata?.phone || '',
+          max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
+          default_price: 130
+        }])
+        .select()
+        .single();
+      
+      if (insertError) throw insertError;
+      profile = newProfile;
+    } else if (error) {
+      throw error;
+    }
+
+    if (profile) {
+      console.log('Setting field values from profile:', profile);
+      const fieldMapping = {
+        'settings-capacity': profile.max_capacity,
+        'settings-phone': profile.phone,
+        'settings-full-name': profile.full_name,
+        'settings-business-name': profile.business_name,
+        'settings-location': profile.location,
+        'settings-default-price': profile.default_price
+      };
+
+      for (const [id, value] of Object.entries(fieldMapping)) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.value = (value !== null && value !== undefined) ? value : '';
+        }
+      }
+      console.log('Settings fields populated successfully');
+    }
+  } catch (err) {
+    console.error('Critical error in loadSettings:', err);
+  }
+}
+
+document.getElementById('saveSettingsBtn')?.addEventListener('click', async function() {
+  const session = window.currentUserSession;
+  if (!session) return;
+
+  const saveBtn = this;
+  const originalText = saveBtn.innerHTML;
+  
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+
+  const updateData = {
+    max_capacity: parseInt(document.getElementById('settings-capacity').value),
+    phone: document.getElementById('settings-phone').value,
+    full_name: document.getElementById('settings-full-name').value,
+    business_name: document.getElementById('settings-business-name').value,
+    location: document.getElementById('settings-location').value,
+    default_price: parseInt(document.getElementById('settings-default-price').value)
+  };
+
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update(updateData)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
+
+    alert('ההגדרות נשמרו בהצלחה!');
+    location.reload(); 
+  } catch (err) {
+    console.error('Error saving settings:', err);
+    alert('שגיאה בשמירת ההגדרות: ' + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalText;
+  }
+});
 
 function togglePasswordVisibility() {
   const input = document.getElementById("passwordInput");

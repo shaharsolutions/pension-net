@@ -3,7 +3,7 @@ const PENSION_NET_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG
 const PENSION_NET_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4";
 
 const pNetSupabase = getSupabase();
-const PNET_MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
+let PNET_MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
 
 function calculateDaysLocal(checkIn, checkOut) {
     if (!checkIn || !checkOut) return 0;
@@ -158,6 +158,21 @@ async function loadAnalytics() {
             .order("check_in", { ascending: true });
 
         if (error) throw error;
+
+        // Fetch owner's profile for max_capacity
+        const { data: profile } = await pNetSupabase
+            .from("profiles")
+            .select("max_capacity")
+            .eq("user_id", session.user.id)
+            .single();
+        
+        if (profile && profile.max_capacity) {
+            PNET_MAX_CAPACITY = profile.max_capacity;
+            const capLabel = document.querySelector(".stat-label");
+            if (capLabel && capLabel.textContent.includes("קיבולת מקסימלית")) {
+                capLabel.textContent = `קיבולת מקסימלית: ${PNET_MAX_CAPACITY} כלבים`;
+            }
+        }
 
         const now = new Date();
         const currentMonth = now.getMonth();

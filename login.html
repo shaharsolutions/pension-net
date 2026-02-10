@@ -248,6 +248,10 @@
                 <label for="phone">מספר טלפון (עבור הודעות ווטסאפ ללקוחות)</label>
                 <input type="tel" id="phone" placeholder="050-1234567" pattern="[0-9]{3}-?[0-9]{7}">
             </div>
+            <div id="capacityGroup" class="form-group" style="display: none;">
+                <label for="max_capacity">קיבולת מקסימלית<br>(מספר כלבים שיכולים לשהות במקביל)</label>
+                <input type="number" id="max_capacity" placeholder="10" min="1" max="100">
+            </div>
             <div class="form-group">
                 <label for="password">סיסמה</label>
                 <div class="password-wrapper">
@@ -281,6 +285,9 @@
             document.getElementById('phoneGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('phone').required = mode === 'signup';
             
+            document.getElementById('capacityGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('max_capacity').required = mode === 'signup';
+            
             document.getElementById('rememberMeGroup').style.display = mode === 'login' ? 'flex' : 'none';
             
             document.getElementById('submitBtn').textContent = mode === 'login' ? 'כניסה' : 'הרשמה';
@@ -296,6 +303,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value;
+            const max_capacity = document.getElementById('max_capacity').value;
             const errorDiv = document.getElementById('errorMessage');
             const submitBtn = document.getElementById('submitBtn');
 
@@ -309,7 +317,7 @@
                 if (mode === 'login') {
                     result = await Auth.login(email, password);
                 } else {
-                    result = await Auth.signUp(email, password, { phone });
+                    result = await Auth.signUp(email, password, { phone, max_capacity });
                 }
 
                 if (result.error) {
