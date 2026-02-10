@@ -13,6 +13,7 @@ let currentStep = 0;
 let previousOrders = [];
 let lastSearchedPhone = '';
 let currentCapacityDate = new Date();
+let selectionPhase = 1; // 1: Selecting check-in, 2: Selecting check-out
 
 // Get owner ID from URL (e.g. order.html?owner=UUID)
 const urlParams = new URLSearchParams(window.location.search);
@@ -78,20 +79,21 @@ async function loadOwnerInfo() {
 }
 
 async function loadMonthlyCapacity() {
-  if (!PENSION_OWNER_ID) return;
+  if (!PENSION_OWNER_ID) {
+    console.warn("Cannot load capacity: PENSION_OWNER_ID is missing.");
+    return;
+  }
   
   let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
   
-  if (PENSION_OWNER_ID) {
-    const { data: profile } = await pensionNetSupabase
-      .from('profiles')
-      .select('max_capacity')
-      .eq('user_id', PENSION_OWNER_ID)
-      .single();
-    
-    if (profile && profile.max_capacity) {
-      MAX_CAPACITY = profile.max_capacity;
-    }
+  const { data: profile } = await pensionNetSupabase
+    .from('profiles')
+    .select('max_capacity')
+    .eq('user_id', PENSION_OWNER_ID)
+    .single();
+  
+  if (profile && profile.max_capacity) {
+    MAX_CAPACITY = profile.max_capacity;
   }
 
   const year = currentCapacityDate.getFullYear();
@@ -156,19 +158,36 @@ async function loadMonthlyCapacity() {
         const count = capacityByDate[day];
         const perc = (count / MAX_CAPACITY) * 100;
         
-        // Check if date is passed
         const currentDate = new Date(year, month, day);
         const isPast = currentDate < today;
         
-        let bgColor = '#4caf50'; // Green (Free)
-        if (perc >= 80) bgColor = '#ff9800'; // Orange (Busy)
-        if (perc >= 100) bgColor = '#f44336'; // Red (Full)
+        let bgColor = '#4caf50'; // Green
+        if (perc >= 80) bgColor = '#ff9800'; 
+        if (perc >= 100) bgColor = '#f44336';
         
+        // Highlight logic
+        const selIn = document.getElementById('checkInDate').value;
+        const selOut = document.getElementById('checkOutDate').value;
+        const dateStr = formatDateToISO(currentDate);
+        
+        let highlightStyle = '';
+        let dayContentColor = 'white';
+
+        if (selIn && dateStr === selIn) {
+            highlightStyle = 'background: #667eea !important; box-shadow: 0 0 10px rgba(102, 126, 234, 0.5); transform: scale(1.05); z-index: 2; border-radius: 8px;';
+        } else if (selOut && dateStr === selOut) {
+            highlightStyle = 'background: #667eea !important; box-shadow: 0 0 10px rgba(102, 126, 234, 0.5); transform: scale(1.05); z-index: 2; border-radius: 8px;';
+        } else if (selIn && selOut && dateStr > selIn && dateStr < selOut) {
+            highlightStyle = 'background: rgba(102, 126, 234, 0.2) !important; color: #667eea !important; border-radius: 0;';
+            dayContentColor = '#667eea';
+        }
+
         let opacity = isPast ? '0.3' : '1';
         let border = (currentDate.getTime() === today.getTime()) ? '2px solid #667eea' : 'none';
         
         html += `
-        <div style="background:${bgColor}; color:white; border-radius:8px; padding:6px 2px; text-align:center; opacity: ${opacity}; border: ${border}; min-height: 45px; display:flex; flex-direction:column; justify-content:center;">
+        <div onclick="${isPast ? '' : `onDateClick(${day}, ${month}, ${year})`}" 
+             style="background:${bgColor}; color:${dayContentColor}; border-radius:8px; padding:6px 2px; text-align:center; opacity: ${opacity}; border: ${border}; min-height: 45px; display:flex; flex-direction:column; justify-content:center; cursor:${isPast ? 'default' : 'pointer'}; ${highlightStyle}">
           <div style="font-size:12px; font-weight:700;">${day}</div>
           <div style="font-size:10px;">${count}/${MAX_CAPACITY}</div>
         </div>
@@ -230,6 +249,37 @@ function updateNavigationButtons() {
     }
 }
 
+function onDateClick(day, month, year) {
+  const checkInInput = document.getElementById('checkInDate');
+  const checkOutInput = document.getElementById('checkOutDate');
+  
+  const selectedDate = new Date(year, month, day);
+  const dateStr = formatDateToISO(selectedDate);
+  
+  if (selectionPhase === 1) {
+    // First click: Set check-in and temporary check-out (same day)
+    checkInInput.value = dateStr;
+    checkOutInput.value = dateStr;
+    lastCheckInValue = dateStr;
+    selectionPhase = 2; // Move to pick check-out
+  } else {
+    // Second click: Set check-out
+    if (dateStr < checkInInput.value) {
+        // If clicked earlier than check-in, restart with this as check-in
+        checkInInput.value = dateStr;
+        checkOutInput.value = dateStr;
+        lastCheckInValue = dateStr;
+        selectionPhase = 2; 
+    } else {
+        checkOutInput.value = dateStr;
+        selectionPhase = 1; // Complete, next click starts over
+    }
+  }
+  
+  updateDaysDisplay();
+  loadMonthlyCapacity(); 
+}
+
 function updateDaysDisplay() {
   const checkIn = document.getElementById('checkInDate').value;
   const checkOut = document.getElementById('checkOutDate').value;
@@ -238,8 +288,14 @@ function updateDaysDisplay() {
   
   if (checkIn && checkOut) {
     const days = calculateDays(checkIn, checkOut); // Uses utils.js
-    if (days > 0) {
-      daysText.textContent = `🐾 הכלב ישהה בפנסיון ${days} ימים`;
+    if (days >= 0) {
+      if (days === 0) {
+        daysText.textContent = `🐾 יום כיף בפנסיון (ללא לינה)`;
+      } else if (days === 1) {
+        daysText.textContent = `🐾 הכלב ישהה בפנסיון לילה אחד`;
+      } else {
+        daysText.textContent = `🐾 הכלב ישהה בפנסיון ${days} לילות`;
+      }
       daysDisplay.classList.add('show');
     } else {
       daysDisplay.classList.remove('show');
@@ -247,6 +303,22 @@ function updateDaysDisplay() {
   } else {
     daysDisplay.classList.remove('show');
   }
+}
+
+let lastCheckInValue = '';
+function handleCheckInChange() {
+  const checkInInput = document.getElementById('checkInDate');
+  const checkOutInput = document.getElementById('checkOutDate');
+  
+  const newValue = checkInInput.value;
+  
+  // Sync logic: if check-out is empty OR was exactly the same as the old check-in, update it
+  if (newValue && (!checkOutInput.value || checkOutInput.value === lastCheckInValue)) {
+    checkOutInput.value = newValue;
+  }
+  
+  lastCheckInValue = newValue;
+  updateDaysDisplay();
 }
 
 
@@ -418,6 +490,12 @@ async function identifyCustomer() {
     phone = '0' + phone;
   }
   
+  if (!PENSION_OWNER_ID) {
+    document.getElementById('searchingIndicator').style.display = 'none';
+    alert('שגיאה: מזהה פנסיון חסר בכתובת ה-URL. לא ניתן לחפש הזמנות.');
+    return;
+  }
+
   try {
     const { data, error } = await pensionNetSupabase
       .from('orders')
@@ -742,9 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkOutInput = document.getElementById('checkOutDate');
   
   if (checkInInput && checkOutInput) {
-    checkInInput.addEventListener('input', updateDaysDisplay);
+    checkInInput.addEventListener('input', handleCheckInChange);
     checkOutInput.addEventListener('input', updateDaysDisplay);
-    checkInInput.addEventListener('change', updateDaysDisplay);
+    checkInInput.addEventListener('change', handleCheckInChange);
     checkOutInput.addEventListener('change', updateDaysDisplay);
   }
 });

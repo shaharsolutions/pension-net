@@ -13,6 +13,12 @@ function calculateDays(checkIn, checkOut) {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+function formatDateToISO(date) {
+  const offset = date.getTimezoneOffset();
+  const adjusted = new Date(date.getTime() - (offset * 60 * 1000));
+  return adjusted.toISOString().split('T')[0];
+}
+
 function formatDateWithDay(dateString) {
   const daysHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
   const date = new Date(dateString);
