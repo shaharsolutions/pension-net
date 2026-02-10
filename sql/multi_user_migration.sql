@@ -78,7 +78,7 @@ CREATE POLICY "Users can insert their own profile" ON public.profiles
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, phone, full_name, max_capacity, business_name, location, default_price)
+  INSERT INTO public.profiles (user_id, phone, full_name, max_capacity, business_name, location, default_price, manager_pin)
   VALUES (
     new.id,
     new.raw_user_meta_data->>'phone',
@@ -86,7 +86,8 @@ BEGIN
     COALESCE((new.raw_user_meta_data->>'max_capacity')::integer, 10),
     new.raw_user_meta_data->>'business_name',
     new.raw_user_meta_data->>'location',
-    COALESCE((new.raw_user_meta_data->>'default_price')::integer, 130)
+    COALESCE((new.raw_user_meta_data->>'default_price')::integer, 130),
+    new.raw_user_meta_data->>'manager_pin'
   );
   RETURN new;
 END;
