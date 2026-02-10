@@ -2,7 +2,8 @@
 const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.URL : 'https://smzgfffeehrozxsqtgqa.supabase.co';
 const SUPABASE_ANON_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.ANON_KEY : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
 
-const ADMIN_PHONE = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.ADMIN_PHONE : '972528366744';
+let ADMIN_PHONE = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.ADMIN_PHONE : '972528366744';
+let BUSINESS_NAME = 'פנסיון לכלבים';
 
 // Initialize Supabase
 const pensionNetSupabase = getSupabase();
@@ -15,17 +16,68 @@ let currentCapacityDate = new Date();
 
 // Get owner ID from URL (e.g. order.html?owner=UUID)
 const urlParams = new URLSearchParams(window.location.search);
-const PENSION_OWNER_ID = urlParams.get('owner');
+let PENSION_OWNER_ID = urlParams.get('owner');
 
-if (!PENSION_OWNER_ID) {
+// Handle missing owner ID - try to get from session if logged in (for testing)
+async function ensureOwnerId() {
+  if (!PENSION_OWNER_ID && typeof Auth !== 'undefined') {
+    const session = await Auth.getSession();
+    if (session && session.user) {
+      PENSION_OWNER_ID = session.user.id;
+      console.log("Using owner ID from session:", PENSION_OWNER_ID);
+      // Refresh data now that we have an ID
+      loadMonthlyCapacity();
+      loadOwnerInfo();
+    }
+  }
+  
+  if (!PENSION_OWNER_ID) {
     console.warn("Owner ID not specified in URL. Booking might not be saved correctly.");
-    // Optionally redirect or show a message to the user
+  }
 }
+
+// Start ID check
+ensureOwnerId();
 
 
 // --- Functions ---
 
+async function loadOwnerInfo() {
+  if (!PENSION_OWNER_ID) return;
+  
+  try {
+    const { data: profile, error } = await pensionNetSupabase
+      .from('profiles')
+      .select('phone, business_name')
+      .eq('user_id', PENSION_OWNER_ID)
+      .single();
+    
+    if (error) throw error;
+    
+    if (profile) {
+      if (profile.phone) ADMIN_PHONE = profile.phone;
+      if (profile.business_name) {
+        BUSINESS_NAME = profile.business_name;
+        document.querySelector('.header h1').textContent = `הזמנת מקום ב${BUSINESS_NAME}`;
+        document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
+        
+        // Update new subtitle element
+        const headerSub = document.getElementById('header-business-name');
+        if (headerSub) headerSub.textContent = BUSINESS_NAME;
+      }
+      
+      // Update phone display in success message if it exists
+      const successPhoneEl = document.getElementById('displayAdminPhone');
+      if (successPhoneEl) successPhoneEl.textContent = ADMIN_PHONE;
+    }
+  } catch (err) {
+    console.error('Error loading owner info:', err);
+  }
+}
+
 async function loadMonthlyCapacity() {
+  if (!PENSION_OWNER_ID) return;
+  
   let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
   
   if (PENSION_OWNER_ID) {
@@ -663,7 +715,10 @@ function resetForm() {
 }
 
 // Global Listeners
-document.addEventListener('DOMContentLoaded', loadMonthlyCapacity);
+document.addEventListener('DOMContentLoaded', () => {
+  loadMonthlyCapacity();
+  loadOwnerInfo();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   // Set initial state

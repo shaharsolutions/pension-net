@@ -54,10 +54,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     UNIQUE(user_id)
 );
 
--- For existing tables, add new columns if they don't exist
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS business_name TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS location TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS default_price INTEGER DEFAULT 130;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS staff_members JSONB DEFAULT '[]';
+-- We will keep orders.admin_note as TEXT for now but store JSON string inside it for compatibility,
+-- or just use a new column if we want to be safe, but let's stick to JSON within the existing column.
 
 
 -- Enable RLS on profiles

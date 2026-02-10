@@ -1155,9 +1155,14 @@ async function loadData() {
         </select>
       </td>
       <td class="manager-note-column">
-        <textarea class="admin-note" data-id="${
-          row.id
-        }" cols="50" rows="2">${row.admin_note || ""}</textarea>
+        <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}')">
+          <i class="fas fa-comments"></i> הערות (${(() => {
+            try {
+              const notes = row.admin_note ? JSON.parse(row.admin_note) : [];
+              return Array.isArray(notes) ? notes.length : (row.admin_note ? 1 : 0);
+            } catch(e) { return row.admin_note ? 1 : 0; }
+          })()})
+        </button>
       </td>
     `;
       futureTbody.appendChild(tr);
@@ -1342,6 +1347,176 @@ function switchTab(tabName) {
   }
 }
 
+// --- Staff Management ---
+window.currentStaffMembers = [];
+
+function renderStaffList() {
+  const list = document.getElementById('staff-list');
+  if (!list) return;
+  list.innerHTML = '';
+  
+  window.currentStaffMembers.forEach((name, index) => {
+    const tag = document.createElement('div');
+    tag.className = 'staff-tag';
+    tag.innerHTML = `
+      <span>${name}</span>
+      <span class="remove-staff" onclick="removeStaffMember(${index})">&times;</span>
+    `;
+    list.appendChild(tag);
+  });
+
+  // Also update modal author select
+  const select = document.getElementById('noteAuthorSelect');
+  if (select) {
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">בחר עובד/ת...</option>';
+    window.currentStaffMembers.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+    select.value = currentVal;
+  }
+}
+
+function addStaffMember() {
+  const input = document.getElementById('new-staff-name');
+  const name = input.value.trim();
+  if (name && !window.currentStaffMembers.includes(name)) {
+    window.currentStaffMembers.push(name);
+    input.value = '';
+    renderStaffList();
+  }
+}
+
+function removeStaffMember(index) {
+  window.currentStaffMembers.splice(index, 1);
+  renderStaffList();
+}
+
+// --- Admin Notes Modal Logic ---
+window.currentlyEditingOrderId = null;
+
+async function openNotesModal(orderId, dogName) {
+  window.currentlyEditingOrderId = orderId;
+  document.getElementById('modalDogName').textContent = dogName;
+  document.getElementById('notesModal').style.display = 'block';
+  document.getElementById('newNoteContent').value = '';
+  document.getElementById('noteAuthorSelect').selectedIndex = 0;
+  
+  loadOrderNotes(orderId);
+}
+
+function closeNotesModal() {
+  document.getElementById('notesModal').style.display = 'none';
+  window.currentlyEditingOrderId = null;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('notesModal');
+  if (event.target == modal) {
+    closeNotesModal();
+  }
+}
+
+function loadOrderNotes(orderId) {
+  const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+  const historyDiv = document.getElementById('notesHistory');
+  historyDiv.innerHTML = '';
+  
+  if (!order) return;
+  
+  let notes = [];
+  try {
+    notes = order.admin_note ? JSON.parse(order.admin_note) : [];
+    if (!Array.isArray(notes)) {
+      if (order.admin_note) notes = [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }];
+      else notes = [];
+    }
+  } catch(e) {
+    if (order.admin_note) notes = [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }];
+  }
+  
+  if (notes.length === 0) {
+    historyDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">אין הערות עדיין</div>';
+    return;
+  }
+  
+  // Sort by date descending
+  notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  notes.forEach(note => {
+    const item = document.createElement('div');
+    item.className = 'note-item';
+    item.innerHTML = `
+      <div class="note-header">
+        <span class="note-author"><i class="fas fa-user-edit"></i> ${note.author}</span>
+        <span class="note-time">${formatDateTime(note.timestamp)}</span>
+      </div>
+      <div class="note-content">${note.content}</div>
+    `;
+    historyDiv.appendChild(item);
+  });
+}
+
+document.getElementById('saveNoteBtn')?.addEventListener('click', async function() {
+  const author = document.getElementById('noteAuthorSelect').value;
+  const content = document.getElementById('newNoteContent').value.trim();
+  
+  if (!author) { alert('נא לבחור מחבר/ת להערה'); return; }
+  if (!content) { alert('נא להזין תוכן להערה'); return; }
+  
+  const orderId = window.currentlyEditingOrderId;
+  const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+  if (!order) return;
+  
+  let notes = [];
+  try {
+    notes = order.admin_note ? JSON.parse(order.admin_note) : [];
+    if (!Array.isArray(notes)) {
+      notes = order.admin_note ? [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }] : [];
+    }
+  } catch(e) {
+    notes = order.admin_note ? [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }] : [];
+  }
+  
+  const newNote = {
+    content,
+    author,
+    timestamp: new Date().toISOString()
+  };
+  
+  notes.push(newNote);
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ admin_note: JSON.stringify(notes) })
+      .eq('id', orderId);
+      
+    if (error) throw error;
+    
+    // Update local cache
+    order.admin_note = JSON.stringify(notes);
+    
+    // Refresh UI
+    loadOrderNotes(orderId);
+    document.getElementById('newNoteContent').value = '';
+    
+    // Update table button count
+    const btn = document.querySelector(`button[onclick*="openNotesModal('${orderId}'"]`);
+    if (btn) {
+      btn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
+    }
+    
+  } catch (err) {
+    console.error('Error saving note:', err);
+    alert('שגיאה בשמירת ההערה: ' + err.message);
+  }
+});
+
 async function loadSettings() {
   console.log('Attempting to load settings...');
   const session = window.currentUserSession || await Auth.getSession();
@@ -1353,7 +1528,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members')
       .eq('user_id', session.user.id)
       .single();
 
@@ -1366,7 +1541,8 @@ async function loadSettings() {
           full_name: session.user.user_metadata?.full_name || '',
           phone: session.user.user_metadata?.phone || '',
           max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
-          default_price: 130
+          default_price: 130,
+          staff_members: []
         }])
         .select()
         .single();
@@ -1394,6 +1570,15 @@ async function loadSettings() {
           el.value = (value !== null && value !== undefined) ? value : '';
         }
       }
+
+      window.currentStaffMembers = profile.staff_members || [];
+      renderStaffList();
+
+      // Update Header Subtitle
+      const headerSubtitle = document.getElementById('header-business-name');
+      if (headerSubtitle && profile.business_name) {
+        headerSubtitle.textContent = profile.business_name;
+      }
       console.log('Settings fields populated successfully');
     }
   } catch (err) {
@@ -1417,7 +1602,8 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     full_name: document.getElementById('settings-full-name').value,
     business_name: document.getElementById('settings-business-name').value,
     location: document.getElementById('settings-location').value,
-    default_price: parseInt(document.getElementById('settings-default-price').value)
+    default_price: parseInt(document.getElementById('settings-default-price').value),
+    staff_members: window.currentStaffMembers
   };
 
   try {

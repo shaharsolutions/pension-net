@@ -159,18 +159,30 @@ async function loadAnalytics() {
 
         if (error) throw error;
 
-        // Fetch owner's profile for max_capacity
+        // Update the 'Go to order' link if it exists
+        const orderLink = document.querySelector('a[href="order.html"]');
+        if (orderLink && session.user) {
+            orderLink.href = `order.html?owner=${session.user.id}`;
+        }
+
+        // Fetch owner's profile for max_capacity and business_name
         const { data: profile } = await pNetSupabase
             .from("profiles")
-            .select("max_capacity")
+            .select("max_capacity, business_name")
             .eq("user_id", session.user.id)
             .single();
         
-        if (profile && profile.max_capacity) {
-            PNET_MAX_CAPACITY = profile.max_capacity;
-            const capLabel = document.querySelector(".stat-label");
-            if (capLabel && capLabel.textContent.includes("קיבולת מקסימלית")) {
-                capLabel.textContent = `קיבולת מקסימלית: ${PNET_MAX_CAPACITY} כלבים`;
+        if (profile) {
+            if (profile.business_name) {
+                const headSub = document.getElementById('header-business-name');
+                if (headSub) headSub.textContent = profile.business_name;
+            }
+            if (profile.max_capacity) {
+                PNET_MAX_CAPACITY = profile.max_capacity;
+                const capLabel = document.querySelector(".stat-label");
+                if (capLabel && capLabel.textContent.includes("קיבולת מקסימלית")) {
+                    capLabel.textContent = `קיבולת מקסימלית: ${PNET_MAX_CAPACITY} כלבים`;
+                }
             }
         }
 

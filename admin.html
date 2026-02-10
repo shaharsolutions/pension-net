@@ -31,7 +31,10 @@
           <button class="header-btn logout-btn" type="button" onclick="logout()">יציאה 🚪</button>
           <button class="header-btn" type="button" onclick="copyBookingLink(event)">🔗 קישור להזמנות</button>
         </div>
-        <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+        <div class="header-center">
+          <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+          <div id="header-business-name" class="header-subtitle"></div>
+        </div>
         <div class="header-actions">
           <a href="growth.html" class="header-btn">📊 דוחות</a>
         </div>
@@ -235,6 +238,17 @@
                     <input type="number" id="settings-default-price" min="0">
                   </div>
                 </div>
+
+                <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                  <label><i class="fas fa-users-cog"></i> ניהול צוות עובדים:</label>
+                  <div class="staff-manager">
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                      <input type="text" id="new-staff-name" placeholder="שם העובד/ת">
+                      <button type="button" onclick="addStaffMember()" class="header-btn" style="background:#4caf50; color:white; padding: 0 15px;">הוסף</button>
+                    </div>
+                    <div id="staff-list" class="staff-tags"></div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -249,6 +263,33 @@
 
       <div id="saveButtonContainer">
         <button id="saveButton">💾 שמור שינויים</button>
+      </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>📋 הערות מנהל - <span id="modalDogName"></span></h3>
+          <span class="close-modal" onclick="closeNotesModal()">&times;</span>
+        </div>
+        <div id="notesHistory" class="notes-history">
+          <!-- Notes will be loaded here -->
+        </div>
+        <div class="new-note-form">
+          <h4>הוספת הערה חדשה</h4>
+          <div class="form-group">
+            <label>כותב ההערה:</label>
+            <select id="noteAuthorSelect">
+              <option value="">בחר עובד/ת...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>תוכן ההערה:</label>
+            <textarea id="newNoteContent" placeholder="כתוב כאן את ההערה..."></textarea>
+          </div>
+          <button type="button" id="saveNoteBtn" class="save-note-btn">💾 הוסף הערה</button>
+        </div>
       </div>
     </div>
 
