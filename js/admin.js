@@ -904,6 +904,11 @@ async function toggleMovementChecked(type, orderId) {
         const actionText = type === 'entering' ? 'נכנס' : 'יצא';
         btn.textContent = isNowChecked ? `${actionText} ✓` : `סמן ש${actionText}`;
         btn.style.opacity = '1';
+
+        const auditDesc = isNowChecked ? 
+            `סימון ${actionText} עבור ${order.dog_name}` : 
+            `ביטול סימון ${actionText} עבור ${order.dog_name}`;
+        createAuditLog('UPDATE', auditDesc, orderId);
     }
 
   } catch (err) {
@@ -1218,8 +1223,8 @@ async function loadData() {
 document
   .getElementById("saveButton")
   .addEventListener("click", async () => {
-    if (!checkAuth()) {
-      alert("אין הרשאה");
+    if (!window.currentUserSession) {
+      alert("אין הרשאה - אנא התחבר מחדש");
       return;
     }
 
@@ -1295,6 +1300,8 @@ document
           }
         }
       }
+
+      await createAuditLog('UPDATE', 'ביצוע שמירה גורפת של שינויים בטבלאות הניהול');
 
       const savedBanner = document.createElement("div");
       savedBanner.className = "success-banner";
@@ -1886,12 +1893,20 @@ function renderPaymentsTable() {
         const totalAmount = days * pricePerDay;
         const isPaid = row.is_paid === true;
 
+        // Apply defaults if not set in DB
+        const currentMethod = row.payment_method || 'מזומן';
+        const currentAmountPaid = (row.amount_paid !== undefined && row.amount_paid !== null) ? row.amount_paid : totalAmount;
+
         tr.innerHTML = `
             <td>${row.owner_name}</td>
             <td>${row.dog_name}</td>
             <td style="font-size: 11px;">${formatDateOnly(row.check_in)} - ${formatDateOnly(row.check_out)}</td>
             <td>${days} ימים</td>
-            <td>${pricePerDay}₪</td>
+            <td>
+                <input type="number" value="${pricePerDay}" step="5"
+                       onchange="updatePricePerDay('${row.id}', this.value)" 
+                       class="payment-input">
+            </td>
             <td style="font-weight: bold;">${totalAmount}₪</td>
             <td>
                 <span class="${isPaid ? 'paid-badge' : 'unpaid-badge'}">
@@ -1900,15 +1915,14 @@ function renderPaymentsTable() {
             </td>
             <td>
                 <select onchange="updatePaymentMethod('${row.id}', this.value)" class="payment-input">
-                    <option value="" ${!row.payment_method ? 'selected' : ''}>בחר...</option>
-                    <option value="מזומן" ${row.payment_method === 'מזומן' ? 'selected' : ''}>מזומן</option>
-                    <option value="אפליקציה" ${row.payment_method === 'אפליקציה' ? 'selected' : ''}>אפליקציה (Bit/Pay)</option>
-                    <option value="העברה" ${row.payment_method === 'העברה' ? 'selected' : ''}>העברה בנקאית</option>
-                    <option value="אחר" ${row.payment_method === 'אחר' ? 'selected' : ''}>אחר</option>
+                    <option value="מזומן" ${currentMethod === 'מזומן' ? 'selected' : ''}>מזומן</option>
+                    <option value="אפליקציה" ${currentMethod === 'אפליקציה' ? 'selected' : ''}>אפליקציה (Bit/Pay)</option>
+                    <option value="העברה" ${currentMethod === 'העברה' ? 'selected' : ''}>העברה בנקאית</option>
+                    <option value="אחר" ${currentMethod === 'אחר' ? 'selected' : ''}>אחר</option>
                 </select>
             </td>
             <td>
-                <input type="number" value="${row.amount_paid || 0}" 
+                <input type="number" value="${currentAmountPaid}" step="5"
                        onchange="updateAmountPaid('${row.id}', this.value)" 
                        class="payment-input">
             </td>
@@ -1968,21 +1982,58 @@ async function updateAmountPaid(orderId, amount) {
 
 async function togglePaidStatus(orderId, newStatus) {
     try {
+        const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+        if (!order) return;
+
+        const updateData = { is_paid: newStatus };
+        
+        // If marking as paid for the first time and values are missing, use defaults
+        if (newStatus === true) {
+            if (!order.payment_method) {
+                updateData.payment_method = 'מזומן';
+                order.payment_method = 'מזומן';
+            }
+            if (order.amount_paid === undefined || order.amount_paid === null || order.amount_paid === 0) {
+                const days = calculateDays(order.check_in, order.check_out);
+                const totalAmount = days * (order.price_per_day || 130);
+                updateData.amount_paid = totalAmount;
+                order.amount_paid = totalAmount;
+            }
+        }
+
         const { error } = await pensionNetSupabase
             .from('orders')
-            .update({ is_paid: newStatus })
+            .update(updateData)
+            .eq('id', orderId);
+
+        if (error) throw error;
+
+        order.is_paid = newStatus;
+        const statusText = newStatus ? "שולם" : "לא שולם";
+        createAuditLog('UPDATE', `שינוי סטטוס תשלום ל-${statusText} עבור ${order.dog_name}`, orderId);
+        renderPaymentsTable();
+    } catch (err) {
+        console.error("Error toggling paid status:", err);
+    }
+}
+
+async function updatePricePerDay(orderId, newPrice) {
+    try {
+        const price = parseInt(newPrice) || 0;
+        const { error } = await pensionNetSupabase
+            .from('orders')
+            .update({ price_per_day: price })
             .eq('id', orderId);
 
         if (error) throw error;
 
         const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
         if (order) {
-            order.is_paid = newStatus;
-            const statusText = newStatus ? "שולם" : "לא שולם";
-            createAuditLog('UPDATE', `שינוי סטטוס תשלום ל-${statusText} עבור ${order.dog_name}`, orderId);
-            renderPaymentsTable();
+            order.price_per_day = price;
+            createAuditLog('UPDATE', `עדכון מחיר ליום ל-${price}₪ עבור ${order.dog_name}`, orderId);
+            renderPaymentsTable(); // Refresh to recalculate total
         }
     } catch (err) {
-        console.error("Error toggling paid status:", err);
+        console.error("Error updating price per day:", err);
     }
 }
