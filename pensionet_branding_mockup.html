@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פנסיונט - מיתוג עסקי</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --dark: #0f172a;
+            --secondary: #FF8D29;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .section-header {
+            width: 820px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-right: 4px solid var(--primary);
+        }
+
+        .btn-dl {
+            padding: 10px 20px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* Profile Area - Square 800x800 */
+        #profile-box {
+            width: 800px;
+            height: 800px;
+            background: linear-gradient(135deg, #2563eb 0%, #0f172a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .p-icon {
+            width: 320px;
+            height: 320px;
+            fill: white;
+            margin-bottom: 20px;
+        }
+
+        .p-title {
+            font-size: 110px;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .p-badge {
+            background: var(--secondary);
+            font-size: 32px;
+            font-weight: 700;
+            padding: 10px 40px;
+            border-radius: 100px;
+            margin-top: 25px;
+        }
+
+        /* Cover Area - FB Size 820x312 */
+        #cover-box {
+            width: 820px;
+            height: 312px;
+            background: #0f172a;
+            position: relative;
+            display: flex;
+            color: white;
+            overflow: hidden;
+        }
+
+        .cover-accent {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #0f172a 45%, #2563eb 100%);
+        }
+
+        .cover-content {
+            position: relative;
+            z-index: 5;
+            padding: 40px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-top: -30px;
+        }
+
+        .c-title {
+            font-size: 85px;
+            font-weight: 900;
+            margin: 0;
+            line-height: 0.9;
+        }
+
+        .c-tagline {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-top: 10px;
+        }
+
+        .c-features {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .c-feat {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .cover-bottom {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            padding: 12px 50px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .c-phone {
+            background: var(--success);
+            padding: 5px 20px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        /* Scale down for display only */
+        .zoom-out {
+            zoom: 0.6;
+            -moz-transform: scale(0.6);
+            -moz-transform-origin: top center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="section-header">
+        <h2 style="margin:0">1. תמונת פרופיל (Square)</h2>
+        <button class="btn-dl" onclick="doCapture('profile-box', 'profile')">⬇️ הורדה תקינה (PNG)</button>
+    </div>
+
+    <div class="zoom-out">
+        <div id="profile-box">
+            <svg class="p-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21.5c-1.35 0-2.53-.44-3.41-1.18-.32-.27-.61-.58-.85-.92-.68-.94-1.04-2.06-1.01-3.21.03-1.03.35-2.02.9-2.88.5-.78 1.15-1.42 1.91-1.89.81-.5 1.74-.77 2.69-.77s1.88.27 2.69.77c.76.47 1.41 1.11 1.91 1.89.55.86.87 1.85.9 2.88.03 1.15-.33 2.27-1.01 3.21-.24.34-.53.65-.85.92-.88.74-2.06 1.18-3.41 1.18zM6.5 12c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM9.5 8C8.67 8 8 7.33 8 6.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5S15.33 8 14.5 8z"/>
+            </svg>
+            <h1 class="p-title">פנסיונט</h1>
+            <div class="p-badge">ניהול פנסיון כלבים חכם</div>
+        </div>
+    </div>
+
+    <div class="section-header" style="margin-top: 40px;">
+        <h2 style="margin:0">2. תמונת נושא (Cover)</h2>
+        <button class="btn-dl" onclick="doCapture('cover-box', 'cover')">⬇️ הורדה תקינה (PNG)</button>
+    </div>
+
+    <div id="cover-box">
+        <div class="cover-accent"></div>
+        <div class="cover-content">
+            <h1 class="c-title">פנסיונט</h1>
+            <div class="c-tagline">השקט שלך, הביטחון שלהם.</div>
+            <div class="c-features">
+                <div class="c-feat">✓ ניהול יומן</div>
+                <div class="c-feat">✓ ניהול לקוחות חכם</div>
+                <div class="c-feat">✓ דוחות פיננסיים</div>
+            </div>
+        </div>
+        <div class="cover-bottom">
+            <div class="c-phone">📞 052-8366744</div>
+            <div style="font-weight: 800; opacity: 0.8">מערכת ניהול לפנסיון כלבים</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 50px; text-align: center;">
+        <a href="admin.html" style="color: var(--dark); font-weight: 700;">חזרה למערכת</a>
+    </div>
+
+    <script>
+        async function doCapture(id, name) {
+            const el = document.getElementById(id);
+            const btn = event.currentTarget;
+            btn.innerHTML = "...מעבד";
+            
+            // גלילה לראש הדף מבטיחה ששום דבר לא יחתוך את הצילום
+            window.scrollTo(0, 0);
+
+            try {
+                const canvas = await html2canvas(el, {
+                    scale: 2, // איכות גבוהה
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: null,
+                    scrollX: 0,
+                    scrollY: -window.scrollY
+                });
+                
+                const link = document.createElement('a');
+                link.download = name + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (e) {
+                alert("חלה שגיאה. מומלץ לבצע צילום מסך ידני.");
+            } finally {
+                btn.innerHTML = "⬇️ הורדה תקינה (PNG)";
+            }
+        }
+    </script>
+</body>
+</html>

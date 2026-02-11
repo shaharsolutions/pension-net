@@ -1188,7 +1188,7 @@ textarea.admin-note:focus {
   border-radius: 24px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
   width: 100%;
-  max-width: 800px;
+  max-width: 1100px;
   overflow: hidden;
   border: 1px solid #f1f5f9;
 }
@@ -1308,10 +1308,47 @@ textarea.admin-note:focus {
 
 /* Staff Management Styles */
 .staff-tags {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+@media (max-width: 992px) {
+  .staff-tags {
+    grid-template-columns: 1fr;
+  }
+}
+
+.staff-permission-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  transition: all 0.2s;
+}
+
+.staff-permission-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.staff-permission-card label {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  margin-top: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px !important;
+  padding: 4px 0;
+}
+
+.staff-permission-card input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  cursor: pointer;
 }
 
 .staff-tag {
@@ -1558,19 +1595,33 @@ body.staff-mode .only-manager {
   display: none !important;
 }
 
-body.staff-mode .price-input,
-body.staff-mode .days-input,
-body.staff-mode .date-input,
-body.staff-mode .status-select,
-body.staff-mode .price-btn,
-body.staff-mode #new-staff-name,
-body.staff-mode #settings-admin-pin,
-body.staff-mode .staff-manager button,
-body.staff-mode .remove-staff {
+body.staff-mode :is(.price-input, .days-input, .date-input, .status-select, .price-btn, #new-staff-name, #settings-admin-pin, .staff-manager button, .remove-staff, .payment-input, #payments-table button) {
   pointer-events: none;
   background-color: #f8fafc !important;
   color: #94a3b8 !important;
   opacity: 0.7;
+}
+
+/* Permission Overrides */
+body.staff-mode.perm-edit-status .status-select {
+  pointer-events: auto !important;
+  background-color: white !important;
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+body.staff-mode.perm-edit-details :is(.price-input, .days-input, .date-input, .price-btn) {
+  pointer-events: auto !important;
+  background-color: white !important;
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+body.staff-mode.perm-manage-payments :is(.payment-input, #payments-table button) {
+  pointer-events: auto !important;
+  background-color: white !important;
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 /* Audit Logs */

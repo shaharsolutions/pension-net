@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פנסיונט | המערכת המושלמת לניהול פנסיון כלבים</title>
+    <meta name="description" content="השקט הנפשי שלך, הבית השני שלהם. המערכת המתקדמת ביותר לניהול פנסיון כלבים.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <nav id="navbar">
+        <a href="#" class="logo">
+            <i class="fas fa-paw"></i>
+            <span>פנסיונט</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">פיצ'רים</a></li>
+            <li><a href="#how-it-works">איך זה עובד</a></li>
+            <li><a href="#demo">הדגמה</a></li>
+
+        </ul>
+        <a href="../login.html" class="cta-btn">כניסת מנהל</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <!-- Animated Background Particles -->
+        <div class="hero-particles">
+            <div class="particle" style="--x: 10%; --y: 20%; --delay: 0s; --size: 6px;"></div>
+            <div class="particle" style="--x: 80%; --y: 10%; --delay: 1s; --size: 4px;"></div>
+            <div class="particle" style="--x: 50%; --y: 70%; --delay: 2s; --size: 8px;"></div>
+            <div class="particle" style="--x: 20%; --y: 80%; --delay: 3s; --size: 5px;"></div>
+            <div class="particle" style="--x: 90%; --y: 60%; --delay: 0.5s; --size: 7px;"></div>
+            <div class="particle" style="--x: 70%; --y: 30%; --delay: 1.5s; --size: 3px;"></div>
+            <div class="particle" style="--x: 35%; --y: 50%; --delay: 2.5s; --size: 6px;"></div>
+            <div class="particle" style="--x: 60%; --y: 90%; --delay: 4s; --size: 4px;"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-badge reveal">
+                <i class="fas fa-rocket"></i>
+                מנהלים את הפנסיון בדיגיטל - גרסת פיילוט
+            </div>
+            <h1 class="reveal">השקט הנפשי <span>שלך</span>,<br>הבית השני <span>שלהם</span>.</h1>
+            <p class="reveal">פנסיונט היא המערכת המתקדמת והקלה ביותר לניהול פנסיון כלבים. ניהול הזמנות, גבייה, יומן פעולות ודיווחי תפעול – הכל במקום אחד, מעוצב ומלוטש.</p>
+            <div class="hero-buttons reveal">
+                <a href="#features" class="cta-btn pulse-btn">גלו עוד</a>
+                <a href="../login.html" class="cta-btn cta-outline">נסו עכשיו</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="images/hero.png" alt="Dog in pension" id="heroImg" class="reveal-left">
+            <div class="floating-card card-1">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-check-circle" style="color: var(--accent); font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">הזמנה אושרה</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">בוני - גולדן רטריבר</div>
+                    </div>
+                </div>
+            </div>
+            <div class="floating-card card-2">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-calendar-alt" style="color: var(--primary); font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">8 כלבים היום</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">תפוסה: 85%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="floating-card card-3">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-shekel-sign" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">₪2,400</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">הכנסות החודש</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>גלול מטה</span>
+        </div>
+    </header>
+
+    <!-- Stats Counter Section -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="100" data-suffix="%">0</div>
+                <div class="stat-label">ניהול דיגיטלי מלא</div>
+                <div class="stat-icon"><i class="fas fa-mobile-alt"></i></div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="0" data-prefix="₪">0</div>
+                <div class="stat-label">עלות למצטרפי הפיילוט</div>
+                <div class="stat-icon"><i class="fas fa-tags"></i></div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="5" data-suffix=" דק'">0</div>
+                <div class="stat-label">זמן הגדרה מהיר</div>
+                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="1" data-prefix="1-on-">0</div>
+                <div class="stat-label">ליווי ומענה אישי</div>
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="section-header reveal">
+            <div class="section-tag">פיצ'רים</div>
+            <h2>כל מה שהפנסיון שלך צריך</h2>
+            <p>בנינו את הכלים שיעזרו לך להתמקד במה שחשוב באמת – הכלבים.</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card stagger-reveal" data-delay="0">
+                <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+                <h3>ניהול הזמנות חכם</h3>
+                <p>לוח שנה אינטראקטיבי המציג את תפוסת הפנסיון בזמן אמת. מעקב פשוט אחרי כניסות ויציאות מתוכננות.</p>
+            </div>
+            
+            <div class="feature-card stagger-reveal" data-delay="1">
+                <div class="feature-icon" style="background: #f59e0b;"><i class="fas fa-shekel-sign"></i></div>
+                <h3>גבייה ותשלומים</h3>
+                <p>ניהול כספי מלא. מעקב אחר יתרות לקוחות, שיטות תשלום והפקת סיכומי גבייה בלחיצת כפתור.</p>
+            </div>
+            
+            <div class="feature-card stagger-reveal" data-delay="2">
+                <div class="feature-icon" style="background: #10b981;"><i class="fas fa-clipboard-list"></i></div>
+                <h3>יומן פעולות צוות</h3>
+                <p>תיעוד שוטף של כל מה שקורה בפנסיון. הערות על התנהגות, אוכל, תרופות ועדכונים חשובים מהשטח.</p>
+            </div>
+
+            <div class="feature-card stagger-reveal" data-delay="3">
+                <div class="feature-icon" style="background: #ef4444;"><i class="fas fa-chart-line"></i></div>
+                <h3>דוחות ותובנות</h3>
+                <p>נתחו את צמיחת העסק שלכם עם דוחות גרפיים מפורטים על הכנסות ותפוסה לאורך זמן.</p>
+            </div>
+
+            <div class="feature-card stagger-reveal" data-delay="4">
+                <div class="feature-icon" style="background: #8b5cf6;"><i class="fas fa-users-cog"></i></div>
+                <h3>ניהול צוות עובדים</h3>
+                <p>הרשאות מנוהלות, מעקב אחרי מי ביצע כל פעולה וסנכרון מלא בין חברי הצוות.</p>
+            </div>
+
+            <div class="feature-card stagger-reveal" data-delay="5">
+                <div class="feature-icon" style="background: #06b6d4;"><i class="fas fa-mobile-alt"></i></div>
+                <h3>קישור הזמנות ללקוח</h3>
+                <p>שלחו ללקוחות קישור ייעודי למילוי פרטי ההזמנה בצורה נוחה וישירה מהסמארטפון.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section how-it-works-section">
+        <div class="section-header reveal">
+            <div class="section-tag">איך זה עובד</div>
+            <h2>3 צעדים פשוטים להתחלה</h2>
+            <p>תוך דקות ספורות, הפנסיון שלכם מנוהל בצורה דיגיטלית חלקה.</p>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-line">
+                <div class="timeline-line-fill" id="timelineFill"></div>
+            </div>
+
+            <div class="timeline-item reveal-right">
+                <div class="timeline-number">1</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>הרשמו בחינם</h3>
+                    <p>יצרו חשבון חדש תוך שניות ספורות. לא נדרש כרטיס אשראי, רק כתובת אימייל.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item reveal-left">
+                <div class="timeline-number">2</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-cogs"></i></div>
+                    <h3>הגדירו את הפנסיון</h3>
+                    <p>הוסיפו את פרטי העסק, קבעו קיבולת, בנו את צוות העובדים שלכם ותתחילו לקבל הזמנות.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item reveal-right">
+                <div class="timeline-number">3</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-rocket"></i></div>
+                    <h3>נהלו הכל ממקום אחד</h3>
+                    <p>צפו בלוח הבקרה, נהלו הזמנות, קבלו תשלומים ועקבו אחרי הצמיחה שלכם.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Mockup Section -->
+    <section id="demo" class="mockup-section">
+        <div class="reveal">
+            <div class="section-tag" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);">הדגמה</div>
+            <h2 style="font-size: 2.5rem; margin-bottom: 20px;">מעוצב לחוויית עבודה מושלמת</h2>
+            <p style="opacity: 0.7; max-width: 700px; margin: 0 auto 50px;">הממשק שלנו נקי, מינימליסטי ומהיר, כדי שתוכלו לעשות יותר בפחות זמן.</p>
+        </div>
+        
+        <div class="mockup-container scale-reveal">
+            <div class="mockup-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+                <div style="margin-right: 20px; font-size: 0.8rem; opacity: 0.5;">app.pensionet.co.il</div>
+            </div>
+            <div class="mockup-body">
+                <div class="mockup-app-header">
+                    <div class="header-side">
+                        <div class="mock-btn logout">יציאה 🚪</div>
+                    </div>
+                    <div class="header-center">
+                        <h5>🐕 מערכת ניהול פנסיון כלבים</h5>
+                        <div class="header-badge">🔐 מצב עובד</div>
+                    </div>
+                    <div class="header-side">
+                        <div class="mock-btn">📊 דוחות</div>
+                    </div>
+                </div>
+
+                <div class="mockup-tabs">
+                    <span class="mock-tab active">ניהול שוטף</span>
+                    <span class="mock-tab">היסטוריית הזמנות</span>
+                    <span class="mock-tab">גבייה</span>
+                    <span class="mock-tab">יומן פעולות</span>
+                </div>
+
+                <div class="mockup-content">
+                    <div class="mockup-inner-header">📊 תנועות להיום</div>
+                    <div class="mockup-stat-row">
+                        <div class="mockup-real-stat" style="background: #f0f7f0;">
+                            <span style="color: #4caf50;">📥 נכנסים היום</span>
+                            <div class="real-num">12</div>
+                            <div class="dog-names">בוני, לולי, רקס...</div>
+                        </div>
+                        <div class="mockup-real-stat" style="background: #fff0f0;">
+                            <span style="color: #f44336;">📤 יוצאים היום</span>
+                            <div class="real-num">4</div>
+                            <div class="dog-names">מיקה, סימבה...</div>
+                        </div>
+                    </div>
+
+                    <div class="mockup-table">
+                        <div class="mockup-table-header">הזמנות עתידיות</div>
+                        <div class="fake-table-row">
+                            <div class="fake-cell">01/02</div>
+                            <div class="fake-cell">ישראל ישראלי</div>
+                            <div class="fake-cell">בוני</div>
+                            <div class="fake-badge approved">אושר</div>
+                        </div>
+                        <div class="fake-table-row">
+                            <div class="fake-cell">02/02</div>
+                            <div class="fake-cell">שרה כהן</div>
+                            <div class="fake-cell">לולי</div>
+                            <div class="fake-badge approved">אושר</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join the Pilot? -->
+    <section id="pilot-program" class="section pilot-section">
+        <div class="section-header reveal">
+            <div class="section-tag">תוכנית הפיילוט</div>
+            <h2>למה להצטרף אלינו עכשיו?</h2>
+            <p>אנחנו בונים את המערכת יחד איתכם. הצטרפות לפיילוט היא הזדמנות לקבל פתרון שמותאם בדיוק לצרכים שלכם.</p>
+        </div>
+
+        <div class="pilot-benefits-grid">
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-magic"></i></div>
+                <h3>השפעה על הפיתוח</h3>
+                <p>הפיצ'רים שחשובים לכם נכנסים לסדרי העדיפויות שלנו. אתם אלו שמכתיבים איך המערכת תיראה.</p>
+            </div>
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                <h3>ליווי אישי צמוד</h3>
+                <p>אנחנו כאן כדי לוודא שהמעבר לדיגיטל עובר חלק. הדרכה אישית ומענה מהיר לכל שאלה.</p>
+            </div>
+
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-sync-alt"></i></div>
+                <h3>שיפור ועדכון מתמיד</h3>
+                <p>המערכת מתפתחת מדי יום. אנחנו משחררים עדכונים ושיפורים במהירות כדי להבטיח לכם את חוויית הניהול הטובה ביותר.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="section cta-section">
+        <div class="cta-card reveal">
+            <div class="cta-bg-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+            <h2>מוכנים להתחיל?</h2>
+            <p>הצטרפו לנבחרת הפיילוט שלנו והשפיעו על עתיד ניהול הפנסיון שלכם.</p>
+            <a href="../login.html" class="cta-btn pulse-btn" style="font-size: 1.25rem; padding: 18px 55px;">התחילו עכשיו בחינם</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo" style="margin-bottom: 20px;">
+                    <i class="fas fa-paw"></i>
+                    <span>פנסיונט</span>
+                </div>
+                <p style="color: var(--text-muted);">הפתרון המקיף לניהול עסק הפנסיון שלך. מיוצר באהבה עבור אוהבי כלבים.</p>
+            </div>
+            <div class="footer-links">
+                <h4>ניווט מהיר</h4>
+                <ul>
+                    <li><a href="#features">פיצ'רים</a></li>
+                    <li><a href="#how-it-works">איך זה עובד</a></li>
+
+                    <li><a href="../login.html">כניסת מערכת</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 פנסיונט. כל הזכויות שמורות.
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

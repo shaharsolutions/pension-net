@@ -290,7 +290,7 @@ function updateDaysDisplay() {
     const days = calculateDays(checkIn, checkOut); // Uses utils.js
     if (days >= 0) {
       if (days === 0) {
-        daysText.textContent = `🐾 יום כיף בפנסיון (ללא לינה)`;
+        daysText.textContent = `🐾 יום כיף בגן`;
       } else if (days === 1) {
         daysText.textContent = `🐾 הכלב ישהה בפנסיון לילה אחד`;
       } else {

@@ -8,6 +8,9 @@ async function checkAuthStatus() {
   return session;
 }
 
+// Alias for safety
+const checkAuth = checkAuthStatus;
+
 async function logout() {
   await Auth.logout();
 }
@@ -987,7 +990,7 @@ function renderMovementStats(data) {
          <div style="flex: 1;">
            <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-           <div style="font-size: 11px; color: #888;">לתשלום: ${total}₪</div>
+
          </div>
        </div>`;
     }).join('');
@@ -1364,33 +1367,118 @@ async function switchTab(tabName) {
 // --- Staff Management ---
 window.currentStaffMembers = [];
 
+window.staffDeleteConfirmIndex = -1;
+
 function renderStaffList() {
   const list = document.getElementById('staff-list');
   if (!list) return;
   list.innerHTML = '';
   
-  window.currentStaffMembers.forEach((name, index) => {
-    const tag = document.createElement('div');
-    tag.className = 'staff-tag';
-    tag.innerHTML = `
-      <span>${name}</span>
-      <span class="remove-staff" onclick="removeStaffMember(${index})">&times;</span>
+  if (window.currentStaffMembers.length === 0) {
+    list.innerHTML = '<div style="color: #94a3b8; font-size: 14px; padding: 10px;">אין עובדים רשומים במערכת</div>';
+    return;
+  }
+
+  window.currentStaffMembers.forEach((staff, index) => {
+    // Ensure permissions exist
+    if (!staff.permissions) {
+      staff.permissions = { edit_status: false, edit_details: false, manage_payments: false };
+    }
+
+    const card = document.createElement('div');
+    card.className = 'staff-permission-card';
+    
+    const isConfirming = window.staffDeleteConfirmIndex === index;
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        <span style="font-weight: 800; color: #1e293b;">${staff.name}</span>
+        ${isConfirming ? `
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 11px; color: #ef4444; font-weight: bold;">בטוח?</span>
+            <button onclick="executeRemoveStaff(${index})" class="header-btn" style="background:#ef4444; color:white; padding: 2px 8px; font-size: 11px; border-radius: 4px;">כן</button>
+            <button onclick="cancelRemoveStaff()" class="header-btn" style="background:#64748b; color:white; padding: 2px 8px; font-size: 11px; border-radius: 4px;">לא</button>
+          </div>
+        ` : `
+          <button onclick="requestRemoveStaff(${index})" class="delete-note-btn" title="הסר עובד/ת"><i class="fas fa-trash"></i></button>
+        `}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 4px; ${isConfirming ? 'opacity: 0.3; pointer-events: none;' : ''}">
+        <label>
+          <span>שינוי סטטוס הזמנות</span>
+          <input type="checkbox" ${staff.permissions.edit_status ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'edit_status')">
+        </label>
+        <label>
+          <span>עריכת פרטי הזמנה</span>
+          <input type="checkbox" ${staff.permissions.edit_details ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'edit_details')">
+        </label>
+        <label>
+          <span>ניהול גבייה ותשלומים</span>
+          <input type="checkbox" ${staff.permissions.manage_payments ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'manage_payments')">
+        </label>
+      </div>
     `;
-    list.appendChild(tag);
+    list.appendChild(card);
   });
 
-  // Also update modal author select
+  // Also update modal author select and active staff select
+  updateStaffSelectors();
+}
+
+async function saveStaffToDB() {
+  const session = window.currentUserSession;
+  if (!session) return;
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update({ staff_members: window.currentStaffMembers })
+      .eq('user_id', session.user.id);
+      
+    if (error) throw error;
+    console.log('Staff members persisted to database');
+  } catch (err) {
+    console.error('Error persisting staff:', err);
+    showToast('שגיאה בשמירת נתוני צוות', 'error');
+  }
+}
+
+async function toggleStaffPermission(index, permKey) {
+  if (window.currentStaffMembers[index]) {
+    window.currentStaffMembers[index].permissions[permKey] = !window.currentStaffMembers[index].permissions[permKey];
+    await saveStaffToDB();
+  }
+}
+
+function updateStaffSelectors() {
+  const staffNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
+  
+  // 1. Update notes modal select
   const select = document.getElementById('noteAuthorSelect');
   if (select) {
     const currentVal = select.value;
     select.innerHTML = '<option value="">בחר עובד/ת...</option>';
-    window.currentStaffMembers.forEach(name => {
+    staffNames.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
       opt.textContent = name;
       select.appendChild(opt);
     });
     select.value = currentVal;
+  }
+
+  // 2. Update active staff select (for staff mode)
+  const activeSelect = document.getElementById('activeStaffSelect');
+  if (activeSelect) {
+    const currentVal = activeSelect.value;
+    activeSelect.innerHTML = '<option value="צוות">זהות עובד/ת...</option>';
+    staffNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      activeSelect.appendChild(opt);
+    });
+    activeSelect.value = currentVal;
   }
 }
 
@@ -1448,19 +1536,43 @@ async function addStaffMember() {
   
   const input = document.getElementById('new-staff-name');
   const name = input.value.trim();
-  if (name && !window.currentStaffMembers.includes(name)) {
-    window.currentStaffMembers.push(name);
+  const existingNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
+  
+  if (name && !existingNames.includes(name)) {
+    window.currentStaffMembers.push({
+      name: name,
+      permissions: {
+        edit_status: false,
+        edit_details: false,
+        manage_payments: false
+      }
+    });
+    await saveStaffToDB();
     createAuditLog('UPDATE', `הוספת חבר צוות חדש: ${name}`);
     input.value = '';
     renderStaffList();
   }
 }
 
-async function removeStaffMember(index) {
+function requestRemoveStaff(index) {
+  window.staffDeleteConfirmIndex = index;
+  renderStaffList();
+}
+
+function cancelRemoveStaff() {
+  window.staffDeleteConfirmIndex = -1;
+  renderStaffList();
+}
+
+async function executeRemoveStaff(index) {
   if (!(await verifyManagerAccess())) return;
   
-  const name = window.currentStaffMembers[index];
+  const staff = window.currentStaffMembers[index];
+  const name = typeof staff === 'string' ? staff : staff.name;
+  
   window.currentStaffMembers.splice(index, 1);
+  window.staffDeleteConfirmIndex = -1;
+  await saveStaffToDB();
   createAuditLog('UPDATE', `הסרת חבר צוות: ${name}`);
   renderStaffList();
 }
@@ -1471,22 +1583,52 @@ window.managerPin = '';
 
 function updateModeUI() {
   const badge = document.getElementById('modeStatusLabel');
+  const staffSelectorContainer = document.getElementById('activeStaffSelectorContainer');
   if (!badge) return;
 
   if (window.isAdminMode) {
     badge.textContent = '🔓 מצב מנהל';
     badge.className = 'mode-badge manager';
     document.body.classList.remove('staff-mode');
+    document.body.classList.remove('perm-edit-status', 'perm-edit-details', 'perm-manage-payments');
+    if (staffSelectorContainer) staffSelectorContainer.style.display = 'none';
   } else {
     badge.textContent = '🔐 מצב עובד';
     badge.className = 'mode-badge staff';
     document.body.classList.add('staff-mode');
+    if (staffSelectorContainer) staffSelectorContainer.style.display = 'flex';
+    
+    // Switch permissions based on selected active employee
+    const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+    const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+    
+    const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : (window.globalStaffPermissions || {
+       edit_status: false,
+       edit_details: false,
+       manage_payments: false
+    });
+
+    // Apply permissions
+    if (perms.edit_status) document.body.classList.add('perm-edit-status');
+    else document.body.classList.remove('perm-edit-status');
+    
+    if (perms.edit_details) document.body.classList.add('perm-edit-details');
+    else document.body.classList.remove('perm-edit-details');
+    
+    if (perms.manage_payments) document.body.classList.add('perm-manage-payments');
+    else document.body.classList.remove('perm-manage-payments');
   }
   
   // Refresh notes view if open to show/hide delete buttons
   if (window.currentlyEditingOrderId) {
     loadOrderNotes(window.currentlyEditingOrderId);
   }
+}
+
+function handleActiveStaffChange() {
+  updateModeUI();
+  const name = document.getElementById('activeStaffSelect')?.value || 'צוות';
+  showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
 }
 
 // Ensure staff mode on start
@@ -1687,7 +1829,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, staff_permissions')
       .eq('user_id', session.user.id)
       .single();
 
@@ -1701,7 +1843,12 @@ async function loadSettings() {
           phone: session.user.user_metadata?.phone || '',
           max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
           default_price: 130,
-          staff_members: []
+          staff_members: [],
+          staff_permissions: {
+            edit_status: false,
+            edit_details: false,
+            manage_payments: false
+          }
         }])
         .select()
         .single();
@@ -1724,16 +1871,31 @@ async function loadSettings() {
         'settings-admin-pin': profile.manager_pin
       };
 
-      window.managerPin = profile.manager_pin || '';
-
-      for (const [id, value] of Object.entries(fieldMapping)) {
-        const el = document.getElementById(id);
-        if (el) {
-          el.value = (value !== null && value !== undefined) ? value : '';
+      window.currentStaffMembers = (profile.staff_members || []).map(s => {
+        // Migration: convert string staff to objects if needed
+        if (typeof s === 'string') {
+          return {
+            name: s,
+            permissions: profile.staff_permissions || { edit_status: false, edit_details: false, manage_payments: false }
+          };
         }
-      }
+        return s;
+      });
 
-      window.currentStaffMembers = profile.staff_members || [];
+      window.globalStaffPermissions = profile.staff_permissions || {
+        edit_status: false,
+        edit_details: false,
+        manage_payments: false
+      };
+
+      // Set global permission checkboxes
+      if (document.getElementById('perm-edit-status')) 
+        document.getElementById('perm-edit-status').checked = window.globalStaffPermissions.edit_status || false;
+      if (document.getElementById('perm-edit-details')) 
+        document.getElementById('perm-edit-details').checked = window.globalStaffPermissions.edit_details || false;
+      if (document.getElementById('perm-manage-payments')) 
+        document.getElementById('perm-manage-payments').checked = window.globalStaffPermissions.manage_payments || false;
+
       renderStaffList();
 
       // Update Header Subtitle
@@ -1766,7 +1928,12 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     location: document.getElementById('settings-location').value,
     default_price: parseInt(document.getElementById('settings-default-price').value),
     staff_members: window.currentStaffMembers,
-    manager_pin: document.getElementById('settings-admin-pin').value
+    manager_pin: document.getElementById('settings-admin-pin').value,
+    staff_permissions: {
+      edit_status: document.getElementById('perm-edit-status')?.checked || false,
+      edit_details: document.getElementById('perm-edit-details')?.checked || false,
+      manage_payments: document.getElementById('perm-manage-payments')?.checked || false
+    }
   };
 
   try {
@@ -1806,7 +1973,8 @@ async function createAuditLog(actionType, description, orderId = null) {
     const session = window.currentUserSession || await Auth.getSession();
     if (!session) return;
 
-    const staffName = window.isAdminMode ? "מנהל" : "צוות עובדים";
+    const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+    const staffName = window.isAdminMode ? "מנהל" : (activeStaffName || "צוות עובדים");
 
     try {
         await pensionNetSupabase.from('audit_logs').insert([{
@@ -1895,7 +2063,8 @@ function renderPaymentsTable() {
 
         // Apply defaults if not set in DB
         const currentMethod = row.payment_method || 'מזומן';
-        const currentAmountPaid = (row.amount_paid !== undefined && row.amount_paid !== null) ? row.amount_paid : totalAmount;
+        // Display 0 if not paid, otherwise the stored amount (defaulting to total if paid but null)
+        const currentAmountPaid = (row.amount_paid !== undefined && row.amount_paid !== null) ? row.amount_paid : (isPaid ? totalAmount : 0);
 
         tr.innerHTML = `
             <td>${row.owner_name}</td>
@@ -1930,7 +2099,7 @@ function renderPaymentsTable() {
                 <button onclick="togglePaidStatus('${row.id}', ${!isPaid})" 
                         class="header-btn" 
                         style="background: ${isPaid ? '#64748b' : '#10b981'}; color: white; padding: 5px 10px; font-size: 12px; border-radius: 6px;">
-                    ${isPaid ? 'בטל סימון שולם' : 'סמן כסולק ✓'}
+                    ${isPaid ? 'בטל סימון שולם' : 'סמן כשולם ✓'}
                 </button>
             </td>
         `;
@@ -1987,18 +2156,20 @@ async function togglePaidStatus(orderId, newStatus) {
 
         const updateData = { is_paid: newStatus };
         
-        // If marking as paid for the first time and values are missing, use defaults
+        // If marking as paid for the first time or amount is 0, update it to total amount
         if (newStatus === true) {
             if (!order.payment_method) {
                 updateData.payment_method = 'מזומן';
                 order.payment_method = 'מזומן';
             }
-            if (order.amount_paid === undefined || order.amount_paid === null || order.amount_paid === 0) {
-                const days = calculateDays(order.check_in, order.check_out);
-                const totalAmount = days * (order.price_per_day || 130);
-                updateData.amount_paid = totalAmount;
-                order.amount_paid = totalAmount;
-            }
+            const days = calculateDays(order.check_in, order.check_out);
+            const totalAmount = days * (order.price_per_day || 130);
+            updateData.amount_paid = totalAmount;
+            order.amount_paid = totalAmount;
+        } else {
+            // When un-marking as paid, optionally reset amount paid to 0 locally
+            updateData.amount_paid = 0;
+            order.amount_paid = 0;
         }
 
         const { error } = await pensionNetSupabase
