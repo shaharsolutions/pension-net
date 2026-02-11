@@ -73,6 +73,40 @@ document.addEventListener("DOMContentLoaded", async function () {
         icon.classList.add('fa-eye');
       }
     });
+
+    // Handle password change
+    document.getElementById('changePasswordBtn')?.addEventListener('click', async function() {
+      const newPassword = document.getElementById('settings-new-password').value;
+      const confirmPassword = document.getElementById('settings-confirm-password').value;
+
+      if (!newPassword || newPassword.length < 6) {
+        showToast('הסיסמה חייבת להכיל לפחות 6 תווים', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showToast('הסיסמאות אינן תואמות', 'error');
+        return;
+      }
+
+      this.disabled = true;
+      this.textContent = 'מעדכן...';
+
+      try {
+        const { error } = await Auth.updatePassword(newPassword);
+        if (error) throw error;
+
+        showToast('הסיסמה עודכנה בהצלחה!', 'success');
+        document.getElementById('settings-new-password').value = '';
+        document.getElementById('settings-confirm-password').value = '';
+      } catch (err) {
+        console.error('Password update error:', err);
+        showToast('שגיאה בעדכון הסיסמה: ' + err.message, 'error');
+      } finally {
+        this.disabled = false;
+        this.textContent = 'עדכן סיסמת כניסה';
+      }
+    });
   }
 
   
@@ -740,7 +774,14 @@ function renderPastOrdersTable() {
     <td data-label="כלב">${row.dog_name}</td>
     <td data-label="גיל">${row.dog_age}</td>
     <td data-label="גזע">${row.dog_breed}</td>
-    <td data-label="סירס/עיקור">${row.neutered}</td>
+    <td data-label="סירס/עיקור">
+      ${row.neutered || ""}
+      ${row.neutered ? `
+        <div style="font-size: 11px; color: #3b82f6; margin-top: 2px; font-weight: 500;">
+          ${(row.neutered.includes('מסורס') ? 'זכר' : (row.neutered.includes('מעוקרת') ? 'נקבה' : ''))}
+        </div>
+      ` : ''}
+    </td>
     <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
       ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
     </td>
@@ -1150,7 +1191,14 @@ async function loadData() {
       <td data-label="כלב">${row.dog_name || ""}</td>
       <td data-label="גיל">${row.dog_age || ""}</td>
       <td data-label="גזע">${row.dog_breed || ""}</td>
-      <td data-label="סירס/עיקור">${row.neutered || ""}</td>
+      <td data-label="סירס/עיקור">
+        ${row.neutered || ""}
+        ${row.neutered ? `
+          <div style="font-size: 11px; color: #3b82f6; margin-top: 2px; font-weight: 500;">
+            ${(row.neutered.includes('מסורס') ? 'זכר' : (row.neutered.includes('מעוקרת') ? 'נקבה' : ''))}
+          </div>
+        ` : ''}
+      </td>
       <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
         ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
       </td>
@@ -1375,8 +1423,8 @@ document
 loadData();
 
 async function switchTab(tabName) {
-  // If moving to settings, verify PIN first
-  if (tabName === 'settings') {
+  // If moving to settings or audit, verify PIN first
+  if (tabName === 'settings' || tabName === 'audit') {
     if (!(await verifyManagerAccess())) return;
   }
 
@@ -1495,7 +1543,7 @@ async function toggleStaffPermission(index, permKey) {
 }
 
 function updateStaffSelectors() {
-  const staffNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
+  const staffNames = getStaffNames();
   
   // 1. Update notes modal select
   const select = document.getElementById('noteAuthorSelect');
@@ -1509,6 +1557,27 @@ function updateStaffSelectors() {
       select.appendChild(opt);
     });
     select.value = currentVal;
+    
+    // Protect manager selection in notes
+    if (!select.hasAttribute('listener-added')) {
+      select.setAttribute('listener-added', 'true');
+      let prevAuthor = select.value;
+      
+      select.addEventListener('focus', function() {
+        prevAuthor = this.value;
+      });
+
+      select.addEventListener('change', async function() {
+        if (this.value === window.managerName && !window.isAdminMode) {
+          const success = await verifyManagerAccess();
+          if (!success) {
+            this.value = prevAuthor;
+            return;
+          }
+        }
+        prevAuthor = this.value;
+      });
+    }
   }
 
   // 2. Update active staff select (for staff mode)
@@ -1653,9 +1722,18 @@ async function executeRemoveStaff(index) {
   renderStaffList();
 }
 
+function getStaffNames() {
+  const staffNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
+  if (window.managerName && !staffNames.includes(window.managerName)) {
+    return [window.managerName, ...staffNames];
+  }
+  return staffNames;
+}
+
 // --- Mode Toggle Logic ---
 window.isAdminMode = false; // Default to staff mode
 window.managerPin = '';
+window.managerName = '';
 
 function updateModeUI() {
   const badge = document.getElementById('modeStatusLabel');
@@ -1667,7 +1745,13 @@ function updateModeUI() {
     badge.className = 'mode-badge manager';
     document.body.classList.remove('staff-mode');
     document.body.classList.remove('perm-edit-status', 'perm-edit-details', 'perm-manage-payments');
-    if (staffSelectorContainer) staffSelectorContainer.style.display = 'none';
+    
+    // Ensure selector reflects manager profile
+    if (staffSelectorContainer) staffSelectorContainer.style.display = 'flex';
+    const select = document.getElementById('activeStaffSelect');
+    if (select && window.managerName) {
+      select.value = window.managerName;
+    }
   } else {
     badge.textContent = '🔐 מצב עובד';
     badge.className = 'mode-badge staff';
@@ -1688,6 +1772,12 @@ function updateModeUI() {
     
     if (perms.edit_details) document.body.classList.add('perm-edit-details');
     else document.body.classList.remove('perm-edit-details');
+
+    // If on protected tab while in staff mode, switch to ongoing
+    const activeTabBtn = document.querySelector('.tab-btn.active');
+    if (activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
+      switchTab('ongoing');
+    }
   }
   
   // Refresh notes view if open to show/hide delete buttons
@@ -1696,9 +1786,25 @@ function updateModeUI() {
   }
 }
 
-function handleActiveStaffChange() {
+async function handleActiveStaffChange() {
+  const select = document.getElementById('activeStaffSelect');
+  const name = select?.value || 'צוות';
+  
+  if (name === window.managerName && !window.isAdminMode) {
+    const success = await verifyManagerAccess();
+    if (!success) {
+      // Revert to previous value or default
+      const prev = localStorage.getItem('pensionNet_activeStaff') || 'צוות';
+      if (select) select.value = prev;
+      return;
+    }
+    // Access verified, updateModeUI will be called by verifyManagerAccess
+    localStorage.setItem('pensionNet_activeStaff', name);
+    return;
+  }
+
+  window.isAdminMode = false;
   updateModeUI();
-  const name = document.getElementById('activeStaffSelect')?.value || 'צוות';
   localStorage.setItem('pensionNet_activeStaff', name);
   showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
 }
@@ -1710,6 +1816,9 @@ async function toggleAdminMode() {
   if (window.isAdminMode) {
     // Switch to staff mode (no PIN needed)
     window.isAdminMode = false;
+    const select = document.getElementById('activeStaffSelect');
+    if (select) select.value = 'צוות';
+    localStorage.setItem('pensionNet_activeStaff', 'צוות');
     updateModeUI();
   } else {
     // Switching to manager mode - ask for PIN
@@ -1938,6 +2047,8 @@ async function loadSettings() {
         'settings-default-price': profile.default_price,
         'settings-admin-pin': profile.manager_pin
       };
+      
+      window.managerName = profile.full_name || '';
 
       // Apply field values to inputs
       Object.keys(fieldMapping).forEach(id => {

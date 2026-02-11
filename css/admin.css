@@ -1874,3 +1874,8 @@ body.staff-mode.perm-manage-payments :is(.payment-input, #payments-table button)
     margin: 10% auto;
   }
 }
+
+/* Hide manager-only elements in staff mode */
+body.staff-mode .manager-only {
+  display: none !important;
+}

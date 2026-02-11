@@ -53,6 +53,13 @@ const Auth = {
 
   onAuthStateChange(callback) {
     return supabaseClient.auth.onAuthStateChange(callback);
+  },
+
+  async updatePassword(newPassword) {
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: newPassword
+    });
+    return { data, error };
   }
 };
 
