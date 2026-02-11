@@ -26,9 +26,6 @@ async function ensureOwnerId() {
     if (session && session.user) {
       PENSION_OWNER_ID = session.user.id;
       console.log("Using owner ID from session:", PENSION_OWNER_ID);
-      // Refresh data now that we have an ID
-      loadMonthlyCapacity();
-      loadOwnerInfo();
     }
   }
   
@@ -38,7 +35,12 @@ async function ensureOwnerId() {
 }
 
 // Start ID check
-ensureOwnerId();
+ensureOwnerId().then(() => {
+  if (PENSION_OWNER_ID) {
+    loadOwnerInfo();
+    loadMonthlyCapacity();
+  }
+});
 
 
 // --- Functions ---
