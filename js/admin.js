@@ -686,11 +686,11 @@ function renderPastOrdersTable() {
     const totalPrice = days * pricePerDay;
 
     tr.innerHTML = `
-    <td>${formatDateTime(row.order_date)}</td>
-    <td>${row.owner_name}</td>
-    <td>${createWhatsAppLink(row.phone)}</td>
-    <td>${generateWhatsAppConfirmationLink(row)}</td>
-    <td class="wide-date-column">
+    <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
+    <td data-label="בעלים">${row.owner_name}</td>
+    <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
+    <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
+    <td data-label="כניסה" class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
       }" data-field="check_in" value="${formatDateForInput(
@@ -700,7 +700,7 @@ function renderPastOrdersTable() {
         row.check_in
       )}</div>
     </td>
-    <td class="wide-date-column">
+    <td data-label="יציאה" class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
       }" data-field="check_out" value="${formatDateForInput(
@@ -710,21 +710,21 @@ function renderPastOrdersTable() {
         row.check_out
       )}</div>
     </td>
-    <td>${row.dog_name}</td>
-    <td>${row.dog_age}</td>
-    <td>${row.dog_breed}</td>
-    <td>${row.neutered}</td>
-    <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+    <td data-label="כלב">${row.dog_name}</td>
+    <td data-label="גיל">${row.dog_age}</td>
+    <td data-label="גזע">${row.dog_breed}</td>
+    <td data-label="סירס/עיקור">${row.neutered}</td>
+    <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
       ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
     </td>
-    <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+    <td data-label="אופי" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
       ${
         row.dog_temperament
           ? row.dog_temperament
           : '<span style="color:#999;">-</span>'
       }
     </td>
-    <td class="price-cell">
+    <td data-label="מחיר" class="price-cell">
       <div class="price-wrapper">
         <div class="price-controls">
           <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
@@ -738,7 +738,7 @@ function renderPastOrdersTable() {
       </div>
       <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
     </td>
-    <td>
+    <td data-label="ימים">
       <div class="days-wrapper">
         <div class="days-controls">
           <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
@@ -753,14 +753,14 @@ function renderPastOrdersTable() {
         </div>
       </div>
     </td>
-    <td class="${
+    <td data-label="סטטוס" class="${
       row.status === "מאושר"
         ? "status-approved"
         : row.status === "בוטל"
         ? "status-cancelled"
         : ""
     }">${row.status}</td>
-    <td class="manager-note-column">
+    <td data-label="ניהול" class="manager-note-column">
       <textarea class="admin-note" data-id="${
         row.id
       }" cols="50" rows="2">${row.admin_note || ""}</textarea>
@@ -887,16 +887,35 @@ async function toggleMovementChecked(type, orderId) {
       btn.style.opacity = '0.7';
   }
 
+  const updateData = { [field]: newState };
+  
+  // Custom request: If marking as departed, also mark as paid
+  if (type === 'leaving' && newState === true && !order.is_paid) {
+    updateData.is_paid = true;
+    if (!order.amount_paid) {
+      const days = calculateDays(order.check_in, order.check_out);
+      updateData.amount_paid = days * (order.price_per_day || 130);
+    }
+    if (!order.payment_method) {
+      updateData.payment_method = 'מזומן';
+    }
+  }
+
   try {
     const { error } = await pensionNetSupabase
       .from('orders')
-      .update({ [field]: newState })
+      .update(updateData)
       .eq('id', orderId);
 
     if (error) throw error;
 
     // Update local cache
     order[field] = newState;
+    if (updateData.is_paid) {
+      order.is_paid = true;
+      if (updateData.amount_paid) order.amount_paid = updateData.amount_paid;
+      if (updateData.payment_method) order.payment_method = updateData.payment_method;
+    }
 
     // Re-render UI to reflect final state
     if (btn && row) {
@@ -908,9 +927,13 @@ async function toggleMovementChecked(type, orderId) {
         btn.textContent = isNowChecked ? `${actionText} ✓` : `סמן ש${actionText}`;
         btn.style.opacity = '1';
 
-        const auditDesc = isNowChecked ? 
+        let auditDesc = isNowChecked ? 
             `סימון ${actionText} עבור ${order.dog_name}` : 
             `ביטול סימון ${actionText} עבור ${order.dog_name}`;
+            
+        if (isNowChecked && type === 'leaving' && updateData.is_paid) {
+            auditDesc += ' (סומן אוטומטית כ-שולם)';
+        }
         createAuditLog('UPDATE', auditDesc, orderId);
     }
 
@@ -1073,11 +1096,11 @@ async function loadData() {
       const totalPrice = days * pricePerDay;
 
       tr.innerHTML = `
-      <td>${formatDateTime(row.order_date)}</td>
-      <td>${row.owner_name || ""}</td>
-      <td>${createWhatsAppLink(row.phone)}</td>
-      <td>${generateWhatsAppConfirmationLink(row)}</td>
-      <td class="wide-date-column">
+      <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
+      <td data-label="בעלים">${row.owner_name || ""}</td>
+      <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
+      <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
+      <td data-label="כניסה" class="wide-date-column">
         <input type="date" class="date-input" data-id="${
           row.id
         }" data-field="check_in" value="${formatDateForInput(
@@ -1087,7 +1110,7 @@ async function loadData() {
           row.check_in
         )}</div>
       </td>
-      <td class="wide-date-column">
+      <td data-label="יציאה" class="wide-date-column">
         <input type="date" class="date-input" data-id="${
           row.id
         }" data-field="check_out" value="${formatDateForInput(
@@ -1097,21 +1120,21 @@ async function loadData() {
           row.check_out
         )}</div>
       </td>
-      <td>${row.dog_name || ""}</td>
-      <td>${row.dog_age || ""}</td>
-      <td>${row.dog_breed || ""}</td>
-      <td>${row.neutered || ""}</td>
-      <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+      <td data-label="כלב">${row.dog_name || ""}</td>
+      <td data-label="גיל">${row.dog_age || ""}</td>
+      <td data-label="גזע">${row.dog_breed || ""}</td>
+      <td data-label="סירס/עיקור">${row.neutered || ""}</td>
+      <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
         ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
       </td>
-      <td style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
+      <td data-label="אופי" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
         ${
           row.dog_temperament
             ? row.dog_temperament
             : '<span style="color:#999;">-</span>'
         }
       </td>
-      <td class="price-cell">
+      <td data-label="מחיר" class="price-cell">
         <div class="price-wrapper">
           <div class="price-controls">
             <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
@@ -1125,7 +1148,7 @@ async function loadData() {
         </div>
         <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
       </td>
-      <td>
+      <td data-label="ימים">
         <div class="days-wrapper">
           <div class="days-controls">
             <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
@@ -1140,7 +1163,7 @@ async function loadData() {
           </div>
         </div>
       </td>
-      <td>
+      <td data-label="סטטוס">
         <select data-id="${row.id}" class="status-select ${
         row.status === "מאושר"
           ? "status-approved"
@@ -1159,7 +1182,7 @@ async function loadData() {
           }>בוטל</option>
         </select>
       </td>
-      <td class="manager-note-column">
+      <td data-label="ניהול" class="manager-note-column">
         <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
           <i class="fas fa-comments"></i> הערות (${(() => {
             try {
@@ -1357,8 +1380,6 @@ async function switchTab(tabName) {
   // Handle data loading for specific tabs
   if (tabName === 'settings') {
     loadSettings();
-  } else if (tabName === 'payments') {
-    renderPaymentsTable();
   } else if (tabName === 'audit') {
     loadAuditLogs();
   }
@@ -1470,7 +1491,16 @@ function updateStaffSelectors() {
   // 2. Update active staff select (for staff mode)
   const activeSelect = document.getElementById('activeStaffSelect');
   if (activeSelect) {
-    const currentVal = activeSelect.value;
+    let currentVal = activeSelect.value;
+    
+    // If current value is default, try to load from localStorage
+    if (currentVal === 'צוות') {
+      const savedAuth = localStorage.getItem('pensionNet_activeStaff');
+      if (savedAuth && staffNames.includes(savedAuth)) {
+        currentVal = savedAuth;
+      }
+    }
+
     activeSelect.innerHTML = '<option value="צוות">זהות עובד/ת...</option>';
     staffNames.forEach(name => {
       const opt = document.createElement('option');
@@ -1479,6 +1509,11 @@ function updateStaffSelectors() {
       activeSelect.appendChild(opt);
     });
     activeSelect.value = currentVal;
+    
+    // Trigger UI update if we loaded a saved value
+    if (currentVal !== 'צוות') {
+      updateModeUI();
+    }
   }
 }
 
@@ -1647,6 +1682,7 @@ function updateModeUI() {
 function handleActiveStaffChange() {
   updateModeUI();
   const name = document.getElementById('activeStaffSelect')?.value || 'צוות';
+  localStorage.setItem('pensionNet_activeStaff', name);
   showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
 }
 
@@ -2086,17 +2122,17 @@ function renderPaymentsTable() {
         const currentAmountPaid = (row.amount_paid !== undefined && row.amount_paid !== null) ? row.amount_paid : (isPaid ? totalAmount : 0);
 
         tr.innerHTML = `
-            <td>${row.owner_name}</td>
-            <td>${row.dog_name}</td>
-            <td style="font-size: 11px;">${formatDateOnly(row.check_in)} - ${formatDateOnly(row.check_out)}</td>
-            <td>${days} ימים</td>
-            <td>
+            <td data-label="בעלים">${row.owner_name}</td>
+            <td data-label="כלב">${row.dog_name}</td>
+            <td data-label="תאריכים" style="font-size: 11px;">${formatDateOnly(row.check_in)} - ${formatDateOnly(row.check_out)}</td>
+            <td data-label="ימים">${days} ימים</td>
+            <td data-label="מחיר/יום">
                 <input type="number" value="${pricePerDay}" step="5"
                        onchange="updatePricePerDay('${row.id}', this.value)" 
                        class="payment-input">
             </td>
-            <td style="font-weight: bold;">${totalAmount}₪</td>
-            <td>
+            <td data-label="סהכ לתשלום" style="font-weight: bold;">${totalAmount}₪</td>
+            <td data-label="סטטוס">
                 <span class="${isPaid ? 'paid-badge' : 'unpaid-badge'}">
                     ${isPaid ? 'שולם' : 'טרם שולם'}
                 </span>

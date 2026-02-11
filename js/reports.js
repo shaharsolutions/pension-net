@@ -31,13 +31,15 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "🚀",
             title: "צמיחה מרשימה",
-            text: `ההכנסות עלו ב-${revenueGrowth.toFixed(1)}% לעומת החודש הקודם! המגמה חיובית - כדאי לנצל את התנופה ולהשקיע בשיווק.`,
+            analysis: `ההכנסות עלו ב-${revenueGrowth.toFixed(1)}% לעומת החודש הקודם!`,
+            recommendation: "המגמה חיובית - זה הזמן לנצל את התנופה ולהשקיע בשיווק ממוקד כדי להגדיל עוד יותר את המאגר."
         });
     } else if (revenueGrowth < -10) {
         insights.push({
             icon: "⚠️",
             title: "ירידה בהכנסות",
-            text: `ההכנסות ירדו ב-${Math.abs(revenueGrowth).toFixed(1)}%. כדאי לבדוק: האם יש עונתיות? האם צריך קמפיין שיווקי? מתחרים חדשים באזור?`,
+            analysis: `זיהינו ירידה של ${Math.abs(revenueGrowth).toFixed(1)}% בהכנסות החודש.`,
+            recommendation: "כדאי לבדוק: האם יש עונתיות? האם יש צורך בקמפיין שיווקי חדש? או אולי מתחרים חדשים נכנסו לאזור?"
         });
     }
 
@@ -47,13 +49,15 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "🎯",
             title: "תפוסה גבוהה",
-            text: `תפוסה של ${occupancyNum.toFixed(1)}% היא מצוינת! אבל זה אומר שאתה מתקרב למקסימום. כדאי לשקול: העלאת מחירים, הרחבת הפנסיון, או העסקת עוזר.`,
+            analysis: `תפוסה של ${occupancyNum.toFixed(1)}% היא מצוינת ומעידה על ביקוש רב.`,
+            recommendation: "אתה מתקרב למקסימום. מומלץ לשקול: העלאת מחירים בעונות שיא, הרחבת הפנסיון, או העסקת סיוע נוסף."
         });
     } else if (occupancyNum < 50) {
         insights.push({
             icon: "📢",
-            title: "יש מקום לצמיחה",
-            text: `תפוסה של ${occupancyNum.toFixed(1)}% משאירה הרבה פוטנציאל. המלצות: פרסום ממוקד ברשתות החברתיות, הנחות ללקוחות חוזרים, שיתופי פעולה עם וטרינרים.`,
+            title: "פוטנציאל לצמיחה",
+            analysis: `תפוסה של ${occupancyNum.toFixed(1)}% משאירה מקום רב לגידול בפעילות.`,
+            recommendation: "כדאי להשקיע בפרסום ממוקד, מבצעי 'חבר מביא חבר' או שיתופי פעולה עם מרפאות וטרינריות בסביבה."
         });
     }
 
@@ -70,13 +74,15 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "❤️",
             title: "נאמנות לקוחות גבוהה",
-            text: `${loyaltyRate.toFixed(1)}% מהלקוחות שלך חוזרים 3+ פעמים! זה מצוין. תשמור על השירות האיכותי ושקול תוכנית נאמנות (כרטיסייה - 10 ימים ב-1100₪ במקום 1300₪).`,
+            analysis: `${loyaltyRate.toFixed(1)}% מהלקוחות שלך הם לקוחות חוזרים קבועים.`,
+            recommendation: "זה מעולה! שקול להשיק כרטיסיית 'חבר מועדון' (למשל: יום 11 חינם) כדי לחזק את הקשר עוד יותר."
         });
     } else {
         insights.push({
             icon: "🎁",
-            title: "הזדמנות לשיפור נאמנות",
-            text: `רק ${loyaltyRate.toFixed(1)}% מהלקוחות חוזרים. כדאי: לשלוח הודעות תודה, לתת הנחה בביקור השני, ליצור קבוצת WhatsApp ללקוחות קבועים.`,
+            title: "הזדמנות לשימור",
+            analysis: `שיעור הלקוחות החוזרים עומד על ${loyaltyRate.toFixed(1)}%.`,
+            recommendation: "מומלץ לשלוח הודעת תודה לאחר ביקור, להציע הנחה קטנה בהזמנה הבאה, או ליצור קבוצת עדכונים שקטה ללקוחות."
         });
     }
 
@@ -88,8 +94,9 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     if (top20Percentage > 70) {
         insights.push({
             icon: "⭐",
-            title: "תלות בלקוחות מובילים",
-            text: `${top20Percentage.toFixed(1)}% מההכנסות מגיעות מ-20% מהלקוחות. זה טוב (לקוחות נאמנים!) אבל גם סיכון. כדאי לגוון ולהביא לקוחות חדשים.`,
+            title: "תלות בלקוחות קבועים",
+            analysis: `${top20Percentage.toFixed(1)}% מההכנסות מגיעות מ-20% בלבד מהלקוחות.`,
+            recommendation: "הלקוחות האלו הם הליבה של העסק, אבל יש סיכון בתלות גבוהה. כדאי לנסות להרחיב את המעגל לקהלים חדשים."
         });
     }
 
@@ -100,8 +107,9 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         if (topSizePercent > 40) {
             insights.push({
                 icon: "🐕",
-                title: `התמחות בכלבים ${topSize[0]}`,
-                text: `${topSizePercent.toFixed(1)}% מהכלבים הם "${topSize[0]}". זה יתרון! תוכל לפרסם כמומחה ל${topSize[0]}, להתאים את הציוד, ולמשוך עוד לקוחות מסוג זה.`,
+                title: `מומחיות ב${topSize[0]}`,
+                analysis: `${topSizePercent.toFixed(1)}% מהלקוחות שלך הם בגודל "${topSize[0]}".`,
+                recommendation: "זה בידול מצוין! תוכל לשווק את עצמך כמומחה וספציפי לגודל הזה ולהתאים את האביזרים והפעילויות עבורם."
             });
         }
     }
@@ -119,8 +127,9 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         if (maxMonth[1] > minMonth[1] * 2) {
             insights.push({
                 icon: "📅",
-                title: "עונתיות ברורה",
-                text: `השיא ב${getMonthName(parseInt(maxMonth[0]))} והשפל ב${getMonthName(parseInt(minMonth[0]))}. תכנן מבצעים בחודשים החלשים, והעלה מחירים בעונות השיא.`,
+                title: "זיהוי עונתיות",
+                analysis: `הביקוש בשיאו ב${getMonthName(parseInt(maxMonth[0]))} ובשפל ב${getMonthName(parseInt(minMonth[0]))}.`,
+                recommendation: "תכנן מבצעים אטרקטיביים לחודשים החלשים והעלה מעט את התעריפים בעונות השיא והחגים."
             });
         }
     }
@@ -130,11 +139,25 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
 
     let html = '<div class="business-insights-container">';
     insights.forEach((insight) => {
+        // Determine class based on icon
+        let typeClass = 'info';
+        if (insight.icon === '🚀' || insight.icon === '❤️' || insight.icon === '⭐') typeClass = 'success';
+        if (insight.icon === '⚠️') typeClass = 'warning';
+        if (insight.icon === '📢' || insight.icon === '🎁') typeClass = 'opportunity';
+
         html += `
-            <div class="insight-card">
-                <div class="insight-icon">${insight.icon}</div>
-                <div class="insight-title">${insight.title}</div>
-                <div class="insight-text">${insight.text}</div>
+            <div class="insight-card ${typeClass}">
+                <div class="insight-header">
+                    <span class="insight-icon">${insight.icon}</span>
+                    <h4 class="insight-title">${insight.title}</h4>
+                </div>
+                <div class="insight-body">
+                    <div class="insight-analysis">${insight.analysis}</div>
+                    <div class="insight-recommendation">
+                        <span class="rec-label">💡 המלצה:</span>
+                        ${insight.recommendation}
+                    </div>
+                </div>
             </div>
         `;
     });

@@ -1713,3 +1713,164 @@ body.staff-mode.perm-manage-payments :is(.payment-input, #payments-table button)
   border-radius: 6px;
   font-size: 13px;
 }
+
+.movements-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-around;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  header {
+    flex-direction: column;
+    padding: 15px;
+    height: auto;
+    min-height: auto;
+    gap: 15px;
+  }
+
+  .header-center {
+    order: -1;
+    margin-bottom: 10px;
+  }
+
+  header h1 {
+    font-size: 20px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .header-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 5px;
+    font-size: 12px;
+  }
+
+  .tabs-nav {
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 5px;
+    max-width: 100%;
+  }
+
+  .tab-btn {
+    padding: 8px 4px;
+    font-size: 13px;
+    min-width: calc(50% - 5px);
+  }
+
+  .movements-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .container {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+  }
+
+  /* Table responsiveness - cards for mobile */
+  .table-container, table {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    border: none;
+  }
+
+  thead {
+    display: none; /* Hide headers on mobile */
+  }
+
+  tbody tr {
+    display: block;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    position: relative;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #edf2f7;
+    text-align: left;
+    min-height: 40px;
+  }
+
+  td:last-child {
+    border-bottom: none;
+  }
+
+  /* Add labels before data using data-label attribute if needed, 
+     but here we'll just rely on flex layout for now or add common labels */
+  td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #4a5568;
+    margin-left: 10px;
+  }
+
+  #futureOrdersTable td, #pastOrdersTable td, #paymentsTable td {
+    font-size: 14px;
+    text-align: left;
+  }
+
+  /* Specific fixes for buttons in tables */
+  td button {
+    width: auto;
+  }
+
+  /* Calendar fixes */
+  #monthlyCalendarGrid {
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+
+  #monthlyCalendarGrid > div {
+    padding: 5px 2px !important;
+    font-size: 11px !important;
+  }
+
+  .calendar-day-number {
+    font-size: 12px !important;
+  }
+
+  .dog-dot-container {
+    gap: 2px !important;
+  }
+
+  .dog-dot {
+    width: 4px !important;
+    height: 4px !important;
+  }
+
+  /* Settings grid */
+  .settings-grid {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+  }
+}
