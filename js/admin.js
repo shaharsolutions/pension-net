@@ -29,17 +29,15 @@ async function copyBookingLink(event) {
     const pathname = window.location.pathname;
     const directory = pathname.substring(0, pathname.lastIndexOf('/'));
     const bookingUrl = `${origin}${directory}/order.html?owner=${session.user.id}`;
-    const bName = window.businessName ? ` (${window.businessName})` : '';
-    const textToCopy = `קישור להזמנת מקום${bName}: ${bookingUrl}`;
     
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(textToCopy);
+        await navigator.clipboard.writeText(bookingUrl);
         showToast('הקישור להזמנות הועתק! ניתן לשלוח אותו ללקוחות.', 'success');
       } else {
         // Fallback for older browsers or insecure contexts
         const textArea = document.createElement("textarea");
-        textArea.value = textToCopy;
+        textArea.value = bookingUrl;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
@@ -49,7 +47,7 @@ async function copyBookingLink(event) {
     } catch (err) {
       console.error('Failed to copy:', err);
       // Last resort fallback
-      prompt('העתק את הקישור שלך מכאן:', textToCopy);
+      prompt('העתק את הקישור שלך מכאן:', bookingUrl);
     }
   } else {
     showToast('שגיאה: לא נמצא סשן פעיל. נא להתחבר מחדש.', 'error');
