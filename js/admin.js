@@ -18,23 +18,35 @@ async function logout() {
 async function copyBookingLink(event) {
   if (event) event.preventDefault();
   
-  const session = await Auth.getSession();
+  const session = window.currentUserSession || await Auth.getSession();
   if (session && session.user) {
-    const baseUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
-    const bookingUrl = `${baseUrl}/order.html?owner=${session.user.id}`;
+    // Construct the absolute URL to order.html
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const directory = pathname.substring(0, pathname.lastIndexOf('/'));
+    const bookingUrl = `${origin}${directory}/order.html?owner=${session.user.id}`;
     
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(bookingUrl);
-        // Using showToast from utils.js
-        showToast('הקישור הועתק בהצלחה! שלח אותו ללקוחות שלך.', 'success');
+        showToast('הקישור להזמנות הועתק! ניתן לשלוח אותו ללקוחות.', 'success');
       } else {
-        throw new Error('Clipboard API not available');
+        // Fallback for older browsers or insecure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = bookingUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('הקישור הועתק (שיטת גיבוי)!', 'success');
       }
     } catch (err) {
       console.error('Failed to copy:', err);
-      prompt('העתק את הקישור שלך:', bookingUrl);
+      // Last resort fallback
+      prompt('העתק את הקישור שלך מכאן:', bookingUrl);
     }
+  } else {
+    showToast('שגיאה: לא נמצא סשן פעיל. נא להתחבר מחדש.', 'error');
   }
 }
 
