@@ -1,5 +1,6 @@
 // --- Globals ---
 window.isSessionVerified = false;
+window.businessName = '';
 
 // --- Supabase Auth Integration ---
 async function checkAuthStatus() {
@@ -28,15 +29,17 @@ async function copyBookingLink(event) {
     const pathname = window.location.pathname;
     const directory = pathname.substring(0, pathname.lastIndexOf('/'));
     const bookingUrl = `${origin}${directory}/order.html?owner=${session.user.id}`;
+    const bName = window.businessName ? ` (${window.businessName})` : '';
+    const textToCopy = `קישור להזמנת מקום${bName}: ${bookingUrl}`;
     
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(bookingUrl);
+        await navigator.clipboard.writeText(textToCopy);
         showToast('הקישור להזמנות הועתק! ניתן לשלוח אותו ללקוחות.', 'success');
       } else {
         // Fallback for older browsers or insecure contexts
         const textArea = document.createElement("textarea");
-        textArea.value = bookingUrl;
+        textArea.value = textToCopy;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
@@ -46,7 +49,7 @@ async function copyBookingLink(event) {
     } catch (err) {
       console.error('Failed to copy:', err);
       // Last resort fallback
-      prompt('העתק את הקישור שלך מכאן:', bookingUrl);
+      prompt('העתק את הקישור שלך מכאן:', textToCopy);
     }
   } else {
     showToast('שגיאה: לא נמצא סשן פעיל. נא להתחבר מחדש.', 'error');
@@ -283,7 +286,8 @@ function generateWhatsAppConfirmationLink(row) {
   
   // Build pieces
   const p1 = enc(`היי ${params.customer_name},`);
-  const p2 = enc(`מאשרים את ההזמנה של ${params.dog_name} `) + DOG_CODE;
+  const bNamePrefix = window.businessName ? enc(` מ-${window.businessName}`) : '';
+  const p2 = enc(`מאשרים את ההזמנה של ${params.dog_name}`) + bNamePrefix + enc(` `) + DOG_CODE;
   
   // Get owner phone from session metadata if available
   const ownerPhone = window.currentUserSession?.user?.user_metadata?.phone || '';
@@ -2142,6 +2146,7 @@ async function loadSettings() {
       };
       
       window.managerName = profile.full_name || window.managerName || 'מנהל';
+      window.businessName = profile.business_name || session.user.user_metadata?.business_name || '';
 
       // Apply field values to inputs
       Object.keys(fieldMapping).forEach(id => {
