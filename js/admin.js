@@ -58,6 +58,21 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("mainContent").style.display = "block";
     loadData();
     loadSettings(); // Load profile settings
+
+    // Toggle PIN visibility
+    document.getElementById('togglePinVisibility')?.addEventListener('click', function() {
+      const pinInput = document.getElementById('settings-admin-pin');
+      const icon = this.querySelector('i');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        pinInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
   }
 
   
