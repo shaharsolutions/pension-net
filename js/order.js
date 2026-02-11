@@ -34,16 +34,7 @@ async function ensureOwnerId() {
   }
 }
 
-// Start ID check
-ensureOwnerId().then(() => {
-  if (PENSION_OWNER_ID) {
-    loadOwnerInfo();
-    loadMonthlyCapacity();
-  } else {
-    const headerSub = document.getElementById('header-business-name');
-    if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
-  }
-});
+// Initial ID check will be handled in DOMContentLoaded instead to avoid double calls
 
 
 // --- Functions ---
@@ -52,13 +43,14 @@ async function loadOwnerInfo() {
   if (!PENSION_OWNER_ID) return;
   
   try {
-    const { data: profile, error } = await pensionNetSupabase
+    const { data: profiles, error } = await pensionNetSupabase
       .from('profiles')
       .select('phone, business_name, location')
-      .eq('user_id', PENSION_OWNER_ID)
-      .single();
+      .eq('user_id', PENSION_OWNER_ID);
     
     if (error) throw error;
+    
+    const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     
     if (profile) {
       if (profile.phone) ADMIN_PHONE = profile.phone;
@@ -97,11 +89,12 @@ async function loadMonthlyCapacity() {
   
   let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
   
-  const { data: profile } = await pensionNetSupabase
+  const { data: profiles } = await pensionNetSupabase
     .from('profiles')
     .select('max_capacity')
-    .eq('user_id', PENSION_OWNER_ID)
-    .single();
+    .eq('user_id', PENSION_OWNER_ID);
+  
+  const profile = profiles && profiles.length > 0 ? profiles[0] : null;
   
   if (profile && profile.max_capacity) {
     MAX_CAPACITY = profile.max_capacity;
@@ -810,8 +803,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Set initial state
   updateStepIndicator();
   await ensureOwnerId();
-  loadMonthlyCapacity();
-  loadOwnerInfo();
+  
+  if (PENSION_OWNER_ID) {
+    // These functions now handle missing data gracefully
+    await Promise.all([
+      loadMonthlyCapacity(),
+      loadOwnerInfo()
+    ]);
+  } else {
+    const headerSub = document.getElementById('header-business-name');
+    if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
+  }
   
   // Phone input listener - Enter key only
   const phoneInput = document.getElementById('identificationPhone');

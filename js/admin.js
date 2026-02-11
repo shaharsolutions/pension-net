@@ -1686,8 +1686,8 @@ async function verifyManagerAccess(targetName = null) {
         if (!window.managerPin) {
           const session = window.currentUserSession || await Auth.getSession();
           if (session) {
-            const { data } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id).single();
-            if (data) window.managerPin = data.manager_pin;
+            const { data: profiles } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id);
+            if (profiles && profiles.length > 0) window.managerPin = profiles[0].manager_pin;
           }
         }
         actualPin = String(window.managerPin || '').trim();
