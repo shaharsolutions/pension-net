@@ -1508,6 +1508,12 @@ function renderStaffList() {
           <span>עריכת פרטי הזמנה</span>
           <input type="checkbox" ${staff.permissions.edit_details ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'edit_details')">
         </label>
+        <div style="margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          <label style="font-size: 11px; color: #64748b;">קוד PIN (4 ספרות):</label>
+          <input type="password" value="${staff.pin || ''}" maxlength="4" 
+                 onchange="updateStaffPin(${index}, this.value)" 
+                 style="width: 100%; padding: 4px 8px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 4px;">
+        </div>
       </div>
     `;
     list.appendChild(card);
@@ -1535,6 +1541,18 @@ async function saveStaffToDB() {
   }
 }
 
+async function updateStaffPin(index, newPin) {
+  if (window.currentStaffMembers[index]) {
+    if (newPin && newPin.length === 4) {
+      window.currentStaffMembers[index].pin = newPin;
+      await saveStaffToDB();
+    } else {
+      showToast('קוד PIN חייב להכיל 4 ספרות', 'error');
+      renderStaffList();
+    }
+  }
+}
+
 async function toggleStaffPermission(index, permKey) {
   if (window.currentStaffMembers[index]) {
     window.currentStaffMembers[index].permissions[permKey] = !window.currentStaffMembers[index].permissions[permKey];
@@ -1544,6 +1562,18 @@ async function toggleStaffPermission(index, permKey) {
 
 function updateStaffSelectors() {
   const staffNames = getStaffNames();
+  
+  // 0. Update initial login overlay select
+  const initialSelect = document.getElementById('initialProfileSelect');
+  if (initialSelect) {
+    initialSelect.innerHTML = '<option value="">בחר פרופיל...</option>';
+    staffNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      initialSelect.appendChild(opt);
+    });
+  }
   
   // 1. Update notes modal select
   const select = document.getElementById('noteAuthorSelect');
@@ -1610,8 +1640,15 @@ function updateStaffSelectors() {
 }
 
 window.isVerifyingManager = false;
-async function verifyManagerAccess() {
-  if (window.isAdminMode) return true;
+async function verifyManagerAccess(targetName = null) {
+  // If targetName is provided, we verify that specific person (manager or staff)
+  // If no targetName, we verify manager
+  
+  const isVerifyingStaff = targetName && targetName !== window.managerName;
+  const staffObj = isVerifyingStaff ? window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === targetName) : null;
+  
+  // If already in admin mode and verifying manager, return true
+  if (!isVerifyingStaff && window.isAdminMode) return true;
   if (window.isVerifyingManager) return false;
   
   window.isVerifyingManager = true;
@@ -1621,6 +1658,9 @@ async function verifyManagerAccess() {
     const confirmBtn = document.getElementById('pinConfirmBtn');
     const cancelBtn = document.getElementById('pinCancelBtn');
     const errorMsg = document.getElementById('pinError');
+    const title = modal.querySelector('h3');
+    
+    if (title) title.textContent = targetName ? `אימות PIN עבור: ${targetName}` : 'אימות PIN מנהל';
     
     input.value = '';
     errorMsg.textContent = '';
@@ -1637,25 +1677,32 @@ async function verifyManagerAccess() {
     
     const handleConfirm = async () => {
       const enteredPin = String(input.value).trim();
-      
-      // If window.managerPin is empty, try to fetch it now
-      if (!window.managerPin) {
-        console.log('[PIN] Local PIN empty, fetching from DB...');
-        const session = window.currentUserSession || await Auth.getSession();
-        if (session) {
-          const { data } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id).single();
-          if (data) window.managerPin = data.manager_pin;
+      let actualPin = "";
+
+      if (isVerifyingStaff && staffObj) {
+        actualPin = String(staffObj.pin || '').trim();
+      } else {
+        // Manager verification
+        if (!window.managerPin) {
+          const session = window.currentUserSession || await Auth.getSession();
+          if (session) {
+            const { data } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id).single();
+            if (data) window.managerPin = data.manager_pin;
+          }
         }
+        actualPin = String(window.managerPin || '').trim();
       }
 
-      const actualPin = String(window.managerPin || '').trim();
-      console.log(`[PIN Check] Entered: "${enteredPin}", Actual: "${actualPin}"`);
-
       if (enteredPin === actualPin && actualPin !== "") {
-        window.isAdminMode = true;
+        if (!isVerifyingStaff) {
+            window.isAdminMode = true;
+            createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות PIN מוצלח)');
+        } else {
+            createAuditLog('UPDATE', `אימות PIN מוצלח עבור עובד: ${targetName}`);
+        }
+        
         updateModeUI();
         cleanup();
-        createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות PIN מוצלח)');
         resolve(true);
       } else {
         errorMsg.textContent = 'קוד PIN שגוי';
@@ -1680,13 +1727,20 @@ async function verifyManagerAccess() {
 async function addStaffMember() {
   if (!(await verifyManagerAccess())) return;
   
-  const input = document.getElementById('new-staff-name');
-  const name = input.value.trim();
+  const nameInput = document.getElementById('new-staff-name');
+  const pinInput = document.getElementById('new-staff-pin');
+  const name = nameInput.value.trim();
+  const pin = pinInput.value.trim();
+  
   const existingNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
+  
+  if (!name) { showToast('יש להזין שם עובד', 'error'); return; }
+  if (!pin || pin.length !== 4) { showToast('יש להזין קוד PIN בן 4 ספרות', 'error'); return; }
   
   if (name && !existingNames.includes(name)) {
     window.currentStaffMembers.push({
       name: name,
+      pin: pin,
       permissions: {
         edit_status: false,
         edit_details: false
@@ -1694,7 +1748,8 @@ async function addStaffMember() {
     });
     await saveStaffToDB();
     createAuditLog('UPDATE', `הוספת חבר צוות חדש: ${name}`);
-    input.value = '';
+    nameInput.value = '';
+    pinInput.value = '';
     renderStaffList();
   }
 }
@@ -1752,6 +1807,8 @@ function updateModeUI() {
     if (select && window.managerName) {
       select.value = window.managerName;
     }
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) overlay.style.display = 'none';
   } else {
     badge.textContent = '🔐 מצב עובד';
     badge.className = 'mode-badge staff';
@@ -1778,6 +1835,15 @@ function updateModeUI() {
     if (activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
       switchTab('ongoing');
     }
+
+    // LOCK: If no valid profile selected, show login overlay
+    if (!window.isAdminMode && activeStaffName === 'צוות') {
+       const overlay = document.getElementById('login-overlay');
+       if (overlay) overlay.style.display = 'flex';
+    } else {
+       const overlay = document.getElementById('login-overlay');
+       if (overlay) overlay.style.display = 'none';
+    }
   }
   
   // Refresh notes view if open to show/hide delete buttons
@@ -1786,25 +1852,47 @@ function updateModeUI() {
   }
 }
 
+async function handleInitialProfileChange() {
+  const select = document.getElementById('initialProfileSelect');
+  const name = select?.value;
+  if (!name) return;
+  
+  const success = await verifyManagerAccess(name);
+  if (success) {
+    document.getElementById('login-overlay').style.display = 'none';
+    const activeSelect = document.getElementById('activeStaffSelect');
+    if (activeSelect) activeSelect.value = name;
+    localStorage.setItem('pensionNet_activeStaff', name);
+    showToast(`ברוך הבא, ${name}`, 'success');
+  } else {
+    select.value = '';
+  }
+}
+
 async function handleActiveStaffChange() {
   const select = document.getElementById('activeStaffSelect');
   const name = select?.value || 'צוות';
   
-  if (name === window.managerName && !window.isAdminMode) {
-    const success = await verifyManagerAccess();
-    if (!success) {
-      // Revert to previous value or default
-      const prev = localStorage.getItem('pensionNet_activeStaff') || 'צוות';
-      if (select) select.value = prev;
-      return;
-    }
-    // Access verified, updateModeUI will be called by verifyManagerAccess
-    localStorage.setItem('pensionNet_activeStaff', name);
+  if (name === 'צוות') {
+     // Optional: decide if switching back to "Team" requires PIN or just logs out profile
+     window.isAdminMode = false;
+     updateModeUI();
+     localStorage.setItem('pensionNet_activeStaff', 'צוות');
+     return;
+  }
+
+  // If already the current active staff, do nothing
+  if (name === localStorage.getItem('pensionNet_activeStaff')) return;
+
+  const success = await verifyManagerAccess(name);
+  if (!success) {
+    // Revert to previous value or default
+    const prev = localStorage.getItem('pensionNet_activeStaff') || 'צוות';
+    if (select) select.value = prev;
     return;
   }
 
-  window.isAdminMode = false;
-  updateModeUI();
+  // Access verified
   localStorage.setItem('pensionNet_activeStaff', name);
   showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
 }
@@ -2091,6 +2179,7 @@ async function loadSettings() {
         headerSubtitle.textContent = profile.business_name;
       }
       console.log('Settings fields populated successfully');
+      updateModeUI();
     }
   } catch (err) {
     console.error('Critical error in loadSettings:', err);

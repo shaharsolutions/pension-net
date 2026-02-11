@@ -21,8 +21,56 @@
     <link rel="stylesheet" href="css/common.css?v=3">
     <link rel="stylesheet" href="css/admin.css?v=46">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+      #login-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        direction: rtl;
+      }
+      .profile-card {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        color: #1e293b;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      }
+      .profile-card h2 { margin-bottom: 20px; color: #6366f1; }
+      .profile-card select { 
+        width: 100%; 
+        padding: 12px; 
+        margin-bottom: 20px; 
+        border-radius: 10px; 
+        border: 1px solid #e2e8f0;
+        font-size: 16px;
+        appearance: none;
+        background: #f8fafc;
+        cursor: pointer;
+      }
+    </style>
   </head>
-  <body>
+  <body class="staff-mode">
+    <!-- Login/Profile Selection Overlay -->
+    <div id="login-overlay" style="display: none;">
+      <div class="profile-card">
+        <h2 style="font-family: 'Heebo', sans-serif;">🐕 פנסיון-נט</h2>
+        <p style="margin-bottom: 25px; color: #64748b;">יש לבחור פרופיל לשימוש במערכת</p>
+        <select id="initialProfileSelect" onchange="handleInitialProfileChange()">
+          <option value="">בחר פרופיל...</option>
+        </select>
+        <div style="font-size: 13px; color: #94a3b8;">הגישה למערכת מורשית לצוות בלבד</div>
+      </div>
+    </div>
 
 
     <div id="mainContent">
@@ -278,9 +326,13 @@
                 <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
                   <label><i class="fas fa-users-cog"></i> ניהול צוות עובדים:</label>
                   <div class="staff-manager">
-                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                      <input type="text" id="new-staff-name" placeholder="שם העובד/ת">
-                      <button type="button" onclick="addStaffMember()" class="header-btn" style="background:#4caf50; color:white; padding: 0 15px;">הוסף</button>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+                      <div style="display:flex; gap:8px;">
+                        <input type="text" id="new-staff-name" placeholder="שם העובד/ת" style="flex: 2;">
+                        <input type="password" id="new-staff-pin" placeholder="PIN (4 ספרות)" maxlength="4" style="flex: 1;">
+                        <button type="button" onclick="addStaffMember()" class="header-btn" style="background:#4caf50; color:white; padding: 0 15px;">הוסף</button>
+                      </div>
+                      <div class="helper-text">יש להגדיר קוד PIN לכל עובד לצורך כניסה וזיהוי</div>
                     </div>
                     <div id="staff-list" class="staff-tags"></div>
                   </div>
