@@ -1,3 +1,6 @@
+// --- Globals ---
+window.isSessionVerified = false;
+
 // --- Supabase Auth Integration ---
 async function checkAuthStatus() {
   const session = await Auth.getSession();
@@ -1631,11 +1634,6 @@ function updateStaffSelectors() {
       activeSelect.appendChild(opt);
     });
     activeSelect.value = currentVal;
-    
-    // Trigger UI update if we loaded a saved value
-    if (currentVal !== 'צוות') {
-      updateModeUI();
-    }
   }
 }
 
@@ -1701,6 +1699,7 @@ async function verifyManagerAccess(targetName = null) {
             createAuditLog('UPDATE', `אימות PIN מוצלח עבור עובד: ${targetName}`);
         }
         
+        window.isSessionVerified = true;
         updateModeUI();
         cleanup();
         resolve(true);
@@ -1836,13 +1835,13 @@ function updateModeUI() {
       switchTab('ongoing');
     }
 
-    // LOCK: If no valid profile selected, show login overlay
-    if (!window.isAdminMode && activeStaffName === 'צוות') {
+    // LOCK: If no valid profile selected OR session not verified, show login overlay
+    if (!window.isAdminMode && (!window.isSessionVerified || activeStaffName === 'צוות')) {
        const overlay = document.getElementById('login-overlay');
-       if (overlay) overlay.style.display = 'flex';
+       if (overlay) overlay.style.setProperty('display', 'flex', 'important');
     } else {
        const overlay = document.getElementById('login-overlay');
-       if (overlay) overlay.style.display = 'none';
+       if (overlay) overlay.style.setProperty('display', 'none', 'important');
     }
   }
   
@@ -1859,7 +1858,7 @@ async function handleInitialProfileChange() {
   
   const success = await verifyManagerAccess(name);
   if (success) {
-    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('login-overlay').style.setProperty('display', 'none', 'important');
     const activeSelect = document.getElementById('activeStaffSelect');
     if (activeSelect) activeSelect.value = name;
     localStorage.setItem('pensionNet_activeStaff', name);
@@ -2136,7 +2135,7 @@ async function loadSettings() {
         'settings-admin-pin': profile.manager_pin
       };
       
-      window.managerName = profile.full_name || '';
+      window.managerName = profile.full_name || 'מנהל';
 
       // Apply field values to inputs
       Object.keys(fieldMapping).forEach(id => {

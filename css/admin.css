@@ -1382,7 +1382,7 @@ textarea.admin-note:focus {
 .modal {
   display: none;
   position: fixed;
-  z-index: 2000;
+  z-index: 20000;
   left: 0;
   top: 0;
   width: 100%;

@@ -249,6 +249,10 @@
                 <label for="email">אימייל</label>
                 <input type="email" id="email" placeholder="example@gmail.com" required>
             </div>
+            <div id="nameGroup" class="form-group" style="display: none;">
+                <label for="full_name">שם מלא (יופיע בבחירת פרופיל)</label>
+                <input type="text" id="full_name" placeholder="ישראל ישראלי">
+            </div>
             <div id="phoneGroup" class="form-group" style="display: none;">
                 <label for="phone">מספר טלפון (עבור הודעות ווטסאפ ללקוחות)</label>
                 <input type="tel" id="phone" placeholder="050-1234567" pattern="[0-9]{3}-?[0-9]{7}">
@@ -291,6 +295,9 @@
             document.getElementById('loginTab').classList.toggle('active', mode === 'login');
             document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
             
+            document.getElementById('nameGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('full_name').required = mode === 'signup';
+            
             document.getElementById('phoneGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('phone').required = mode === 'signup';
             
@@ -314,6 +321,7 @@
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const full_name = document.getElementById('full_name').value;
             const phone = document.getElementById('phone').value;
             const max_capacity = document.getElementById('max_capacity').value;
             const manager_pin = document.getElementById('manager_pin').value;
@@ -330,7 +338,7 @@
                 if (mode === 'login') {
                     result = await Auth.login(email, password);
                 } else {
-                    result = await Auth.signUp(email, password, { phone, max_capacity, manager_pin });
+                    result = await Auth.signUp(email, password, { full_name, phone, max_capacity, manager_pin });
                 }
 
                 if (result.error) {
