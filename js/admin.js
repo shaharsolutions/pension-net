@@ -1482,9 +1482,12 @@ function updateStaffSelectors() {
   }
 }
 
+window.isVerifyingManager = false;
 async function verifyManagerAccess() {
   if (window.isAdminMode) return true;
+  if (window.isVerifyingManager) return false;
   
+  window.isVerifyingManager = true;
   return new Promise((resolve) => {
     const modal = document.getElementById('pinModal');
     const input = document.getElementById('pinInput');
@@ -1502,10 +1505,26 @@ async function verifyManagerAccess() {
       cancelBtn.onclick = null;
       input.onkeydown = null;
       modal.style.display = 'none';
+      window.isVerifyingManager = false;
     };
     
-    const handleConfirm = () => {
-      if (input.value === window.managerPin) {
+    const handleConfirm = async () => {
+      const enteredPin = String(input.value).trim();
+      
+      // If window.managerPin is empty, try to fetch it now
+      if (!window.managerPin) {
+        console.log('[PIN] Local PIN empty, fetching from DB...');
+        const session = window.currentUserSession || await Auth.getSession();
+        if (session) {
+          const { data } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id).single();
+          if (data) window.managerPin = data.manager_pin;
+        }
+      }
+
+      const actualPin = String(window.managerPin || '').trim();
+      console.log(`[PIN Check] Entered: "${enteredPin}", Actual: "${actualPin}"`);
+
+      if (enteredPin === actualPin && actualPin !== "") {
         window.isAdminMode = true;
         updateModeUI();
         cleanup();
@@ -1829,7 +1848,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, staff_permissions')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin')
       .eq('user_id', session.user.id)
       .single();
 
@@ -1844,11 +1863,7 @@ async function loadSettings() {
           max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
           default_price: 130,
           staff_members: [],
-          staff_permissions: {
-            edit_status: false,
-            edit_details: false,
-            manage_payments: false
-          }
+          manager_pin: session.user.user_metadata?.manager_pin || '1234'
         }])
         .select()
         .single();
@@ -1871,30 +1886,39 @@ async function loadSettings() {
         'settings-admin-pin': profile.manager_pin
       };
 
+      // Apply field values to inputs
+      Object.keys(fieldMapping).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = fieldMapping[id] ?? '';
+      });
+      
+      // Ensure managerPin has a value: DB -> Metadata -> Default
+      window.managerPin = profile.manager_pin || session.user.user_metadata?.manager_pin || '1234';
+      
+      // Update the input field specifically if it was empty from DB
+      const pinInput = document.getElementById('settings-admin-pin');
+      if (pinInput && !pinInput.value) {
+        pinInput.value = window.managerPin;
+      }
+
       window.currentStaffMembers = (profile.staff_members || []).map(s => {
         // Migration: convert string staff to objects if needed
         if (typeof s === 'string') {
           return {
             name: s,
-            permissions: profile.staff_permissions || { edit_status: false, edit_details: false, manage_payments: false }
+            permissions: { edit_status: false, edit_details: false, manage_payments: false }
           };
         }
         return s;
       });
 
-      window.globalStaffPermissions = profile.staff_permissions || {
+      window.globalStaffPermissions = {
         edit_status: false,
         edit_details: false,
         manage_payments: false
       };
 
-      // Set global permission checkboxes
-      if (document.getElementById('perm-edit-status')) 
-        document.getElementById('perm-edit-status').checked = window.globalStaffPermissions.edit_status || false;
-      if (document.getElementById('perm-edit-details')) 
-        document.getElementById('perm-edit-details').checked = window.globalStaffPermissions.edit_details || false;
-      if (document.getElementById('perm-manage-payments')) 
-        document.getElementById('perm-manage-payments').checked = window.globalStaffPermissions.manage_payments || false;
+
 
       renderStaffList();
 
@@ -1928,12 +1952,7 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     location: document.getElementById('settings-location').value,
     default_price: parseInt(document.getElementById('settings-default-price').value),
     staff_members: window.currentStaffMembers,
-    manager_pin: document.getElementById('settings-admin-pin').value,
-    staff_permissions: {
-      edit_status: document.getElementById('perm-edit-status')?.checked || false,
-      edit_details: document.getElementById('perm-edit-details')?.checked || false,
-      manage_payments: document.getElementById('perm-manage-payments')?.checked || false
-    }
+    manager_pin: document.getElementById('settings-admin-pin').value
   };
 
   try {
@@ -2083,12 +2102,16 @@ function renderPaymentsTable() {
                 </span>
             </td>
             <td>
-                <select onchange="updatePaymentMethod('${row.id}', this.value)" class="payment-input">
-                    <option value="מזומן" ${currentMethod === 'מזומן' ? 'selected' : ''}>מזומן</option>
-                    <option value="אפליקציה" ${currentMethod === 'אפליקציה' ? 'selected' : ''}>אפליקציה (Bit/Pay)</option>
-                    <option value="העברה" ${currentMethod === 'העברה' ? 'selected' : ''}>העברה בנקאית</option>
-                    <option value="אחר" ${currentMethod === 'אחר' ? 'selected' : ''}>אחר</option>
-                </select>
+                <div style="display: flex; gap: 4px; min-width: 120px;">
+                    <button onclick="updatePaymentMethod('${row.id}', 'מזומן')" 
+                            style="padding: 6px 4px; border-radius: 6px; border: 1px solid #cbd5e1; background: ${currentMethod === 'מזומן' ? '#2563eb' : 'white'}; color: ${currentMethod === 'מזומן' ? 'white' : '#64748b'}; cursor: pointer; font-size: 11px; font-weight: bold; flex: 1; transition: all 0.2s;">
+                        מזומן
+                    </button>
+                    <button onclick="updatePaymentMethod('${row.id}', 'אפליקציה')" 
+                            style="padding: 6px 4px; border-radius: 6px; border: 1px solid #cbd5e1; background: ${currentMethod === 'אפליקציה' ? '#2563eb' : 'white'}; color: ${currentMethod === 'אפליקציה' ? 'white' : '#64748b'}; cursor: pointer; font-size: 11px; font-weight: bold; flex: 1; transition: all 0.2s;">
+                        bit
+                    </button>
+                </div>
             </td>
             <td>
                 <input type="number" value="${currentAmountPaid}" step="5"
@@ -2124,6 +2147,7 @@ async function updatePaymentMethod(orderId, method) {
         if (order) {
             order.payment_method = method;
             createAuditLog('UPDATE', `עדכון שיטת תשלום ל-${method} עבור ${order.dog_name} (${order.owner_name})`, orderId);
+            renderPaymentsTable(); // Refresh UI to show active button
         }
     } catch (err) {
         console.error("Error updating payment method:", err);
