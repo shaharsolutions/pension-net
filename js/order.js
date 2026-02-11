@@ -56,15 +56,18 @@ async function loadOwnerInfo() {
       if (profile.phone) ADMIN_PHONE = profile.phone;
       if (profile.business_name && profile.business_name.trim()) {
         BUSINESS_NAME = profile.business_name;
+        // Make the main title dynamic
+        const h1 = document.querySelector('.header h1');
+        if (h1) h1.textContent = `הזמנת מקום ב${BUSINESS_NAME}`;
       }
       
-      document.querySelector('.header h1').textContent = `הזמנת מקום בפנסיון כלבים`;
       document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
       
       const headerSub = document.getElementById('header-business-name');
       if (headerSub) {
         const displayName = BUSINESS_NAME || 'פנסיון לכלבים';
         headerSub.textContent = profile.location ? `${displayName} - ${profile.location}` : displayName;
+        headerSub.style.fontWeight = '800'; // Extra bold
       }
       
       const successPhoneEl = document.getElementById('displayAdminPhone');
@@ -495,10 +498,13 @@ async function identifyCustomer() {
   }
   
   if (!PENSION_OWNER_ID) {
+    console.error('PENSION_OWNER_ID is missing from URL parameters!');
     document.getElementById('searchingIndicator').style.display = 'none';
-    alert('שגיאה: מזהה פנסיון חסר בכתובת ה-URL. לא ניתן לחפש הזמנות.');
+    alert('שגיאה: מזהה פנסיון חסר בכתובת ה-URL. שלח שוב את הקישור ממערכת הניהול.');
     return;
   }
+
+  console.log('Searching for previous orders with phone:', phone, 'and owner:', PENSION_OWNER_ID);
 
   try {
     const { data, error } = await pensionNetSupabase
