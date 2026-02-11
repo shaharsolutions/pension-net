@@ -1403,7 +1403,7 @@ function renderStaffList() {
   window.currentStaffMembers.forEach((staff, index) => {
     // Ensure permissions exist
     if (!staff.permissions) {
-      staff.permissions = { edit_status: false, edit_details: false, manage_payments: false };
+      staff.permissions = { edit_status: false, edit_details: false };
     }
 
     const card = document.createElement('div');
@@ -1432,10 +1432,6 @@ function renderStaffList() {
         <label>
           <span>עריכת פרטי הזמנה</span>
           <input type="checkbox" ${staff.permissions.edit_details ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'edit_details')">
-        </label>
-        <label>
-          <span>ניהול גבייה ותשלומים</span>
-          <input type="checkbox" ${staff.permissions.manage_payments ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'manage_payments')">
         </label>
       </div>
     `;
@@ -1597,8 +1593,7 @@ async function addStaffMember() {
       name: name,
       permissions: {
         edit_status: false,
-        edit_details: false,
-        manage_payments: false
+        edit_details: false
       }
     });
     await saveStaffToDB();
@@ -1657,9 +1652,7 @@ function updateModeUI() {
     const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
     
     const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : (window.globalStaffPermissions || {
-       edit_status: false,
-       edit_details: false,
-       manage_payments: false
+       edit_details: false
     });
 
     // Apply permissions
@@ -1668,9 +1661,6 @@ function updateModeUI() {
     
     if (perms.edit_details) document.body.classList.add('perm-edit-details');
     else document.body.classList.remove('perm-edit-details');
-    
-    if (perms.manage_payments) document.body.classList.add('perm-manage-payments');
-    else document.body.classList.remove('perm-manage-payments');
   }
   
   // Refresh notes view if open to show/hide delete buttons
@@ -1942,7 +1932,7 @@ async function loadSettings() {
         if (typeof s === 'string') {
           return {
             name: s,
-            permissions: { edit_status: false, edit_details: false, manage_payments: false }
+            permissions: { edit_status: false, edit_details: false }
           };
         }
         return s;
@@ -1950,8 +1940,7 @@ async function loadSettings() {
 
       window.globalStaffPermissions = {
         edit_status: false,
-        edit_details: false,
-        manage_payments: false
+        edit_details: false
       };
 
 

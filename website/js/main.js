@@ -90,16 +90,16 @@ function animateCounters() {
             // Format with commas for thousands
             let formatted = current.toLocaleString('he-IL');
             
-            // Add prefix/suffix
-            const prefix = stat.dataset.prefix || '';
-            const suffix = stat.dataset.suffix || '';
+            // Add prefix/suffix with spans for better layout
+            const prefix = stat.dataset.prefix ? `<span class="stat-prefix">${stat.dataset.prefix}</span>` : '';
+            const suffix = stat.dataset.suffix ? `<span class="stat-suffix">${stat.dataset.suffix}</span>` : '';
             
             if (progress >= 1) {
-                stat.textContent = prefix + target.toLocaleString('he-IL') + suffix;
+                stat.innerHTML = prefix + `<span class="stat-value">${target.toLocaleString('he-IL')}</span>` + suffix;
                 return;
             }
 
-            stat.textContent = prefix + formatted + suffix;
+            stat.innerHTML = prefix + `<span class="stat-value">${formatted}</span>` + suffix;
 
             requestAnimationFrame(updateCounter);
         }

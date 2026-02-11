@@ -473,14 +473,28 @@ nav.scrolled {
 .stat-number {
     font-size: 3rem;
     font-weight: 800;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+}
+
+.stat-value {
     background: linear-gradient(135deg, #818cf8, #10b981);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 8px;
-    direction: ltr;
-    display: inline-block;
+    line-height: normal;
 }
+
+.stat-suffix, .stat-prefix {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.7);
+    -webkit-text-fill-color: initial;
+    font-weight: 600;
+}
+
 
 .stat-label {
     font-size: 1rem;
