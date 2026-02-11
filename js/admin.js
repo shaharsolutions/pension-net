@@ -2094,6 +2094,10 @@ async function loadSettings() {
     return;
   }
 
+  // Set initial manager name from metadata immediately to populate login overlay
+  window.managerName = session.user.user_metadata?.full_name || 'מנהל';
+  updateStaffSelectors();
+
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
@@ -2135,7 +2139,7 @@ async function loadSettings() {
         'settings-admin-pin': profile.manager_pin
       };
       
-      window.managerName = profile.full_name || 'מנהל';
+      window.managerName = profile.full_name || window.managerName || 'מנהל';
 
       // Apply field values to inputs
       Object.keys(fieldMapping).forEach(id => {
