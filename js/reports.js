@@ -182,11 +182,7 @@ async function loadAnalytics() {
 
         if (error) throw error;
 
-        // Update the 'Go to order' link if it exists
-        const orderLink = document.querySelector('a[href="order.html"]');
-        if (orderLink && session.user) {
-            orderLink.href = `order.html?owner=${session.user.id}`;
-        }
+
 
         // Fetch owner's profile for max_capacity and business_name
         const { data: profile } = await pNetSupabase
