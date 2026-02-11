@@ -40,8 +40,7 @@ async function ensureOwnerId() {
 // --- Functions ---
 
 async function loadOwnerInfo() {
-  if (!PENSION_OWNER_ID) return;
-  
+  console.log('Fetching profile for owner:', PENSION_OWNER_ID);
   try {
     const { data: profiles, error } = await pensionNetSupabase
       .from('profiles')
@@ -51,10 +50,11 @@ async function loadOwnerInfo() {
     if (error) throw error;
     
     const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+    console.log('Profile data found:', profile);
     
     if (profile) {
       if (profile.phone) ADMIN_PHONE = profile.phone;
-      if (profile.business_name) {
+      if (profile.business_name && profile.business_name.trim()) {
         BUSINESS_NAME = profile.business_name;
       }
       
