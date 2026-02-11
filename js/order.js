@@ -795,14 +795,12 @@ function resetForm() {
 }
 
 // Global Listeners
-document.addEventListener('DOMContentLoaded', () => {
-  loadMonthlyCapacity();
-  loadOwnerInfo();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Set initial state
   updateStepIndicator();
+  await ensureOwnerId();
+  loadMonthlyCapacity();
+  loadOwnerInfo();
   
   // Phone input listener - Enter key only
   const phoneInput = document.getElementById('identificationPhone');
