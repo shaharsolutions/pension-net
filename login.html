@@ -261,6 +261,18 @@
                 <label for="max_capacity">קיבולת מקסימלית<br>(מספר כלבים שיכולים לשהות במקביל)</label>
                 <input type="number" id="max_capacity" placeholder="10" min="1" max="100">
             </div>
+            <div id="businessNameGroup" class="form-group" style="display: none;">
+                <label for="business_name">שם העסק / הפנסיון</label>
+                <input type="text" id="business_name" placeholder="הפנסיון של...">
+            </div>
+            <div id="locationGroup" class="form-group" style="display: none;">
+                <label for="location">מיקום הפנסיון (עיר/יישוב)</label>
+                <input type="text" id="location" placeholder="לדוגמה: תל אביב">
+            </div>
+            <div id="priceGroup" class="form-group" style="display: none;">
+                <label for="default_price">מחיר ברירת מחדל ליום (₪)</label>
+                <input type="number" id="default_price" placeholder="130" min="0">
+            </div>
             <div id="pinGroup" class="form-group" style="display: none;">
                 <label for="manager_pin">קוד PIN לניהול (4 ספרות)<br><small>קוד זה ישמש לביצוע פעולות מנהל</small></label>
                 <input type="password" id="manager_pin" placeholder="1234" maxlength="4" pattern="[0-9]{4}">
@@ -303,6 +315,15 @@
             
             document.getElementById('capacityGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('max_capacity').required = mode === 'signup';
+
+            document.getElementById('businessNameGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('business_name').required = mode === 'signup';
+
+            document.getElementById('locationGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('location').required = mode === 'signup';
+
+            document.getElementById('priceGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            document.getElementById('default_price').required = mode === 'signup';
             
             document.getElementById('pinGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('manager_pin').required = mode === 'signup';
@@ -322,6 +343,9 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const full_name = document.getElementById('full_name').value;
+            const business_name = document.getElementById('business_name').value;
+            const location = document.getElementById('location').value;
+            const default_price = document.getElementById('default_price').value;
             const phone = document.getElementById('phone').value;
             const max_capacity = document.getElementById('max_capacity').value;
             const manager_pin = document.getElementById('manager_pin').value;
@@ -338,7 +362,15 @@
                 if (mode === 'login') {
                     result = await Auth.login(email, password);
                 } else {
-                    result = await Auth.signUp(email, password, { full_name, phone, max_capacity, manager_pin });
+                    result = await Auth.signUp(email, password, { 
+                        full_name, 
+                        business_name, 
+                        location, 
+                        default_price, 
+                        phone, 
+                        max_capacity, 
+                        manager_pin 
+                    });
                 }
 
                 if (result.error) {

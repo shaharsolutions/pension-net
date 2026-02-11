@@ -2112,9 +2112,11 @@ async function loadSettings() {
         .insert([{ 
           user_id: session.user.id,
           full_name: session.user.user_metadata?.full_name || '',
+          business_name: session.user.user_metadata?.business_name || '',
+          location: session.user.user_metadata?.location || '',
           phone: session.user.user_metadata?.phone || '',
           max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
-          default_price: 130,
+          default_price: parseInt(session.user.user_metadata?.default_price) || 130,
           staff_members: [],
           manager_pin: session.user.user_metadata?.manager_pin || '1234'
         }])

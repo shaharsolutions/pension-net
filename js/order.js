@@ -39,6 +39,9 @@ ensureOwnerId().then(() => {
   if (PENSION_OWNER_ID) {
     loadOwnerInfo();
     loadMonthlyCapacity();
+  } else {
+    const headerSub = document.getElementById('header-business-name');
+    if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
   }
 });
 
@@ -61,22 +64,28 @@ async function loadOwnerInfo() {
       if (profile.phone) ADMIN_PHONE = profile.phone;
       if (profile.business_name) {
         BUSINESS_NAME = profile.business_name;
-        document.querySelector('.header h1').textContent = `הזמנת מקום בפנסיון כלבים`;
-        document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
-        
-        // Update subtitle with name and location
-        const headerSub = document.getElementById('header-business-name');
-        if (headerSub) {
-          headerSub.textContent = profile.location ? `${BUSINESS_NAME} - ${profile.location}` : BUSINESS_NAME;
-        }
       }
       
-      // Update phone display in success message if it exists
+      document.querySelector('.header h1').textContent = `הזמנת מקום בפנסיון כלבים`;
+      document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
+      
+      const headerSub = document.getElementById('header-business-name');
+      if (headerSub) {
+        const displayName = BUSINESS_NAME || 'פנסיון לכלבים';
+        headerSub.textContent = profile.location ? `${displayName} - ${profile.location}` : displayName;
+      }
+      
       const successPhoneEl = document.getElementById('displayAdminPhone');
       if (successPhoneEl) successPhoneEl.textContent = ADMIN_PHONE;
+    } else {
+      // Profile found but empty
+      const headerSub = document.getElementById('header-business-name');
+      if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
     }
   } catch (err) {
     console.error('Error loading owner info:', err);
+    const headerSub = document.getElementById('header-business-name');
+    if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
   }
 }
 
