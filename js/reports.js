@@ -154,7 +154,7 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
                 <div class="insight-body">
                     <div class="insight-analysis">${insight.analysis}</div>
                     <div class="insight-recommendation">
-                        <span class="rec-label">💡 המלצה:</span>
+                        <span class="rec-label"><i class="fas fa-lightbulb"></i> המלצה:</span>
                         ${insight.recommendation}
                     </div>
                 </div>
