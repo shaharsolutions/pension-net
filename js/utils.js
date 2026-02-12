@@ -120,27 +120,31 @@ function debounce(func, wait) {
 
 // --- Supabase Helper ---
 function getSupabase() {
-  // If auth.js is loaded and initialized supabaseClient, use it
-  if (typeof supabaseClient !== 'undefined') return supabaseClient;
-  
-  // Return cached instance if available
+  // If we have a cached instance, return it
   if (window._supabaseInstance) return window._supabaseInstance;
+
+  // Search for the client in other global locations (like auth.js)
+  if (typeof supabaseClient !== 'undefined') {
+    window._supabaseInstance = supabaseClient;
+    return window._supabaseInstance;
+  }
   
   if (typeof SUPABASE_CONFIG === 'undefined') {
     console.error('SUPABASE_CONFIG not defined. Ensure config.js is loaded.');
     return null;
   }
   
-  if (window.supabase) {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
     try {
         window._supabaseInstance = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+        console.log('Supabase client initialized successfully.');
         return window._supabaseInstance;
     } catch (e) {
         console.error("Failed to create Supabase client:", e);
         return null;
     }
   } else {
-      console.error("Supabase library not loaded. Check script tags.");
+      console.error("Supabase library not loaded yet or failed. Check script tags in order.html.");
       return null;
   }
 }

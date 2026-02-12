@@ -40,9 +40,16 @@ async function ensureOwnerId() {
 // --- Functions ---
 
 async function loadOwnerInfo() {
+  const client = getSupabase();
+  if (!client) {
+    console.error('Supabase client not ready for loadOwnerInfo. Retrying in 500ms...');
+    setTimeout(loadOwnerInfo, 500);
+    return;
+  }
+
   console.log('Fetching profile for owner:', PENSION_OWNER_ID);
   try {
-    const { data: profiles, error } = await pensionNetSupabase
+    const { data: profiles, error } = await client
       .from('profiles')
       .select('phone, business_name, location')
       .eq('user_id', PENSION_OWNER_ID);
@@ -94,9 +101,16 @@ async function loadMonthlyCapacity() {
     return;
   }
   
+  const client = getSupabase();
+  if (!client) {
+    console.warn("Supabase client not ready for loadMonthlyCapacity. Retrying...");
+    setTimeout(loadMonthlyCapacity, 1000);
+    return;
+  }
+  
   let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
   
-  const { data: profiles } = await pensionNetSupabase
+  const { data: profiles } = await client
     .from('profiles')
     .select('max_capacity')
     .eq('user_id', PENSION_OWNER_ID);
@@ -510,8 +524,15 @@ async function identifyCustomer() {
 
   console.log('Searching for previous orders with phone:', phone, 'and owner:', PENSION_OWNER_ID);
 
+  const client = getSupabase();
+  if (!client) {
+    alert('שגיאה: מערכת הנתונים לא אותחלה. נסה לרענן את הדף.');
+    document.getElementById('searchingIndicator').style.display = 'none';
+    return;
+  }
+
   try {
-    const { data, error } = await pensionNetSupabase
+    const { data, error } = await client
       .from('orders')
       .select('*')
       .eq('phone', phone) // חיפוש עם מספר נקי
@@ -692,7 +713,15 @@ async function submitForm() {
     user_id: PENSION_OWNER_ID
   };
   
-  const { data, error } = await pensionNetSupabase
+  const client = getSupabase();
+  if (!client) {
+    alert('שגיאה בתקשורת עם השרת. אנא רעננו את הדף ונסו שוב.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'שלח הזמנה ✓';
+    return;
+  }
+
+  const { data, error } = await client
     .from('orders')
     .insert([orderData])
     .select();
