@@ -56,18 +56,18 @@ async function loadOwnerInfo() {
       if (profile.phone) ADMIN_PHONE = profile.phone;
       if (profile.business_name && profile.business_name.trim()) {
         BUSINESS_NAME = profile.business_name;
-        // Make the main title dynamic
+        // Make the main title dynamic as requested: Emoji + Text + Business Name
         const h1 = document.querySelector('.header h1');
-        if (h1) h1.textContent = `הזמנת מקום ב${BUSINESS_NAME}`;
+        if (h1) h1.textContent = `🐕 הזמנת מקום בפנסיון כלבים - ${BUSINESS_NAME}`;
       }
       
-      document.title = `הזמנת מקום ב${BUSINESS_NAME}`;
+      document.title = `הזמנת מקום - ${BUSINESS_NAME}`;
       
       const headerSub = document.getElementById('header-business-name');
       if (headerSub) {
-        const displayName = BUSINESS_NAME || 'פנסיון לכלבים';
-        headerSub.textContent = profile.location ? `${displayName} - ${profile.location}` : displayName;
-        headerSub.style.fontWeight = '800'; // Extra bold
+        // If we have a location, show it. Otherwise show nothing or a clean separator.
+        headerSub.textContent = profile.location ? `📍 ${profile.location}` : '';
+        headerSub.style.fontWeight = '800';
       }
       
       const successPhoneEl = document.getElementById('displayAdminPhone');

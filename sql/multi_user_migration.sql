@@ -73,6 +73,14 @@ CREATE POLICY "Users can update their own profile" ON public.profiles
 CREATE POLICY "Users can insert their own profile" ON public.profiles
     FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 
+-- 4. PUBLIC ACCESS (Clients)
+-- Clients need to see business name and location to verify they are on the right booking page
+CREATE POLICY "Anon can see public profile info"
+ON public.profiles
+FOR SELECT
+TO anon
+USING (true);
+
 -- --- TRIGGER FOR AUTOMATIC PROFILE CREATION ---
 -- This function runs every time a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
