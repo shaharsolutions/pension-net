@@ -15,7 +15,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>🐕 הזמנת מקום בפנסיון כלבים</h1>
+      <h1><i class="fas fa-paw"></i> הזמנת מקום בפנסיון כלבים</h1>
       <div id="header-business-name" class="header-subtitle" style="font-size: 18px; color: rgba(255, 255, 255, 0.95); font-weight: 700; margin-bottom: 5px;">טוען נתונים...</div>
       <p>מלאו את הפרטים בשלושה שלבים פשוטים</p>
     </div>
@@ -100,7 +100,7 @@
           </div>
           <div class="form-group">
             <label class="required">גודל הכלב</label>
-            <div class="radio-group radio-group-4">
+            <div class="radio-group radio-group-3">
               <label class="radio-option">
                 <input type="radio" name="dogSize" value="קטן" required />
                 <span class="radio-label">קטן<br><small>עד 10 ק"ג</small></span>
@@ -111,11 +111,7 @@
               </label>
               <label class="radio-option">
                 <input type="radio" name="dogSize" value="גדול" required />
-                <span class="radio-label">גדול<br><small>25-40 ק"ג</small></span>
-              </label>
-              <label class="radio-option">
-                <input type="radio" name="dogSize" value="ענק" required />
-                <span class="radio-label">ענק<br><small>40+ ק"ג</small></span>
+                <span class="radio-label">גדול<br><small>מעל 25 ק"ג</small></span>
               </label>
             </div>
           </div>
@@ -139,11 +135,6 @@
                 <span class="radio-label">לא מעוקרת<br><small>(נקבה)</small></span>
               </label>
             </div>
-          </div>
-          <div class="form-group">
-            <label>אופי הכלב</label>
-            <textarea name="dogTemperament" placeholder="לדוגמה: ידידותי, אנרגטי, ביישן, דומיננטי, רגוע, משחקי, חרדתי מכלבים אחרים..."></textarea>
-            <div class="helper-text">תאר את האופי והתנהגות הכלב - זה יעזור לנו לדאוג לו בצורה הטובה ביותר</div>
           </div>
           <div class="form-group">
             <label>הערות מיוחדות</label>
@@ -183,9 +174,9 @@
           </div>
           <div class="form-group" style="margin-top:24px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <button type="button" id="prevMonthBtn" onclick="changeCapacityMonth(-1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;">➡️</button>
+              <button type="button" id="prevMonthBtn" onclick="changeCapacityMonth(-1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;"><i class="fas fa-chevron-right"></i></button>
               <h3 id="capacityMonthTitle" style="color:#667eea; margin:0; font-size: 18px;">טוען...</h3>
-              <button type="button" id="nextMonthBtn" onclick="changeCapacityMonth(1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;">⬅️</button>
+              <button type="button" id="nextMonthBtn" onclick="changeCapacityMonth(1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;"><i class="fas fa-chevron-left"></i></button>
             </div>
             
             <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; text-align:center; font-weight:bold; margin-bottom:8px; font-size:12px; color:#555;">

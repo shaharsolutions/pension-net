@@ -503,7 +503,8 @@ function renderMonthlyCalendar(allOrders) {
 
     // Build the dog list content
     let dogsContentHTML = "";
-    const sizes = Object.keys(dogsBySize).sort();
+    const sizeOrder = { 'קטן': 1, 'בינוני': 2, 'גדול': 3 };
+    const sizes = Object.keys(dogsBySize).sort((a, b) => (sizeOrder[a] || 99) - (sizeOrder[b] || 99));
 
     sizes.forEach((size) => {
       const dogCount = dogsBySize[size].length;
@@ -577,7 +578,8 @@ function renderCurrentDogsColumnView(allOrders) {
   today.setHours(0, 0, 0, 0);
 
   const dogsBySize = getDogsForDay(allOrders, today);
-  const sizes = Object.keys(dogsBySize).sort();
+  const sizeOrder = { 'קטן': 1, 'בינוני': 2, 'גדול': 3 };
+  const sizes = Object.keys(dogsBySize).sort((a, b) => (sizeOrder[a] || 99) - (sizeOrder[b] || 99));
   
   // Calculate total dogs count
   const totalDogsCount = Object.values(dogsBySize).flat().length;
@@ -644,9 +646,9 @@ function toggleCalendarCollapse(button) {
   const isCollapsed = viewContent.classList.toggle("collapsed");
 
   if (isCollapsed) {
-    button.innerHTML = "פתח ⬇️";
+    button.innerHTML = 'פתח <i class="fas fa-chevron-down"></i>';
   } else {
-    button.innerHTML = "כווץ ⬆️";
+    button.innerHTML = 'כווץ <i class="fas fa-chevron-up"></i>';
   }
 }
 
@@ -662,7 +664,7 @@ function toggleCalendarView(button) {
     calendarView.style.display = "none";
     dogsView.style.display = "flex";
     title.textContent = "כלבים בפנסיון היום";
-    button.textContent = "הצג לוח שנה 🗓️";
+    button.innerHTML = '<i class="fas fa-calendar-alt"></i> הצג לוח שנה';
     collapseBtn.style.display = "none";
     window.currentView = "dogs";
     renderCurrentDogsColumnView(window.allOrdersCache);
@@ -670,15 +672,15 @@ function toggleCalendarView(button) {
     dogsView.style.display = "none";
     calendarView.style.display = "block";
     title.textContent = "לוח זמנים חודשי (נוכחות כלבים)";
-    button.textContent = "הצג כלבים שכרגע בפנסיון 🐕";
+    button.innerHTML = 'הצג כלבים שכרגע בפנסיון <i class="fas fa-paw"></i>';
     collapseBtn.style.display = "block";
     window.currentView = "calendar";
     renderMonthlyCalendar(window.allOrdersCache);
 
     if (calendarView.classList.contains("collapsed")) {
-      collapseBtn.innerHTML = "פתח ⬇️";
+      collapseBtn.innerHTML = 'פתח <i class="fas fa-chevron-down"></i>';
     } else {
-      collapseBtn.innerHTML = "כווץ ⬆️";
+      collapseBtn.innerHTML = 'כווץ <i class="fas fa-chevron-up"></i>';
     }
   }
 }
@@ -761,7 +763,7 @@ function renderPastOrdersTable() {
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
-    <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
+    <td data-label="אישור"><span class="whatsapp-sent-badge">נשלח ✓</span></td>
     <td data-label="כניסה" class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
@@ -784,7 +786,7 @@ function renderPastOrdersTable() {
     </td>
     <td data-label="כלב">${row.dog_name}</td>
     <td data-label="גיל">${row.dog_age}</td>
-    <td data-label="גזע">${row.dog_breed}</td>
+    <td data-label="גודל">${row.dog_breed}</td>
     <td data-label="סירס/עיקור">
       ${row.neutered || ""}
       ${row.neutered ? `
@@ -795,13 +797,6 @@ function renderPastOrdersTable() {
     </td>
     <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
       ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
-    </td>
-    <td data-label="אופי" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
-      ${
-        row.dog_temperament
-          ? row.dog_temperament
-          : '<span style="color:#999;">-</span>'
-      }
     </td>
     <td data-label="מחיר" class="price-cell">
       <div class="price-wrapper">
@@ -842,7 +837,7 @@ function renderPastOrdersTable() {
     <td data-label="ניהול" class="manager-note-column">
       <textarea class="admin-note" data-id="${
         row.id
-      }" cols="50" rows="2">${row.admin_note || ""}</textarea>
+      }" cols="50" rows="2">${(row.admin_note && !row.admin_note.includes('DEMO_DATA') && !row.admin_note.includes('דוגמה אמיתית')) ? row.admin_note : ""}</textarea>
     </td>
   `;
     tbody.appendChild(tr);
@@ -1015,7 +1010,7 @@ async function toggleMovementChecked(type, orderId) {
 
   } catch (err) {
     console.error('Error updating movement:', err);
-    alert('שגיאה בעדכון הסטטוס. אנא נסה שוב.');
+    showToast('שגיאה בעדכון הסטטוס. אנא נסה שוב.', 'error');
     // Revert UI if needed (simple reload or re-render)
     loadData(); 
   }
@@ -1066,7 +1061,7 @@ function renderMovementStats(data) {
          <div style="flex: 1;">
            <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-           ${d.admin_note ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;">⚠️ ${d.admin_note}</div>` : ''}
+           ${(d.admin_note && !d.admin_note.includes('DEMO_DATA') && !d.admin_note.includes('דוגמה אמיתית')) ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;"><i class="fas fa-exclamation-triangle"></i> ${d.admin_note}</div>` : ''}
          </div>
        </div>`;
     }).join('');
@@ -1089,7 +1084,7 @@ function renderMovementStats(data) {
          <div style="flex: 1;">
            <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-
+           ${(d.admin_note && !d.admin_note.includes('DEMO_DATA') && !d.admin_note.includes('דוגמה אמיתית')) ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;"><i class="fas fa-exclamation-triangle"></i> ${d.admin_note}</div>` : ''}
          </div>
        </div>`;
     }).join('');
@@ -1124,46 +1119,93 @@ async function loadData() {
 
     if (data.length > 0) {
       console.log("Sample data:", {
-        dog_temperament: data[0].dog_temperament,
         notes: data[0].notes,
       });
     }
 
-    const futureTbody = document.querySelector(
-      "#futureOrdersTable tbody"
-    );
     const now = new Date();
-
-    const futureOrders = data.filter((row) => {
+    renderFutureOrdersTable();
+    
+    window.pastOrdersRawData = data.filter((row) => {
       const checkOut = new Date(row.check_out);
-      return checkOut >= now;
+      return checkOut < now;
     });
+    renderPastOrdersTable();
 
-    const activeOrders = futureOrders.filter(
-      (order) => order.status === "מאושר"
+    document
+      .querySelectorAll("textarea.admin-note")
+      .forEach((textarea) => {
+        const adjustWidth = () => {
+          textarea.style.width = "80ch";
+          textarea.style.height = "auto";
+          textarea.style.height = textarea.scrollHeight + "px";
+        };
+        adjustWidth();
+        textarea.addEventListener("input", adjustWidth);
+      });
+  } catch (error) {
+    console.error("Error loading data:", error);
+    showToast("שגיאה בטעינת הנתונים", 'error');
+  }
+}
+
+function filterFutureOrdersData() {
+  if (!window.allOrdersCache) return [];
+  const now = new Date();
+  let data = window.allOrdersCache.filter(row => new Date(row.check_out) >= now);
+
+  const searchTerm = document.getElementById('futureSearchInput')?.value.toLowerCase();
+  const statusFilter = document.getElementById('futureStatusFilter')?.value;
+  const sortVal = document.getElementById('futureSortSelect')?.value;
+
+  if (searchTerm) {
+    data = data.filter(row => 
+      (row.owner_name?.toLowerCase().includes(searchTerm)) ||
+      (row.dog_name?.toLowerCase().includes(searchTerm)) ||
+      (row.phone?.includes(searchTerm))
     );
-    const otherFutureOrders = futureOrders.filter(
-      (order) => order.status !== "מאושר"
-    );
-    const orderedFuture = [...activeOrders, ...otherFutureOrders];
+  }
 
-    futureTbody.innerHTML = "";
+  if (statusFilter && statusFilter !== 'all') {
+    data = data.filter(row => row.status === statusFilter);
+  }
 
-    orderedFuture.forEach((row) => {
-      let temperament = row.dog_temperament
-        ? row.dog_temperament.trim()
-        : "";
+  if (sortVal) {
+    switch(sortVal) {
+      case 'check_in_asc':
+        data.sort((a,b) => new Date(a.check_in) - new Date(b.check_in));
+        break;
+      case 'check_in_desc':
+        data.sort((a,b) => new Date(b.check_in) - new Date(a.check_in));
+        break;
+      case 'order_date_desc':
+        data.sort((a,b) => new Date(b.order_date) - new Date(a.order_date));
+        break;
+      case 'dog_name':
+        data.sort((a,b) => (a.dog_name || '').localeCompare(b.dog_name || '', 'he'));
+        break;
+    }
+  } else {
+      // Default: Approved first, then by date
+      const activeOrders = data.filter(o => o.status === "מאושר");
+      const others = data.filter(o => o.status !== "מאושר");
+      data = [...activeOrders, ...others];
+  }
+
+  return data;
+}
+
+function renderFutureOrdersTable() {
+  const futureTbody = document.querySelector("#futureOrdersTable tbody");
+  if (!futureTbody) return;
+
+  const data = filterFutureOrdersData();
+  futureTbody.innerHTML = "";
+
+  data.forEach((row) => {
+      // --- ניקוי הערות כפולות אם נשארו ---
       let notes = row.notes ? row.notes.trim() : "";
 
-      if (!temperament && notes && /^אופי\s*:/m.test(notes)) {
-        const temperamentMatch = notes.match(/^אופי\s*:\s*(.*)$/m);
-        if (temperamentMatch && temperamentMatch[1]) {
-          temperament = temperamentMatch[1].trim();
-        }
-        notes = notes.replace(/^אופי\s*:.*$/m, "").trim();
-      }
-
-      row.dog_temperament = temperament;
       row.notes = notes;
 
       let tr = document.createElement("tr");
@@ -1198,7 +1240,7 @@ async function loadData() {
       </td>
       <td data-label="כלב">${row.dog_name || ""}</td>
       <td data-label="גיל">${row.dog_age || ""}</td>
-      <td data-label="גזע">${row.dog_breed || ""}</td>
+      <td data-label="גודל">${row.dog_breed || ""}</td>
       <td data-label="סירס/עיקור">
         ${row.neutered || ""}
         ${row.neutered ? `
@@ -1209,13 +1251,6 @@ async function loadData() {
       </td>
       <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
         ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
-      </td>
-      <td data-label="אופי" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
-        ${
-          row.dog_temperament
-            ? row.dog_temperament
-            : '<span style="color:#999;">-</span>'
-        }
       </td>
       <td data-label="מחיר" class="price-cell">
         <div class="price-wrapper">
@@ -1269,9 +1304,13 @@ async function loadData() {
         <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
           <i class="fas fa-comments"></i> הערות (${(() => {
             try {
-              const notes = row.admin_note ? JSON.parse(row.admin_note) : [];
-              return Array.isArray(notes) ? notes.length : (row.admin_note ? 1 : 0);
-            } catch(e) { return row.admin_note ? 1 : 0; }
+              const isDemo = row.admin_note && (row.admin_note.includes('DEMO_DATA') || row.admin_note.includes('דוגמה אמיתית'));
+              const notes = (row.admin_note && !isDemo) ? JSON.parse(row.admin_note) : [];
+              return Array.isArray(notes) ? notes.length : ((row.admin_note && !isDemo) ? 1 : 0);
+            } catch(e) { 
+              const isDemo = row.admin_note && (row.admin_note.includes('DEMO_DATA') || row.admin_note.includes('דוגמה אמיתית'));
+              return (row.admin_note && !isDemo) ? 1 : 0; 
+            }
           })()})
         </button>
       </td>
@@ -1305,35 +1344,26 @@ async function loadData() {
           }
         });
       });
-
-    window.pastOrdersRawData = data.filter((row) => {
-      const checkOut = new Date(row.check_out);
-      return checkOut < now;
-    });
-    renderPastOrdersTable();
-
-    document
-      .querySelectorAll("textarea.admin-note")
-      .forEach((textarea) => {
-        const adjustWidth = () => {
-          textarea.style.width = "80ch";
-          textarea.style.height = "auto";
-          textarea.style.height = textarea.scrollHeight + "px";
-        };
-        adjustWidth();
-        textarea.addEventListener("input", adjustWidth);
-      });
-  } catch (error) {
-    console.error("Error loading data:", error);
-    alert("שגיאה בטעינת הנתונים");
-  }
 }
+
+// Event Listeners for Future Orders Filtering
+document.getElementById('futureSearchInput')?.addEventListener('input', debounce(() => {
+  renderFutureOrdersTable();
+}, 300));
+
+document.getElementById('futureStatusFilter')?.addEventListener('change', () => {
+  renderFutureOrdersTable();
+});
+
+document.getElementById('futureSortSelect')?.addEventListener('change', () => {
+  renderFutureOrdersTable();
+});
 
 document
   .getElementById("saveButton")
   .addEventListener("click", async () => {
     if (!window.currentUserSession) {
-      alert("אין הרשאה - אנא התחבר מחדש");
+      showToast("אין הרשאה - אנא התחבר מחדש", 'error');
       return;
     }
 
@@ -1414,7 +1444,7 @@ document
 
       const savedBanner = document.createElement("div");
       savedBanner.className = "success-banner";
-      savedBanner.textContent = "✅ השינויים נשמרו בהצלחה";
+      savedBanner.innerHTML = '<i class="fas fa-check-circle"></i> השינויים נשמרו בהצלחה';
       document.body.appendChild(savedBanner);
 
       setTimeout(() => {
@@ -1422,7 +1452,7 @@ document
       }, 2000);
     } catch (error) {
       console.error("Error saving:", error);
-      alert("שגיאה בשמירת הנתונים: " + error.message);
+      showToast("שגיאה בשמירת הנתונים: " + error.message, 'error');
       saveBtn.classList.remove("loading");
       saveBtn.disabled = false;
     }
@@ -2041,7 +2071,7 @@ async function deleteOrderNote(indexInSorted) {
     if (btn) btn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
 
   } catch (err) {
-    alert('שגיאה במחיקת הערה: ' + err.message);
+    showToast('שגיאה במחיקת הערה: ' + err.message, 'error');
   }
 }
 
@@ -2049,8 +2079,8 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', async function
   const author = document.getElementById('noteAuthorSelect').value;
   const content = document.getElementById('newNoteContent').value.trim();
   
-  if (!author) { alert('נא לבחור מחבר/ת להערה'); return; }
-  if (!content) { alert('נא להזין תוכן להערה'); return; }
+  if (!author) { showToast('נא לבחור מחבר/ת להערה', 'error'); return; }
+  if (!content) { showToast('נא להזין תוכן להערה', 'error'); return; }
   
   const orderId = window.currentlyEditingOrderId;
   const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
@@ -2097,7 +2127,7 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', async function
     
   } catch (err) {
     console.error('Error saving note:', err);
-    alert('שגיאה בשמירת ההערה: ' + err.message);
+    showToast('שגיאה בשמירת ההערה: ' + err.message, 'error');
   }
 });
 
@@ -2238,16 +2268,200 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
 
     if (error) throw error;
 
-    alert('ההגדרות נשמרו בהצלחה!');
-    location.reload(); 
+    showToast('ההגדרות נשמרו בהצלחה!', 'success');
+    setTimeout(() => location.reload(), 1200); 
   } catch (err) {
     console.error('Error saving settings:', err);
-    alert('שגיאה בשמירת ההגדרות: ' + err.message);
+    showToast('שגיאה בשמירת ההגדרות: ' + err.message, 'error');
   } finally {
     saveBtn.disabled = false;
     saveBtn.innerHTML = originalText;
   }
 });
+
+document.getElementById('fillDemoDataBtn')?.addEventListener('click', fillWithDemoData);
+
+async function fillWithDemoData() {
+  const session = window.currentUserSession;
+  if (!session) return;
+  
+  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף כ-15 הזמנות חדשות למערכת לצורך הדגמה.</b>', async () => {
+    const btn = document.getElementById('fillDemoDataBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ממלא נתונים...';
+  
+  const dogNames = ['לוסי', 'מקס', 'בלה', 'צ\'ארלי', 'לולה', 'רוקי', 'ג\'ק', 'מיקה', 'סימבה', 'טוי', 'ג\'וי', 'לואי', 'סקיי', 'קוצ\'י', 'שוקו'];
+  const ownerNames = ['שחר כהן', 'מיכל לוי', 'ישראל ישראלי', 'דינה אברהם', 'רון מועלם', 'עדי שרון', 'דניאל יוסף', 'מיה ארז', 'יואב גל', 'נועה ברק'];
+  const sizes = ['קטן', 'בינוני', 'גדול'];
+  const realNotes = [
+    'אוכל פעמיים ביום, רגיש לעוף',
+    'ידידותי מאוד לכלבים אחרים',
+    'צריך כדור בבוקר עם האוכל',
+    'אוהב לשחק עם כדור טניס',
+    'חששן בהתחלה, זקוק לגישה עדינה',
+    'מעדיף לישון על ספה',
+    'מושך קצת בטיולים',
+    'רגיל ללינה בבית',
+    'אנרגטי מאוד, אוהב לרוץ'
+  ];
+  
+  const today = new Date();
+  
+  const todayStr = today.toISOString().split('T')[0];
+  
+  const demoOrders = [];
+  for (let i = 0; i < 15; i++) {
+    const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
+    const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
+    const size = sizes[Math.floor(Math.random() * sizes.length)];
+    
+    let status = i < 8 ? 'מאושר' : 'ממתין';
+    let checkIn, checkOut;
+    
+    if (i === 0) {
+      // One dog leaving today
+      status = 'מאושר';
+      const prev = new Date(today);
+      prev.setDate(today.getDate() - 3);
+      checkIn = prev;
+      checkOut = new Date(today);
+    } else if (i === 1 || i === 2) {
+      // Two dogs entering today
+      status = 'מאושר';
+      checkIn = new Date(today);
+      const future = new Date(today);
+      future.setDate(today.getDate() + 4);
+      checkOut = future;
+    } else {
+      // Spread dates: some in the past, some now, some in the future
+      const offset = Math.floor(Math.random() * 20) - 10;
+      checkIn = new Date(today);
+      checkIn.setDate(today.getDate() + offset);
+      
+      const duration = Math.floor(Math.random() * 5) + 1;
+      checkOut = new Date(checkIn);
+      checkOut.setDate(checkIn.getDate() + duration);
+    }
+    
+    const isArrived = checkIn <= today && status !== 'ממתין';
+    const isDeparted = checkOut < today && isArrived;
+    
+    demoOrders.push({
+      user_id: session.user.id,
+      owner_name: ownerName,
+      dog_name: dogName,
+      dog_breed: size,
+      dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
+      phone: '05' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
+      check_in: checkIn.toISOString().split('T')[0],
+      check_out: checkOut.toISOString().split('T')[0],
+      status: status,
+      is_arrived: isArrived,
+      is_departed: isDeparted,
+      is_paid: isDeparted || Math.random() > 0.7,
+      price_per_day: 130,
+      neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
+      notes: realNotes[Math.floor(Math.random() * realNotes.length)],
+      admin_note: 'DEMO_DATA',
+      created_at: new Date().toISOString()
+    });
+  }
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .insert(demoOrders);
+      
+    if (error) throw error;
+    
+    showToast('<i class="fas fa-magic"></i> <strong>נתוני הדמו הוספו בהצלחה!</strong><br>המערכת תתרענן כעת...', 'success');
+    setTimeout(() => location.reload(), 2000);
+  } catch (err) {
+    console.error('Error adding demo data:', err);
+    showToast('שגיאה בהוספת נתוני דמו: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+  });
+}
+
+document.getElementById('clearDemoDataBtn')?.addEventListener('click', clearDemoData);
+
+async function clearDemoData() {
+  const session = window.currentUserSession;
+  if (!session) return;
+
+  showConfirm('<i class="fas fa-trash-alt"></i> מחיקת נתוני דמו', 'האם אתה בטוח שברצונך למחוק את כל נתוני הדמו מהמערכת? <br><br><b>פעולה זו תמחק רק הזמנות שנוצרו אוטומטית כדמו.</b>', async () => {
+    const btn = document.getElementById('clearDemoDataBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מוחק...';
+
+    try {
+      const { error } = await pensionNetSupabase
+        .from('orders')
+        .delete()
+        .eq('user_id', session.user.id)
+        .or('notes.eq.DEMO_DATA,admin_note.eq.DEMO_DATA,notes.like.דוגמה אמיתית%');
+
+      if (error) throw error;
+
+      showToast('<i class="fas fa-trash-alt"></i> <strong>נתוני הדמו נמחקו בהצלחה!</strong>', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      console.error('Error clearing demo data:', err);
+      showToast('שגיאה במחיקת נתוני דמו: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+}
+
+function showConfirm(title, message, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  const titleEl = document.getElementById('confirmTitle');
+  const messageEl = document.getElementById('confirmMessage');
+  const confirmBtn = document.getElementById('confirmConfirmBtn');
+  const cancelBtn = document.getElementById('confirmCancelBtn');
+
+  if (!modal || !titleEl || !messageEl || !confirmBtn || !cancelBtn) return;
+
+  titleEl.innerHTML = title;
+  messageEl.innerHTML = message;
+  modal.style.display = 'block';
+
+  // Clear previous listeners
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+  
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+  newConfirmBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+    if (onConfirm) onConfirm();
+  });
+
+  newCancelBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  // Close when clicking outside
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+    // Also keep the existing notesModal logic if needed, 
+    // but better to handle all modals or use a class
+    const notesModal = document.getElementById('notesModal');
+    if (event.target == notesModal) {
+      closeNotesModal();
+    }
+  }
+}
 
 function togglePasswordVisibility() {
   const input = document.getElementById("passwordInput");
@@ -2258,7 +2472,7 @@ function togglePasswordVisibility() {
     icon.textContent = "🙈";
   } else {
     input.type = "password";
-    icon.textContent = "👁️";
+    icon.innerHTML = '<i class="fas fa-eye"></i>';
   }
 }
 
@@ -2303,9 +2517,9 @@ async function loadAuditLogs() {
 
         logsList.innerHTML = logs.map(log => {
             let iconClass = 'update';
-            let icon = '📝';
-            if (log.action_type === 'INSERT') { iconClass = 'insert'; icon = '✅'; }
-            if (log.action_type === 'DELETE') { iconClass = 'delete'; icon = '🗑️'; }
+            let icon = '<i class="fas fa-edit"></i>';
+            if (log.action_type === 'INSERT') { iconClass = 'insert'; icon = '<i class="fas fa-plus-circle"></i>'; }
+            if (log.action_type === 'DELETE') { iconClass = 'delete'; icon = '<i class="fas fa-trash-alt"></i>'; }
 
             return `
                 <div class="audit-item">

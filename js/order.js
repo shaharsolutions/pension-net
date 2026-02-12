@@ -65,7 +65,7 @@ async function loadOwnerInfo() {
         BUSINESS_NAME = profile.business_name;
         // Make the main title dynamic as requested: Emoji + Text + Business Name
         const h1 = document.querySelector('.header h1');
-        if (h1) h1.textContent = `🐕 הזמנת מקום בפנסיון כלבים - ${BUSINESS_NAME}`;
+        if (h1) h1.innerHTML = `<i class="fas fa-paw"></i> הזמנת מקום בפנסיון כלבים - ${BUSINESS_NAME}`;
       }
       
       document.title = `הזמנת מקום - ${BUSINESS_NAME}`;
@@ -86,7 +86,7 @@ async function loadOwnerInfo() {
       if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
       
       const h1 = document.querySelector('.header h1');
-      if (h1) h1.textContent = `🐕 הזמנת מקום בפנסיון כלבים`;
+      if (h1) h1.innerHTML = `<i class="fas fa-paw"></i> הזמנת מקום בפנסיון כלבים`;
     }
   } catch (err) {
     console.error('Error loading owner info:', err);
@@ -448,12 +448,6 @@ function showSummary() {
         <span class="summary-label">מין וסטטוס:</span>
         <span class="summary-value">${data.neutered}</span>
       </div>
-      ${data.dogTemperament ? `
-      <div class="summary-item">
-        <span class="summary-label">אופי הכלב:</span>
-        <span class="summary-value">${data.dogTemperament}</span>
-      </div>
-      ` : ''}
       <div class="summary-item">
         <span class="summary-label">כניסה:</span>
         <span class="summary-value">${checkIn}</span>
@@ -518,7 +512,7 @@ async function identifyCustomer() {
   if (!PENSION_OWNER_ID) {
     console.error('PENSION_OWNER_ID is missing from URL parameters!');
     document.getElementById('searchingIndicator').style.display = 'none';
-    alert('שגיאה: מזהה פנסיון חסר בכתובת ה-URL. שלח שוב את הקישור ממערכת הניהול.');
+    showToast('שגיאה: מזהה פנסיון חסר בכתובת ה-URL. שלח שוב את הקישור ממערכת הניהול.', 'error');
     return;
   }
 
@@ -526,7 +520,7 @@ async function identifyCustomer() {
 
   const client = getSupabase();
   if (!client) {
-    alert('שגיאה: מערכת הנתונים לא אותחלה. נסה לרענן את הדף.');
+    showToast('שגיאה: מערכת הנתונים לא אותחלה. נסה לרענן את הדף.', 'error');
     document.getElementById('searchingIndicator').style.display = 'none';
     return;
   }
@@ -564,7 +558,7 @@ async function identifyCustomer() {
         button.type = 'button';
         button.className = 'dog-button';
         button.dataset.dogIndex = index;
-        button.innerHTML = `<span class="dog-button-icon">🐕</span> ${order.dog_name} (${order.dog_breed || 'גזע לא ידוע'}, ${order.dog_age || 'גיל לא ידוע'})`; // טיפול בערכים חסרים בתצוגה
+        button.innerHTML = `<span class="dog-button-icon"><i class="fas fa-paw"></i></span> ${order.dog_name} (${order.dog_breed || 'גודל לא ידוע'}, ${order.dog_age || 'גיל לא ידוע'})`; // טיפול בערכים חסרים בתצוגה
         button.onclick = function() {
           document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
           this.classList.add('selected');
@@ -584,7 +578,6 @@ async function identifyCustomer() {
           if (radio) radio.checked = true;
           // --------------------------------
           
-          document.querySelector('textarea[name="dogTemperament"]').value = selectedDog.dog_temperament || '';
           document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
           
           currentStep = 3;
@@ -601,10 +594,8 @@ async function identifyCustomer() {
         document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
         this.classList.add('selected');
         
-        // איפוס שדות הכלב
         document.querySelector('input[name="dogName"]').value = '';
         document.querySelectorAll('input[name="dogAge"], input[name="dogSize"], input[name="neutered"]').forEach(radio => radio.checked = false);
-        document.querySelector('textarea[name="dogTemperament"]').value = '';
         document.querySelector('textarea[name="notes"]').value = '';
 
         currentStep = 2;
@@ -674,7 +665,7 @@ async function identifyCustomer() {
     console.error('Error fetching orders:', error);
     lastSearchedPhone = '';
     document.getElementById('searchingIndicator').style.display = 'none';
-    alert('אירעה שגיאה בחיפוש: ' + (error.message || 'שגיאה לא ידועה'));
+    showToast('אירעה שגיאה בחיפוש: ' + (error.message || 'שגיאה לא ידועה'), 'error');
     
     document.querySelector('input[name="ownerName"]').value = '';
     currentStep = 1;
@@ -708,14 +699,13 @@ async function submitForm() {
     dog_age: formData.dogAge,
     dog_breed: formData.dogSize || '',
     neutered: formData.neutered || 'לא צוין',
-    dog_temperament: formData.dogTemperament || '',
     notes: formData.notes || '',
     user_id: PENSION_OWNER_ID
   };
   
   const client = getSupabase();
   if (!client) {
-    alert('שגיאה בתקשורת עם השרת. אנא רעננו את הדף ונסו שוב.');
+    showToast('שגיאה בתקשורת עם השרת. אנא רעננו את הדף ונסו שוב.', 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'שלח הזמנה ✓';
     return;
@@ -728,7 +718,7 @@ async function submitForm() {
   
   if (error) {
     console.error('Error:', error);
-    alert('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.');
+    showToast('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.', 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'שלח הזמנה ✓';
     return;
@@ -777,12 +767,6 @@ async function submitForm() {
         <span class="summary-label">מין וסטטוס:</span>
         <span class="summary-value">${formData.neutered}</span>
       </div>
-      ${formData.dogTemperament ? `
-      <div class="summary-item">
-        <span class="summary-label">אופי הכלב:</span>
-        <span class="summary-value">${formData.dogTemperament}</span>
-      </div>
-      ` : ''}
       <div class="summary-item">
         <span class="summary-label">כניסה:</span>
         <span class="summary-value">${checkIn}</span>

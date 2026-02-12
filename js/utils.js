@@ -88,7 +88,7 @@ function showToast(message, type = 'info') {
   toast.style.transition = 'opacity 0.3s, transform 0.3s';
   toast.style.transform = 'translateY(-20px)';
   
-  toast.textContent = message;
+  toast.innerHTML = message;
   
   container.appendChild(toast);
   

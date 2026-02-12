@@ -321,7 +321,7 @@ button:disabled {
   gap: 12px;
 }
 
-.radio-group-4 {
+.radio-group-4, .radio-group-3 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
@@ -336,6 +336,10 @@ button:disabled {
 @media (min-width: 500px) {
   .radio-group-4 {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .radio-group-3 {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .radio-group-neuter {

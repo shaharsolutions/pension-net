@@ -63,7 +63,17 @@
     <!-- Login/Profile Selection Overlay -->
     <div id="login-overlay" style="display: flex !important;">
       <div class="profile-card">
-        <h2 style="font-family: 'Heebo', sans-serif;">פנסיונט 🐕</h2>
+        <div class="logo-wrapper" style="margin-bottom: 10px;">
+          <div class="pensionet-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 18C14.2091 18 16 16.2091 16 14C16 11.7909 14.2091 10 12 10C9.79086 10 8 11.7909 8 14C8 16.2091 9.79086 18 12 18Z" />
+              <circle cx="7.5" cy="7" r="2" />
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="16.5" cy="7" r="2" />
+            </svg>
+          </div>
+          <h2 class="logo-text" style="font-size: 28px; color: #1e293b; margin: 0;">פנסיונט</h2>
+        </div>
         <p style="margin-bottom: 25px; color: #64748b;">יש לבחור פרופיל לשימוש במערכת</p>
         <select id="initialProfileSelect" onchange="handleInitialProfileChange()">
           <option value="">בחר פרופיל...</option>
@@ -81,11 +91,21 @@
     <div id="mainContent">
       <header>
         <div class="header-actions">
-          <button class="header-btn logout-btn" type="button" onclick="logout()">יציאה 🚪</button>
-          <button class="header-btn" type="button" onclick="copyBookingLink(event)">🔗 קישור להזמנות</button>
+          <button class="header-btn logout-btn" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> יציאה</button>
+          <button class="header-btn" type="button" onclick="copyBookingLink(event)"><i class="fas fa-link"></i> קישור להזמנות</button>
         </div>
         <div class="header-center">
-          <h1>🐕 מערכת ניהול פנסיון כלבים</h1>
+        <div class="logo-wrapper" style="margin-bottom: 5px;">
+          <div class="pensionet-icon" style="width: 36px; height: 36px; border-radius: 10px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;">
+              <path d="M12 18C14.2091 18 16 16.2091 16 14C16 11.7909 14.2091 10 12 10C9.79086 10 8 11.7909 8 14C8 16.2091 9.79086 18 12 18Z" />
+              <circle cx="7.5" cy="7" r="2" />
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="16.5" cy="7" r="2" />
+            </svg>
+          </div>
+          <h1 style="margin: 0; font-size: 22px;">מערכת ניהול פנסיון כלבים</h1>
+        </div>
           <div id="header-business-name" class="header-subtitle"></div>
           <div class="mode-indicator" id="modeToggleContainer">
             <span id="modeStatusLabel" class="mode-badge staff">🔐 מצב עובד</span>
@@ -97,7 +117,7 @@
           </div>
         </div>
         <div class="header-actions">
-          <a href="growth.html" class="header-btn">📊 דוחות</a>
+          <a href="growth.html" class="header-btn"><i class="fas fa-chart-line"></i> דוחות</a>
         </div>
       </header>
 
@@ -105,13 +125,13 @@
         <button class="tab-btn active" onclick="switchTab('ongoing')">ניהול שוטף</button>
         <button class="tab-btn" onclick="switchTab('history')">היסטוריית הזמנות</button>
         <button class="tab-btn manager-only" onclick="switchTab('audit')">יומן פעולות</button>
-        <button class="tab-btn" onclick="switchTab('settings')">⚙️ הגדרות</button>
+        <button class="tab-btn" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i> הגדרות</button>
       </div>
 
       <div id="tab-ongoing" class="tab-content active">
         <!-- New Stats Section -->
         <div class="container" style="margin-bottom: 20px;">
-          <h3 style="text-align: center; margin-bottom: 15px;">📊 תנועות להיום</h3>
+          <h3 style="text-align: center; margin-bottom: 15px;"><i class="fas fa-exchange-alt" style="color: #6366f1;"></i> תנועות להיום</h3>
           <div class="movements-container">
             <div style="flex: 1; text-align: center; padding: 10px; background: #f0f7f0; border-radius: 12px;">
               <h4 style="color: #4caf50; margin-bottom: 10px;">📥 נכנסים היום</h4>
@@ -139,14 +159,14 @@
                 class="calendar-toggle-btn"
                 onclick="toggleCalendarView(this)"
               >
-                הצג כלבים שכרגע בפנסיון 🐕
+                הצג כלבים שכרגע בפנסיון <i class="fas fa-paw"></i>
               </button>
               <button
                 id="toggleCalendarCollapseBtn"
                 class="calendar-toggle-btn"
                 onclick="toggleCalendarCollapse(this)"
               >
-                כווץ ⬆️
+                כווץ <i class="fas fa-chevron-up"></i>
               </button>
             </div>
           </div>
@@ -185,7 +205,26 @@
         </div>
 
         <div class="container">
-          <h3>הזמנות עתידיות</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h3 style="margin: 0;">הזמנות עתידיות</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+              <div class="search-wrapper" style="position: relative;">
+                <input type="text" id="futureSearchInput" placeholder="חיפוש חופשי..." style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; width: 200px;">
+              </div>
+              <select id="futureStatusFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;">
+                <option value="all">כל הסטטוסים</option>
+                <option value="ממתין">ממתין (חדש)</option>
+                <option value="מאושר">מאושר</option>
+                <option value="בוטל">בוטל</option>
+              </select>
+              <select id="futureSortSelect" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;">
+                <option value="check_in_asc">כניסה (מהקרוב לרחוק)</option>
+                <option value="check_in_desc">כניסה (מהרחוק לקרוב)</option>
+                <option value="order_date_desc">תאריך הזמנה (חדש לישן)</option>
+                <option value="dog_name">שם הכלב (א-ת)</option>
+              </select>
+            </div>
+          </div>
           <table id="futureOrdersTable">
             <thead>
               <tr>
@@ -200,7 +239,6 @@
                 <th>גודל</th>
                 <th>מסורס / מעוקרת</th>
                 <th>הערות מיוחדות</th>
-                <th>אופי</th>
                 <th>מחיר ליום</th>
                 <th>ימים</th>
                 <th>סטטוס</th>
@@ -241,7 +279,6 @@
                   <th>גודל</th>
                   <th>מסורס / מעוקרת</th>
                   <th>הערות מיוחדות</th>
-                  <th>אופי</th>
                   <th>מחיר ליום</th>
                   <th>ימים</th>
                   <th>סטטוס</th>
@@ -279,13 +316,15 @@
         <div class="settings-container">
           <div class="settings-card">
             <div class="settings-header">
-              <h3>⚙️ הגדרות פנסיון</h3>
+              <h3 style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-sliders-h" style="color: #6366f1;"></i> הגדרות פנסיון
+              </h3>
               <p>נהל את פרטי העסק והגדרות המערכת שלך</p>
             </div>
             
             <div class="settings-grid">
               <div class="settings-section">
-                <h4>🏠 פרטי עסק</h4>
+                <h4><i class="fas fa-home" style="color: #6366f1;"></i> פרטי עסק</h4>
                 <div class="form-group">
                   <label for="settings-business-name"><i class="fas fa-store"></i> שם הפנסיון / העסק:</label>
                   <input type="text" id="settings-business-name" placeholder="למשל: הפנסיון של שחר">
@@ -366,9 +405,15 @@
 
             </div>
 
-            <div class="settings-actions">
+            <div class="settings-actions" style="display: flex; gap: 15px; justify-content: center;">
               <button id="saveSettingsBtn" class="save-settings-btn">
                 <i class="fas fa-check-circle"></i> שמור את כל השינויים
+              </button>
+              <button id="fillDemoDataBtn" class="save-settings-btn" style="background: #10b981; border-color: #059669;">
+                <i class="fas fa-magic"></i> מלא נתוני דמו
+              </button>
+              <button id="clearDemoDataBtn" class="save-settings-btn" style="background: #ef4444; border-color: #dc2626;">
+                <i class="fas fa-trash-alt"></i> מחק נתוני דמו
               </button>
             </div>
           </div>
@@ -403,6 +448,18 @@
             <textarea id="newNoteContent" placeholder="כתוב כאן את ההערה..."></textarea>
           </div>
           <button type="button" id="saveNoteBtn" class="save-note-btn">💾 הוסף הערה</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+      <div class="modal-content" style="max-width: 400px; text-align: center; padding: 25px;">
+        <h3 id="confirmTitle" style="margin-bottom: 15px; color: #1e293b;">אישור פעולה</h3>
+        <p id="confirmMessage" style="margin-bottom: 25px; color: #64748b; line-height: 1.6;"></p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirmCancelBtn" class="header-btn" style="background: #f1f5f9; color: #64748b; border: none; padding: 10px 20px;">ביטול</button>
+          <button id="confirmConfirmBtn" class="header-btn" style="background: #6366f1; color: white; border: none; padding: 10px 20px;">אישור</button>
         </div>
       </div>
     </div>
