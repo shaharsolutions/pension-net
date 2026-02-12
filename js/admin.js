@@ -1010,9 +1010,6 @@ async function toggleMovementChecked(type, orderId) {
             `סימון ${actionText} עבור ${order.dog_name}` : 
             `ביטול סימון ${actionText} עבור ${order.dog_name}`;
             
-        if (isNowChecked && type === 'leaving' && updateData.is_paid) {
-            auditDesc += ' (סומן אוטומטית כ-שולם)';
-        }
         createAuditLog('UPDATE', auditDesc, orderId);
     }
 
@@ -1934,7 +1931,17 @@ async function openNotesModal(orderId, dogName, ownerName) {
   document.getElementById('modalDogName').textContent = `${dogName} (${ownerName})`;
   document.getElementById('notesModal').style.display = 'block';
   document.getElementById('newNoteContent').value = '';
-  document.getElementById('noteAuthorSelect').selectedIndex = 0;
+  
+  // Set default author to active staff member
+  const activeStaff = document.getElementById('activeStaffSelect')?.value;
+  const authorSelect = document.getElementById('noteAuthorSelect');
+  if (authorSelect) {
+    if (activeStaff && activeStaff !== 'צוות') {
+      authorSelect.value = activeStaff;
+    } else {
+      authorSelect.selectedIndex = 0;
+    }
+  }
   
   loadOrderNotes(orderId);
 }
