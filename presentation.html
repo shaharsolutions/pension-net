@@ -85,23 +85,45 @@
         }
 
         h1 {
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: 900;
             margin-bottom: 1.5rem;
             line-height: 1.1;
         }
 
         h2 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 300;
             color: var(--secondary-text);
-            max-width: 800px;
+            max-width: 900px;
             line-height: 1.4;
         }
 
         .highlight-text {
             color: var(--accent-color);
             font-weight: 700;
+        }
+
+        /* רשימת פיצ'רים */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 900px;
+            text-align: right;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border-right: 4px solid var(--accent-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         /* בקרי שליטה */
@@ -146,9 +168,10 @@
 
         /* התאמה לנייד */
         @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            h2 { font-size: 1.5rem; }
-            .icon-container { font-size: 3.5rem; }
+            h1 { font-size: 2.2rem; }
+            h2 { font-size: 1.3rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .icon-container { font-size: 3rem; }
             .presentation-container { width: 95%; }
         }
     </style>
@@ -164,106 +187,92 @@
             <h2>מערכת ניהול חכמה לפנסיון כלבים</h2>
         </div>
 
-        <!-- חלק 1: הבעיה -->
-        
         <!-- שקף 2 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-regular fa-file-excel"></i></div>
-            <h1>האתגר היומיומי</h1>
-            <h2>ניהול ידני באקסל ובדפים מוביל <span class="highlight-text">לטעויות וכפל הזמנות</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-question-circle"></i></div>
+            <h1>למה לי להשתמש במערכת?</h1>
+            <h2>"יש לי פנסיון פעיל עם הזמנות קבועות,<br><span class="highlight-text">למה לי לשנות את איך שאני עובד?</span>"</h2>
         </div>
 
         <!-- שקף 3 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-regular fa-clock"></i></div>
-            <h1>בזבוז זמן יקר</h1>
-            <h2>שעות של תיאום טלפוני והתכתבויות<br>במקום להתמקד <span class="highlight-text">בטיפול בכלבים</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <h1>בואו נדבר מספרים</h1>
+            <h2>איך אתם עוקבים אחרי הפעילות העסקית?<br>יודעים כמה כלבים בממוצע מגיעים כל חודש?<br>יודעים מהי <span class="highlight-text">תחזית ההכנסות</span> שלכם?</h2>
         </div>
 
         <!-- שקף 4 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-eye-slash"></i></div>
-            <h1>חוסר וודאות</h1>
-            <h2>בלי תמונה ברורה של התפוסה וההכנסות,<br>קשה לזהות <span class="highlight-text">הזדמנויות צמיחה</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-brain"></i></div>
+            <h1>לנהל עסק, לא רק לשמור</h1>
+            <h2>המערכת לא מיועדת למי שמסתפק ב”לך תזכור בראש”.<br>היא מיועדת למי שרוצה <span class="highlight-text">לנהל עסק</span> ולא רק לשמור על כלבים.</h2>
         </div>
-
-        <!-- חלק 2: הפתרון -->
 
         <!-- שקף 5 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-            <h1>הפתרון שלנו</h1>
-            <h2>מערכת <span class="highlight-text">All-in-One</span><br>שמנהלת את העסק בשבילך.</h2>
+            <div class="icon-container"><i class="fa-solid fa-chart-line"></i></div>
+            <h1>דוחות ותחזיות בזמן אמת</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> הכנסות החודש + אחוז שינוי</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> מספר כלבים ומגמות גדילה</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> תפוסה מול קיבולת מירבית</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> לקוחות פעילים מול חדשים</div>
+            </div>
         </div>
 
         <!-- שקף 6 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-mobile-screen-button"></i></div>
-            <h1>הזמנות אונליין 24/7</h1>
-            <h2>הלקוחות מזמינים לבד, בקלות,<br>ומקבלים <span class="highlight-text">אישור מיידי</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-table-list"></i></div>
+            <h1>שליטה עמוקה בנתונים</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> תחזית הכנסות ל-3 חודשים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> 10 הלקוחות המכניסים ביותר</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> גרפי הכנסות ותפוסה חציוניים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> פילוח שוק לפי סוגי כלבים</div>
+            </div>
         </div>
 
         <!-- שקף 7 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-brands fa-whatsapp"></i></div>
-            <h1>שקט נפשי</h1>
-            <h2>התראות <span class="highlight-text">WhatsApp</span><br>ללקוח ולמנהל בכל שלב.</h2>
+            <div class="icon-container"><i class="fa-solid fa-coins"></i></div>
+            <h1>כל הנתונים במקום אחד</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> ממוצע הכנסה לביקור</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> סך ימי אירוח מצטברים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> זיהוי חודשי שיא ושפל</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> מעקב אחרי תשלומים ויתרות</div>
+            </div>
         </div>
 
         <!-- שקף 8 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-regular fa-calendar-check"></i></div>
-            <h1>שליטה מלאה</h1>
-            <h2>לוח שנה חכם המציג תפוסה,<br>סטטוס הזמנות וניהול לקוחות <span class="highlight-text">במסך אחד</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-microchip"></i></div>
+            <h1>לא רק מספרים - תובנות</h1>
+            <h2>המערכת מנתחת את הנתונים עבורך<br>ומציעה <span class="highlight-text">פעולות לשיפור הרווחיות</span>.</h2>
         </div>
 
         <!-- שקף 9 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-chart-pie"></i></div>
-            <h1>חוכמה עסקית (BI)</h1>
-            <h2>דוחות רווחיות, זיהוי לקוחות נאמנים<br>ותחזיות צמיחה <span class="highlight-text">בלחיצת כפתור</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-bullhorn"></i></div>
+            <h1>דחיפה לשיווק וצמיחה</h1>
+            <h2>תפוסה נמוכה מ-50%?<br>המערכת תתריע <span class="highlight-text">ותדרבן אותך להשקיע בשיווק</span> כדי למלא את המקום.</h2>
         </div>
-
-        <!-- חלק 3: הערך -->
 
         <!-- שקף 10 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-rocket"></i></div>
-            <h1>התוצאה</h1>
-            <h2>חיסכון של <span class="highlight-text">5-10 שעות</span> עבודה בשבוע<br>וגידול משמעותי ברווחיות.</h2>
+            <div class="icon-container"><i class="fa-solid fa-shield-halved"></i></div>
+            <h1>הפחתת סיכונים</h1>
+            <h2>זיהוי תלות בלקוחות קבועים (חוק פארטו).<br>אם 20% מהלקוחות מייצרים 80% מההכנסות - <span class="highlight-text">אתם צריכים לדעת מזה</span>.</h2>
         </div>
 
         <!-- שקף 11 -->
         <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-arrow-trend-up"></i></div>
-            <h1>ההזדמנות</h1>
-            <h2>שוק חיות המחמד בצמיחה,<br>אך הניהול בו עדיין <span class="highlight-text">מיושן</span>.</h2>
+            <div class="icon-container"><i class="fa-solid fa-umbrella-beach"></i></div>
+            <h1>זיהוי עונתיות</h1>
+            <h2>המערכת לומדת מתי הפנסיון ריק<br>ומכוונת אותך <span class="highlight-text">למבצעים ממוקדים</span> בחודשים החלשים.</h2>
         </div>
 
         <!-- שקף 12 -->
-        <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-check-circle"></i></div>
-            <h1>היתרון שלנו</h1>
-            <h2>פשוט, בעברית, ללא התקנה<br>ובמחיר <span class="highlight-text">שווה לכל נפש</span>.</h2>
-        </div>
-
-        <!-- חלק 4: עסקי וחזון -->
-
-        <!-- שקף 13 -->
-        <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-sack-dollar"></i></div>
-            <h1>מודל עסקי</h1>
-            <h2>מנוי חודשי פשוט (<span class="highlight-text">SaaS</span>)<br>המותאם לגודל העסק.</h2>
-        </div>
-
-        <!-- שקף 14 -->
-        <div class="slide">
-            <div class="icon-container"><i class="fa-solid fa-binoculars"></i></div>
-            <h1>החזון</h1>
-            <h2>להפוך לפלטפורמה המובילה בישראל<br>לניהול עסקי <span class="highlight-text">חיות מחמד</span>.</h2>
-        </div>
-
-        <!-- שקף 15 -->
         <div class="slide">
             <div class="icon-container"><i class="fa-solid fa-handshake"></i></div>
             <h1>תודה!</h1>
@@ -320,8 +329,7 @@
         // האזנה למקלדת
         document.addEventListener('keydown', function(event) {
             if (event.key === 'ArrowLeft' || event.key === ' ') {
-                nextSlide(); // בעברית חץ שמאלה זה "הבא" בגלל כיוון הקריאה, אבל לוגית זה הפוך. נלך לפי האינטואיציה:
-                // כאן נגדיר שחץ שמאלה = מתקדם (הבא), חץ ימינה = חוזר (הקודם) שזה תואם RTL
+                nextSlide(); 
             } else if (event.key === 'ArrowRight') {
                 prevSlide();
             }
