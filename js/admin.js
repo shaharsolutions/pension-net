@@ -33,7 +33,13 @@ async function copyBookingLink(event) {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(bookingUrl);
-        showToast('הקישור להזמנות הועתק! ניתן לשלוח אותו ללקוחות.', 'success');
+        
+        // Alert user if business name is still the default/missing
+        if (!window.businessName || window.businessName === 'פנסיון לכלבים') {
+          showToast('הקישור הועתק! שים לב: שם הפנסיון עדיין לא הוגדר בהגדרות.', 'info');
+        } else {
+          showToast('הקישור להזמנות הועתק! ניתן לשלוח אותו ללקוחות.', 'success');
+        }
       } else {
         // Fallback for older browsers or insecure contexts
         const textArea = document.createElement("textarea");
@@ -2218,8 +2224,10 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
   try {
     const { error } = await pensionNetSupabase
       .from('profiles')
-      .update(updateData)
-      .eq('user_id', session.user.id);
+      .upsert({ 
+        user_id: session.user.id,
+        ...updateData 
+      }, { onConflict: 'user_id' });
 
     if (error) throw error;
 

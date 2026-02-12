@@ -66,16 +66,20 @@ async function loadOwnerInfo() {
       const headerSub = document.getElementById('header-business-name');
       if (headerSub) {
         // If we have a location, show it. Otherwise show nothing or a clean separator.
-        headerSub.textContent = profile.location ? `📍 ${profile.location}` : '';
+        headerSub.textContent = profile.location ? `📍 ${profile.location}` : (profile.business_name || 'פנסיון לכלבים');
         headerSub.style.fontWeight = '800';
       }
       
       const successPhoneEl = document.getElementById('displayAdminPhone');
       if (successPhoneEl) successPhoneEl.textContent = ADMIN_PHONE;
     } else {
-      // Profile found but empty
+      // Profile NOT found at all
+      console.warn('Owner profile row missing in database for ID:', PENSION_OWNER_ID);
       const headerSub = document.getElementById('header-business-name');
       if (headerSub) headerSub.textContent = 'פנסיון לכלבים';
+      
+      const h1 = document.querySelector('.header h1');
+      if (h1) h1.textContent = `🐕 הזמנת מקום בפנסיון כלבים`;
     }
   } catch (err) {
     console.error('Error loading owner info:', err);
