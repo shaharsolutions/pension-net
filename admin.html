@@ -69,6 +69,11 @@
           <option value="">בחר פרופיל...</option>
         </select>
         <div style="font-size: 13px; color: #94a3b8;">הגישה למערכת מורשית לצוות בלבד</div>
+        <div style="margin-top: 25px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+          <button type="button" onclick="logout()" style="background:none; border:none; color:#ef4444; font-size:14px; cursor:pointer; font-weight:500; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+            <i class="fas fa-sign-out-alt"></i> יציאה מהחשבון
+          </button>
+        </div>
       </div>
     </div>
 
@@ -352,9 +357,11 @@
                     <input type="password" id="settings-confirm-password" placeholder="הקלד שוב">
                   </div>
                 </div>
-                <button type="button" id="changePasswordBtn" class="header-btn" style="background: #64748b; margin-top: 10px; color: white; padding: 10px 25px;">
-                  עדכן סיסמת כניסה
-                </button>
+                <div style="display: flex; justify-content: center; width: 100%;">
+                  <button type="button" id="changePasswordBtn" class="header-btn" style="background: #64748b; margin-top: 10px; color: white; padding: 10px 25px;">
+                    עדכן סיסמת כניסה
+                  </button>
+                </div>
               </div>
 
             </div>
