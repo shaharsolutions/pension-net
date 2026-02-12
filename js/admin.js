@@ -1,6 +1,6 @@
-// --- Globals ---
 window.isSessionVerified = false;
 window.businessName = '';
+window.lastPinVerificationTime = parseInt(localStorage.getItem('pensionet_last_pin_verified') || '0');
 
 // --- Supabase Auth Integration ---
 async function checkAuthStatus() {
@@ -18,6 +18,10 @@ const checkAuth = checkAuthStatus;
 async function logout() {
   await Auth.logout();
 }
+
+// Make logout globally accessible
+window.logout = logout;
+
 
 async function copyBookingLink(event) {
   if (event) event.preventDefault();
@@ -1460,6 +1464,27 @@ document
 
 loadData();
 
+// Auto-restore saved profile if PIN is still valid
+(async function initializeProfile() {
+  const savedProfile = localStorage.getItem('pensionNet_activeStaff');
+  const now = Date.now();
+  const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+  
+  if (savedProfile && savedProfile !== 'צוות' && pinValid) {
+    // PIN is still valid, restore profile without asking again
+    const activeSelect = document.getElementById('activeStaffSelect');
+    const initialSelect = document.getElementById('initialProfileSelect');
+    
+    if (activeSelect) activeSelect.value = savedProfile;
+    if (initialSelect) initialSelect.value = savedProfile;
+    
+    window.isSessionVerified = true;
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+  }
+})();
+
+
 async function switchTab(tabName) {
   // If moving to settings or audit, verify PIN first
   if (tabName === 'settings' || tabName === 'audit') {
@@ -1680,8 +1705,12 @@ async function verifyManagerAccess(targetName = null) {
   const isVerifyingStaff = targetName && targetName !== window.managerName;
   const staffObj = isVerifyingStaff ? window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === targetName) : null;
   
-  // If already in admin mode and verifying manager, return true
-  if (!isVerifyingStaff && window.isAdminMode) return true;
+  // Check for 5-minute cooldown
+  const now = Date.now();
+  if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000)) {
+    return true;
+  }
+
   if (window.isVerifyingManager) return false;
   
   window.isVerifyingManager = true;
@@ -1734,6 +1763,9 @@ async function verifyManagerAccess(targetName = null) {
             createAuditLog('UPDATE', `אימות PIN מוצלח עבור עובד: ${targetName}`);
         }
         
+        const now = Date.now();
+        window.lastPinVerificationTime = now;
+        localStorage.setItem('pensionet_last_pin_verified', now.toString());
         window.isSessionVerified = true;
         updateModeUI();
         cleanup();
@@ -1830,7 +1862,7 @@ function updateModeUI() {
   if (!badge) return;
 
   if (window.isAdminMode) {
-    badge.textContent = '🔓 מצב מנהל';
+    badge.innerHTML = '<i class="fas fa-unlock"></i> מצב מנהל';
     badge.className = 'mode-badge manager';
     document.body.classList.remove('staff-mode');
     document.body.classList.remove('perm-edit-status', 'perm-edit-details', 'perm-manage-payments');
@@ -1844,7 +1876,7 @@ function updateModeUI() {
     const overlay = document.getElementById('login-overlay');
     if (overlay) overlay.style.display = 'none';
   } else {
-    badge.textContent = '🔐 מצב עובד';
+    badge.innerHTML = '<i class="fas fa-lock"></i> מצב עובד';
     badge.className = 'mode-badge staff';
     document.body.classList.add('staff-mode');
     if (staffSelectorContainer) staffSelectorContainer.style.display = 'flex';
@@ -1864,14 +1896,17 @@ function updateModeUI() {
     if (perms.edit_details) document.body.classList.add('perm-edit-details');
     else document.body.classList.remove('perm-edit-details');
 
-    // If on protected tab while in staff mode, switch to ongoing
+    // If on protected tab while in staff mode AND PIN expired, switch to ongoing
+    const now = Date.now();
+    const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+    
     const activeTabBtn = document.querySelector('.tab-btn.active');
-    if (activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
+    if (!pinValid && activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
       switchTab('ongoing');
     }
 
-    // LOCK: If no valid profile selected OR session not verified, show login overlay
-    if (!window.isAdminMode && (!window.isSessionVerified || activeStaffName === 'צוות')) {
+    // LOCK: If no valid profile selected OR PIN expired, show login overlay
+    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות')) {
        const overlay = document.getElementById('login-overlay');
        if (overlay) overlay.style.setProperty('display', 'flex', 'important');
     } else {
@@ -1897,6 +1932,7 @@ async function handleInitialProfileChange() {
     const activeSelect = document.getElementById('activeStaffSelect');
     if (activeSelect) activeSelect.value = name;
     localStorage.setItem('pensionNet_activeStaff', name);
+    window.isSessionVerified = true;
     showToast(`ברוך הבא, ${name}`, 'success');
   } else {
     select.value = '';
@@ -2285,7 +2321,7 @@ async function fillWithDemoData() {
   const session = window.currentUserSession;
   if (!session) return;
   
-  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף כ-15 הזמנות חדשות למערכת לצורך הדגמה.</b>', async () => {
+  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף 7 הזמנות חדשות למערכת לצורך הדגמה.</b>', async () => {
     const btn = document.getElementById('fillDemoDataBtn');
   const originalText = btn.innerHTML;
   btn.disabled = true;
@@ -2311,24 +2347,24 @@ async function fillWithDemoData() {
   const todayStr = today.toISOString().split('T')[0];
   
   const demoOrders = [];
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 7; i++) {
     const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
     const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
     const size = sizes[Math.floor(Math.random() * sizes.length)];
     
-    let status = i < 8 ? 'מאושר' : 'ממתין';
+    let status = 'מאושר';
+    if (i >= 3 && i <= 5) status = 'ממתין';
+    if (i === 6) status = 'בוטל';
     let checkIn, checkOut;
     
     if (i === 0) {
       // One dog leaving today
-      status = 'מאושר';
       const prev = new Date(today);
       prev.setDate(today.getDate() - 3);
       checkIn = prev;
       checkOut = new Date(today);
-    } else if (i === 1 || i === 2) {
-      // Two dogs entering today
-      status = 'מאושר';
+    } else if (i === 1) {
+      // One dog entering today
       checkIn = new Date(today);
       const future = new Date(today);
       future.setDate(today.getDate() + 4);
@@ -2344,8 +2380,13 @@ async function fillWithDemoData() {
       checkOut.setDate(checkIn.getDate() + duration);
     }
     
-    const isArrived = checkIn <= today && status !== 'ממתין';
-    const isDeparted = checkOut < today && isArrived;
+    // Normalize dates for comparison (remove time component)
+    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const checkInNormalized = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+    const checkOutNormalized = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+    
+    const isArrived = checkInNormalized <= todayNormalized && status !== 'ממתין';
+    const isDeparted = checkOutNormalized < todayNormalized && isArrived;
     
     demoOrders.push({
       user_id: session.user.id,
@@ -2368,6 +2409,9 @@ async function fillWithDemoData() {
     });
   }
   
+  // Mark approved orders as having confirmation sent
+  const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
+  
   try {
     const { error } = await pensionNetSupabase
       .from('orders')
@@ -2375,7 +2419,24 @@ async function fillWithDemoData() {
       
     if (error) throw error;
     
-    showToast('<i class="fas fa-magic"></i> <strong>נתוני הדמו הוספו בהצלחה!</strong><br>המערכת תתרענן כעת...', 'success');
+    // After successful insert, mark approved orders as sent
+    const { data: insertedOrders } = await pensionNetSupabase
+      .from('orders')
+      .select('id, status')
+      .eq('admin_note', 'DEMO_DATA')
+      .order('created_at', { ascending: false })
+      .limit(7);
+    
+    if (insertedOrders) {
+      insertedOrders.forEach(order => {
+        if (order.status === 'מאושר') {
+          sentConfirmations[order.id] = Date.now();
+        }
+      });
+      localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
+    }
+    
+    showToast('<i class="fas fa-magic"></i> <strong>נתוני הדמו הוספו בהצלחה!</strong> &nbsp;המערכת תתרענן כעת...', 'success');
     setTimeout(() => location.reload(), 2000);
   } catch (err) {
     console.error('Error adding demo data:', err);

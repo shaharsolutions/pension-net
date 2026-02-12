@@ -29,14 +29,14 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     const revenueGrowth = lastMonthRev > 0 ? ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100 : 0;
     if (revenueGrowth > 10) {
         insights.push({
-            icon: "🚀",
+            icon: "<i class='fas fa-rocket'></i>",
             title: "צמיחה מרשימה",
             analysis: `ההכנסות עלו ב-${revenueGrowth > 0 ? revenueGrowth.toFixed(1) : '0'}% לעומת החודש הקודם!`,
             recommendation: "המגמה חיובית - זה הזמן לנצל את התנופה ולהשקיע בשיווק ממוקד כדי להגדיל עוד יותר את המאגר."
         });
     } else if (revenueGrowth < -10) {
         insights.push({
-            icon: "⚠️",
+            icon: "<i class='fas fa-exclamation-triangle'></i>",
             title: "ירידה בהכנסות",
             analysis: `זיהינו ירידה של ${revenueGrowth < 0 ? Math.abs(revenueGrowth).toFixed(1) : '0'}% בהכנסות החודש.`,
             recommendation: "כדאי לבדוק: האם יש עונתיות? האם יש צורך בקמפיין שיווקי חדש? או אולי מתחרים חדשים נכנסו לאזור?"
@@ -47,14 +47,14 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     const occupancyNum = parseFloat(occupancy);
     if (occupancyNum > 80) {
         insights.push({
-            icon: "🎯",
+            icon: "<i class='fas fa-bullseye'></i>",
             title: "תפוסה גבוהה",
             analysis: `תפוסה של ${occupancyNum > 0 ? occupancyNum.toFixed(1) : '0'}% היא מצוינת ומעידה על ביקוש רב.`,
             recommendation: "אתה מתקרב למקסימום. מומלץ לשקול: העלאת מחירים בעונות שיא, הרחבת הפנסיון, או העסקת סיוע נוסף."
         });
     } else if (occupancyNum < 50) {
         insights.push({
-            icon: "📢",
+            icon: "<i class='fas fa-bullhorn'></i>",
             title: "פוטנציאל לצמיחה",
             analysis: `תפוסה של ${occupancyNum > 0 ? occupancyNum.toFixed(1) : '0'}% משאירה מקום רב לגידול בפעילות.`,
             recommendation: "כדאי להשקיע בפרסום ממוקד, מבצעי 'חבר מביא חבר' או שיתופי פעולה עם מרפאות וטרינריות בסביבה."
@@ -72,14 +72,14 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
 
     if (loyaltyRate > 30) {
         insights.push({
-            icon: "❤️",
+            icon: "<i class='fas fa-heart'></i>",
             title: "נאמנות לקוחות גבוהה",
             analysis: `${loyaltyRate > 0 ? loyaltyRate.toFixed(1) : '0'}% מהלקוחות שלך הם לקוחות חוזרים קבועים.`,
             recommendation: "זה מעולה! שקול להשיק כרטיסיית 'חבר מועדון' (למשל: יום 11 חינם) כדי לחזק את הקשר עוד יותר."
         });
     } else {
         insights.push({
-            icon: "🎁",
+            icon: "<i class='fas fa-gift'></i>",
             title: "הזדמנות לשימור",
             analysis: `שיעור הלקוחות החוזרים עומד על ${loyaltyRate > 0 ? loyaltyRate.toFixed(1) : '0'}%.`,
             recommendation: "מומלץ לשלוח הודעת תודה לאחר ביקור, להציע הנחה קטנה בהזמנה הבאה, או ליצור קבוצת עדכונים שקטה ללקוחות."
@@ -93,7 +93,7 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
 
     if (top20Percentage > 70) {
         insights.push({
-            icon: "⭐",
+            icon: "<i class='fas fa-star'></i>",
             title: "תלות בלקוחות קבועים",
             analysis: `${top20Percentage > 0 ? top20Percentage.toFixed(1) : '0'}% מההכנסות מגיעות מ-20% בלבד מהלקוחות.`,
             recommendation: "הלקוחות האלו הם הליבה של העסק, אבל יש סיכון בתלות גבוהה. כדאי לנסות להרחיב את המעגל לקהלים חדשים."
@@ -106,7 +106,7 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         const topSizePercent = orders.length > 0 ? (topSize[1] / orders.length) * 100 : 0;
         if (topSizePercent > 40) {
             insights.push({
-                icon: "🐕",
+                icon: "<i class='fas fa-dog'></i>",
                 title: `מומחיות ב${topSize[0]}`,
                 analysis: `${topSizePercent > 0 ? topSizePercent.toFixed(1) : '0'}% מהלקוחות שלך הם בגודל "${topSize[0]}".`,
                 recommendation: "זה בידול מצוין! תוכל לשווק את עצמך כמומחה וספציפי לגודל הזה ולהתאים את האביזרים והפעילויות עבורם."
@@ -126,7 +126,7 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         const minMonth = entries.reduce((min, curr) => (curr[1] < min[1] ? curr : min), ["0", 999]);
         if (maxMonth[1] > minMonth[1] * 2) {
             insights.push({
-                icon: "📅",
+                icon: "<i class='fas fa-calendar-alt'></i>",
                 title: "זיהוי עונתיות",
                 analysis: `הביקוש בשיאו ב${getMonthName(parseInt(maxMonth[0]))} ובשפל ב${getMonthName(parseInt(minMonth[0]))}.`,
                 recommendation: "תכנן מבצעים אטרקטיביים לחודשים החלשים והעלה מעט את התעריפים בעונות השיא והחגים."
@@ -141,9 +141,9 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     insights.forEach((insight) => {
         // Determine class based on icon
         let typeClass = 'info';
-        if (insight.icon === '🚀' || insight.icon === '❤️' || insight.icon === '⭐') typeClass = 'success';
-        if (insight.icon === '⚠️') typeClass = 'warning';
-        if (insight.icon === '📢' || insight.icon === '🎁') typeClass = 'opportunity';
+        if (insight.icon.includes('fa-rocket') || insight.icon.includes('fa-heart') || insight.icon.includes('fa-star')) typeClass = 'success';
+        if (insight.icon.includes('fa-exclamation-triangle')) typeClass = 'warning';
+        if (insight.icon.includes('fa-bullhorn') || insight.icon.includes('fa-gift')) typeClass = 'opportunity';
 
         html += `
             <div class="insight-card ${typeClass}">

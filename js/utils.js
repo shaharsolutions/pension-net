@@ -84,6 +84,7 @@ function showToast(message, type = 'info') {
   toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
   toast.style.marginBottom = '10px';
   toast.style.fontWeight = '600';
+  toast.style.whiteSpace = 'nowrap';
   toast.style.opacity = '0';
   toast.style.transition = 'opacity 0.3s, transform 0.3s';
   toast.style.transform = 'translateY(-20px)';
