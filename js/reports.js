@@ -31,14 +31,14 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "🚀",
             title: "צמיחה מרשימה",
-            analysis: `ההכנסות עלו ב-${revenueGrowth.toFixed(1)}% לעומת החודש הקודם!`,
+            analysis: `ההכנסות עלו ב-${revenueGrowth > 0 ? revenueGrowth.toFixed(1) : '0'}% לעומת החודש הקודם!`,
             recommendation: "המגמה חיובית - זה הזמן לנצל את התנופה ולהשקיע בשיווק ממוקד כדי להגדיל עוד יותר את המאגר."
         });
     } else if (revenueGrowth < -10) {
         insights.push({
             icon: "⚠️",
             title: "ירידה בהכנסות",
-            analysis: `זיהינו ירידה של ${Math.abs(revenueGrowth).toFixed(1)}% בהכנסות החודש.`,
+            analysis: `זיהינו ירידה של ${revenueGrowth < 0 ? Math.abs(revenueGrowth).toFixed(1) : '0'}% בהכנסות החודש.`,
             recommendation: "כדאי לבדוק: האם יש עונתיות? האם יש צורך בקמפיין שיווקי חדש? או אולי מתחרים חדשים נכנסו לאזור?"
         });
     }
@@ -49,14 +49,14 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "🎯",
             title: "תפוסה גבוהה",
-            analysis: `תפוסה של ${occupancyNum.toFixed(1)}% היא מצוינת ומעידה על ביקוש רב.`,
+            analysis: `תפוסה של ${occupancyNum > 0 ? occupancyNum.toFixed(1) : '0'}% היא מצוינת ומעידה על ביקוש רב.`,
             recommendation: "אתה מתקרב למקסימום. מומלץ לשקול: העלאת מחירים בעונות שיא, הרחבת הפנסיון, או העסקת סיוע נוסף."
         });
     } else if (occupancyNum < 50) {
         insights.push({
             icon: "📢",
             title: "פוטנציאל לצמיחה",
-            analysis: `תפוסה של ${occupancyNum.toFixed(1)}% משאירה מקום רב לגידול בפעילות.`,
+            analysis: `תפוסה של ${occupancyNum > 0 ? occupancyNum.toFixed(1) : '0'}% משאירה מקום רב לגידול בפעילות.`,
             recommendation: "כדאי להשקיע בפרסום ממוקד, מבצעי 'חבר מביא חבר' או שיתופי פעולה עם מרפאות וטרינריות בסביבה."
         });
     }
@@ -68,20 +68,20 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     });
     const loyalCustomers = Object.values(repeatCustomers).filter((count) => count >= 3).length;
     const totalCustomers = Object.keys(repeatCustomers).length;
-    const loyaltyRate = (loyalCustomers / totalCustomers) * 100;
+    const loyaltyRate = totalCustomers > 0 ? (loyalCustomers / totalCustomers) * 100 : 0;
 
     if (loyaltyRate > 30) {
         insights.push({
             icon: "❤️",
             title: "נאמנות לקוחות גבוהה",
-            analysis: `${loyaltyRate.toFixed(1)}% מהלקוחות שלך הם לקוחות חוזרים קבועים.`,
+            analysis: `${loyaltyRate > 0 ? loyaltyRate.toFixed(1) : '0'}% מהלקוחות שלך הם לקוחות חוזרים קבועים.`,
             recommendation: "זה מעולה! שקול להשיק כרטיסיית 'חבר מועדון' (למשל: יום 11 חינם) כדי לחזק את הקשר עוד יותר."
         });
     } else {
         insights.push({
             icon: "🎁",
             title: "הזדמנות לשימור",
-            analysis: `שיעור הלקוחות החוזרים עומד על ${loyaltyRate.toFixed(1)}%.`,
+            analysis: `שיעור הלקוחות החוזרים עומד על ${loyaltyRate > 0 ? loyaltyRate.toFixed(1) : '0'}%.`,
             recommendation: "מומלץ לשלוח הודעת תודה לאחר ביקור, להציע הנחה קטנה בהזמנה הבאה, או ליצור קבוצת עדכונים שקטה ללקוחות."
         });
     }
@@ -95,7 +95,7 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
         insights.push({
             icon: "⭐",
             title: "תלות בלקוחות קבועים",
-            analysis: `${top20Percentage.toFixed(1)}% מההכנסות מגיעות מ-20% בלבד מהלקוחות.`,
+            analysis: `${top20Percentage > 0 ? top20Percentage.toFixed(1) : '0'}% מההכנסות מגיעות מ-20% בלבד מהלקוחות.`,
             recommendation: "הלקוחות האלו הם הליבה של העסק, אבל יש סיכון בתלות גבוהה. כדאי לנסות להרחיב את המעגל לקהלים חדשים."
         });
     }
@@ -103,12 +103,12 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
     const sortedSizes = Object.entries(sizeBreakdown).sort((a, b) => b[1] - a[1]);
     if (sortedSizes.length > 0) {
         const topSize = sortedSizes[0];
-        const topSizePercent = (topSize[1] / orders.length) * 100;
+        const topSizePercent = orders.length > 0 ? (topSize[1] / orders.length) * 100 : 0;
         if (topSizePercent > 40) {
             insights.push({
                 icon: "🐕",
                 title: `מומחיות ב${topSize[0]}`,
-                analysis: `${topSizePercent.toFixed(1)}% מהלקוחות שלך הם בגודל "${topSize[0]}".`,
+                analysis: `${topSizePercent > 0 ? topSizePercent.toFixed(1) : '0'}% מהלקוחות שלך הם בגודל "${topSize[0]}".`,
                 recommendation: "זה בידול מצוין! תוכל לשווק את עצמך כמומחה וספציפי לגודל הזה ולהתאים את האביזרים והפעילויות עבורם."
             });
         }
@@ -419,7 +419,7 @@ async function loadAnalytics() {
 
         let breedHtml = "";
         Object.entries(sizeBreakdown).sort((a, b) => b[1] - a[1]).forEach(([size, count]) => {
-            const percentage = ((count / allOrders.length) * 100).toFixed(1);
+            const percentage = allOrders.length > 0 ? ((count / allOrders.length) * 100).toFixed(1) : "0";
             breedHtml += `
                 <div class="metric-row">
                     <span class="metric-label">${size}</span>
