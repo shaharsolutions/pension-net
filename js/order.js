@@ -629,7 +629,7 @@ async function identifyCustomer() {
             נעבור עכשיו למילוי פרטי ההזמנה שלך
           </p>
           <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 14px; opacity: 0.9;">
-            הזמנתך תתקבל באישור אוטומטי ב-WhatsApp
+            תקבלו אישור בווטסאפ בהקדם
           </div>
           
           <!-- Progress Bar -->
