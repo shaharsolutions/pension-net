@@ -1007,8 +1007,8 @@ async function toggleMovementChecked(type, orderId) {
         btn.style.opacity = '1';
 
         let auditDesc = isNowChecked ? 
-            `סימון ${actionText} עבור ${order.dog_name}` : 
-            `ביטול סימון ${actionText} עבור ${order.dog_name}`;
+            `סימון ${actionText} עבור ${order.dog_name} (${order.owner_name})` : 
+            `ביטול סימון ${actionText} עבור ${order.dog_name} (${order.owner_name})`;
             
         createAuditLog('UPDATE', auditDesc, orderId);
     }
