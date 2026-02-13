@@ -57,12 +57,32 @@
         background: #f8fafc;
         cursor: pointer;
       }
+      
+      /* Read-only mode when no identity selected */
+      body.no-identity .tab-content button, 
+      body.no-identity .tab-content select, 
+      body.no-identity .tab-content input,
+      body.no-identity .tab-content .whatsapp-confirm-btn,
+      body.no-identity .tab-content .action-btn {
+        pointer-events: none !important;
+        opacity: 0.5 !important;
+        filter: grayscale(1) !important;
+        cursor: not-allowed !important;
+      }
+      
+      /* Keep tab switching allowed but content locked */
+      body.no-identity .tab-btn {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+        filter: none !important;
+      }
     </style>
   </head>
   <body class="staff-mode">
     <!-- Login/Profile Selection Overlay -->
     <div id="login-overlay" style="display: flex !important;">
-      <div class="profile-card">
+      <div class="profile-card" style="position: relative;">
+        <button onclick="closeProfileOverlay()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="סגור">×</button>
         <div class="logo-wrapper" style="margin-bottom: 10px;">
           <div class="pensionet-icon">
             <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -108,7 +128,7 @@
         </div>
           <div id="header-business-name" class="header-subtitle"></div>
           <div class="mode-indicator" id="modeToggleContainer">
-            <span id="modeStatusLabel" class="mode-badge staff" onclick="toggleAdminMode()" style="cursor: pointer;">🔐 מצב עובד</span>
+            <span id="modeStatusLabel" class="mode-badge staff" onclick="toggleAdminMode()" style="cursor: pointer;"><i class="fas fa-lock"></i> מצב עובד</span>
             <div id="activeStaffSelectorContainer" style="display: none; align-items: center; gap: 8px; padding-right: 8px;">
               <select id="activeStaffSelect" onchange="handleActiveStaffChange()" style="font-size: 12px; border: none; background: #f8fafc; padding: 2px 8px; border-radius: 4px; cursor: pointer;">
                 <option value="צוות">זהות עובד/ת...</option>
@@ -351,7 +371,7 @@
               </div>
 
               <div class="settings-section">
-                <h4>🔧 הגדרות תפעוליות</h4>
+                <h4><i class="fas fa-tools" style="color: #64748b;"></i> הגדרות תפעוליות</h4>
                 <div class="form-group">
                   <label for="settings-phone"><i class="fab fa-whatsapp"></i> טלפון לווטסאפ (לקוחות יחזרו אליו):</label>
                   <input type="tel" id="settings-phone" placeholder="050-1234567">
@@ -384,7 +404,7 @@
               </div>
 
               <div class="settings-section" style="grid-column: span 2;">
-                <h4>🔒 אבטחת חשבון</h4>
+                <h4><i class="fas fa-shield-alt" style="color: #f59e0b;"></i> אבטחת חשבון</h4>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">שינוי סיסמת ההתחברות למערכת הניהול</p>
                 <div class="form-row">
                   <div class="form-group">
@@ -421,7 +441,7 @@
       </div>
 
       <div id="saveButtonContainer">
-        <button id="saveButton">💾 שמור שינויים</button>
+        <button id="saveButton"><i class="fas fa-save"></i> שמור שינויים</button>
       </div>
     </div>
 
@@ -429,7 +449,7 @@
     <div id="notesModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>📋 הערות מנהל - <span id="modalDogName"></span></h3>
+          <h3><i class="fas fa-clipboard-list"></i> הערות מנהל - <span id="modalDogName"></span></h3>
           <span class="close-modal" onclick="closeNotesModal()">&times;</span>
         </div>
         <div id="notesHistory" class="notes-history">
@@ -447,7 +467,7 @@
             <label>תוכן ההערה:</label>
             <textarea id="newNoteContent" placeholder="כתוב כאן את ההערה..."></textarea>
           </div>
-          <button type="button" id="saveNoteBtn" class="save-note-btn">💾 הוסף הערה</button>
+          <button type="button" id="saveNoteBtn" class="save-note-btn"><i class="fas fa-save"></i> הוסף הערה</button>
         </div>
       </div>
     </div>

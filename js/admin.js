@@ -22,6 +22,32 @@ async function logout() {
 // Make logout globally accessible
 window.logout = logout;
 
+window.overlayManuallyClosed = false;
+
+function closeProfileOverlay() {
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) {
+    overlay.style.setProperty('display', 'none', 'important');
+    window.overlayManuallyClosed = true;
+    
+    // If no valid session exists, ensure identity is reset to 'צוות'
+    const now = Date.now();
+    const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+    
+    if (!pinValid) {
+      const activeSelect = document.getElementById('activeStaffSelect');
+      if (activeSelect) activeSelect.value = 'צוות';
+      localStorage.setItem('pensionNet_activeStaff', 'צוות');
+      window.isSessionVerified = false;
+      
+      // Update UI to reflect 'צוות' permissions
+      if (typeof updateModeUI === 'function') updateModeUI();
+    }
+  }
+}
+
+// Make closeProfileOverlay globally accessible
+window.closeProfileOverlay = closeProfileOverlay;
 
 async function copyBookingLink(event) {
   if (event) event.preventDefault();
@@ -311,13 +337,13 @@ function generateWhatsAppConfirmationLink(row) {
   const phone = formatPhoneForWhatsApp(row.phone);
   const finalUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${fullEncodedText}`;
   
-  // Check if already sent
+  // Check if already sent or if status is 'מאושר'
   const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
-  const isSent = sentConfirmations[row.id];
+  const isSent = sentConfirmations[row.id] || row.status === 'מאושר';
   
   if (isSent) {
     return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
-      <span class="whatsapp-sent-badge">✓ נשלח</span>
+      <span class="whatsapp-sent-badge">נשלח ✓</span>
       <button class="whatsapp-reset-btn" data-reset-order="${row.id}" title="אפס סטטוס">↺</button>
     </div>`;
   }
@@ -335,12 +361,10 @@ async function markConfirmationSent(orderId) {
   
   // Update UI immediately
   const container = document.getElementById(`confirm-container-${orderId}`);
-  if (container) {
-    container.innerHTML = `
-      <span class="whatsapp-sent-badge">✓ נשלח</span>
-      <button class="whatsapp-reset-btn" data-reset-order="${orderId}" title="אפס סטטוס">↺</button>
-    `;
-  }
+      container.innerHTML = `
+        <span class="whatsapp-sent-badge">נשלח ✓</span>
+        <button class="whatsapp-reset-btn" data-reset-order="${orderId}" title="אפס סטטוס">↺</button>
+      `;
   
   // Update order status to 'מאושר' in database
   try {
@@ -445,6 +469,23 @@ function getDogsForDay(data, date) {
   }, {});
 
   return dogsBySize;
+}
+
+function safeParseNotes(noteStr) {
+  if (!noteStr) return [];
+  let cleanStr = String(noteStr);
+  if (cleanStr.includes(' (DEMO_DATA)')) {
+    cleanStr = cleanStr.replace(' (DEMO_DATA)', '');
+  }
+  try {
+    const notes = JSON.parse(cleanStr);
+    const parsed = Array.isArray(notes) ? notes : [];
+    // Only filter out the specific system-generated marker note content
+    return parsed.filter(n => n.content !== 'נתוני דמו (DEMO_DATA)');
+  } catch(e) {
+    if (cleanStr.includes('DEMO_DATA') || cleanStr.includes('דוגמה')) return [];
+    return [{ content: cleanStr, author: 'מנהל', timestamp: new Date().toISOString() }];
+  }
 }
 
 function renderMonthlyCalendar(allOrders) {
@@ -767,7 +808,7 @@ function renderPastOrdersTable() {
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
-    <td data-label="אישור"><span class="whatsapp-sent-badge">✓ נשלח</span></td>
+    <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
     <td data-label="כניסה" class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
@@ -839,9 +880,9 @@ function renderPastOrdersTable() {
         : ""
     }">${row.status}</td>
     <td data-label="ניהול" class="manager-note-column">
-      <textarea class="admin-note" data-id="${
-        row.id
-      }" cols="50" rows="2">${(row.admin_note && !row.admin_note.includes('DEMO_DATA') && !row.admin_note.includes('דוגמה אמיתית')) ? row.admin_note : ""}</textarea>
+      <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
+         <i class="fas fa-comments"></i> הערות (${safeParseNotes(row.admin_note).length})
+      </button>
     </td>
   `;
     tbody.appendChild(tr);
@@ -853,17 +894,7 @@ function renderPastOrdersTable() {
     maxPage
   );
 
-  document
-    .querySelectorAll("#pastOrdersTable textarea.admin-note")
-    .forEach((textarea) => {
-      const adjustWidth = () => {
-        textarea.style.width = "80ch";
-        textarea.style.height = "auto";
-        textarea.style.height = textarea.scrollHeight + "px";
-      };
-      adjustWidth();
-      textarea.addEventListener("input", adjustWidth);
-    });
+
 
   document
     .querySelectorAll(
@@ -1065,7 +1096,7 @@ function renderMovementStats(data) {
          <div style="flex: 1;">
            <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-           ${(d.admin_note && !d.admin_note.includes('DEMO_DATA') && !d.admin_note.includes('דוגמה אמיתית')) ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;"><i class="fas fa-exclamation-triangle"></i> ${d.admin_note}</div>` : ''}
+
          </div>
        </div>`;
     }).join('');
@@ -1088,7 +1119,7 @@ function renderMovementStats(data) {
          <div style="flex: 1;">
            <div style="font-weight: bold; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${d.dog_name || 'כלב'} <span style="font-weight: normal; font-size: 0.9em;">(${d.owner_name || '?'})</span></div>
            <div style="font-size: 13px;">${createWhatsAppLink(d.phone)}</div>
-           ${(d.admin_note && !d.admin_note.includes('DEMO_DATA') && !d.admin_note.includes('דוגמה אמיתית')) ? `<div style="font-size: 11px; color: #eebb00; margin-top: 2px;"><i class="fas fa-exclamation-triangle"></i> ${d.admin_note}</div>` : ''}
+
          </div>
        </div>`;
     }).join('');
@@ -1306,17 +1337,8 @@ function renderFutureOrdersTable() {
       </td>
       <td data-label="ניהול" class="manager-note-column">
         <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
-          <i class="fas fa-comments"></i> הערות (${(() => {
-            try {
-              const isDemo = row.admin_note && (row.admin_note.includes('DEMO_DATA') || row.admin_note.includes('דוגמה אמיתית'));
-              const notes = (row.admin_note && !isDemo) ? JSON.parse(row.admin_note) : [];
-              return Array.isArray(notes) ? notes.length : ((row.admin_note && !isDemo) ? 1 : 0);
-            } catch(e) { 
-              const isDemo = row.admin_note && (row.admin_note.includes('DEMO_DATA') || row.admin_note.includes('דוגמה אמיתית'));
-              return (row.admin_note && !isDemo) ? 1 : 0; 
-            }
-          })()})
-        </button>
+          <i class="fas fa-comments"></i> הערות (${safeParseNotes(row.admin_note).length})
+      </button>
       </td>
     `;
       futureTbody.appendChild(tr);
@@ -1348,6 +1370,47 @@ function renderFutureOrdersTable() {
           }
         });
       });
+
+    // Handle status change to 'בוטל' - prompt for reason
+    document.querySelectorAll('#futureOrdersTable .status-select').forEach(select => {
+      select.addEventListener('change', async function() {
+        if (this.value === 'בוטל') {
+          const orderId = this.dataset.id;
+          const dogName = this.closest('tr').querySelector('td[data-label="כלב"]')?.textContent || 'הכלב';
+          
+          const reason = prompt(`מהי סיבת הביטול עבור ${dogName}?`);
+          if (reason) {
+            try {
+              // Replace ALL notes with ONLY the cancellation reason for cancelled orders
+              const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+              if (order) {
+                let notes = [{
+                  content: `סיבת ביטול: ${reason}`,
+                  author: 'מנהל',
+                  timestamp: new Date().toISOString()
+                }];
+                
+                // Update in Supabase immediately for notes
+                const { error } = await pensionNetSupabase
+                  .from('orders')
+                  .update({ admin_note: JSON.stringify(notes) + (order.admin_note?.includes('(DEMO_DATA)') ? ' (DEMO_DATA)' : '') })
+                  .eq('id', orderId);
+
+                if (!error) {
+                  order.admin_note = JSON.stringify(notes) + (order.admin_note?.includes('(DEMO_DATA)') ? ' (DEMO_DATA)' : '');
+                  showToast('סיבת הביטול נשמרה בהערות', 'success');
+                  // Update the note count in the button
+                  const noteBtn = this.closest('tr').querySelector('.view-notes-btn');
+                  if (noteBtn) noteBtn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
+                }
+              }
+            } catch (err) {
+              console.error('Error adding cancellation reason:', err);
+            }
+          }
+        }
+      });
+    });
 }
 
 // Event Listeners for Future Orders Filtering
@@ -1481,6 +1544,11 @@ loadData();
     window.isSessionVerified = true;
     const overlay = document.getElementById('login-overlay');
     if (overlay) overlay.style.setProperty('display', 'none', 'important');
+  } else if (!pinValid) {
+    // PIN expired or no session, ensure staff is 'צוות'
+    localStorage.setItem('pensionNet_activeStaff', 'צוות');
+    const activeSelect = document.getElementById('activeStaffSelect');
+    if (activeSelect) activeSelect.value = 'צוות';
   }
 })();
 
@@ -1864,7 +1932,7 @@ function updateModeUI() {
   if (window.isAdminMode) {
     badge.innerHTML = '<i class="fas fa-unlock"></i> מצב מנהל';
     badge.className = 'mode-badge manager';
-    document.body.classList.remove('staff-mode');
+    document.body.classList.remove('staff-mode', 'no-identity');
     document.body.classList.remove('perm-edit-status', 'perm-edit-details', 'perm-manage-payments');
     
     // Ensure selector reflects manager profile
@@ -1896,6 +1964,13 @@ function updateModeUI() {
     if (perms.edit_details) document.body.classList.add('perm-edit-details');
     else document.body.classList.remove('perm-edit-details');
 
+    // LOCK ACTIONS: If no staff identity defined and not in admin mode
+    if (!window.isAdminMode && activeStaffName === 'צוות') {
+       document.body.classList.add('no-identity');
+    } else {
+       document.body.classList.remove('no-identity');
+    }
+
     // If on protected tab while in staff mode AND PIN expired, switch to ongoing
     const now = Date.now();
     const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
@@ -1906,12 +1981,14 @@ function updateModeUI() {
     }
 
     // LOCK: If no valid profile selected OR PIN expired, show login overlay
-    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות')) {
+    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed) {
        const overlay = document.getElementById('login-overlay');
        if (overlay) overlay.style.setProperty('display', 'flex', 'important');
-    } else {
+    } else if (pinValid || window.isAdminMode || window.overlayManuallyClosed) {
        const overlay = document.getElementById('login-overlay');
-       if (overlay) overlay.style.setProperty('display', 'none', 'important');
+       if (overlay && overlay.style.display !== 'none') {
+         overlay.style.setProperty('display', 'none', 'important');
+       }
     }
   }
   
@@ -1933,6 +2010,7 @@ async function handleInitialProfileChange() {
     if (activeSelect) activeSelect.value = name;
     localStorage.setItem('pensionNet_activeStaff', name);
     window.isSessionVerified = true;
+    window.overlayManuallyClosed = false;
     showToast(`ברוך הבא, ${name}`, 'success');
   } else {
     select.value = '';
@@ -2000,17 +2078,24 @@ async function openNotesModal(orderId, dogName, ownerName) {
   document.getElementById('notesModal').style.display = 'block';
   document.getElementById('newNoteContent').value = '';
   
-  // Set default author to active staff member
-  const activeStaff = document.getElementById('activeStaffSelect')?.value;
-  const authorSelect = document.getElementById('noteAuthorSelect');
-  if (authorSelect) {
-    if (activeStaff && activeStaff !== 'צוות') {
-      authorSelect.value = activeStaff;
+  const order = (window.allOrdersCache || []).find(o => String(o.id) === String(orderId)) || (window.pastOrdersCache || []).find(o => String(o.id) === String(orderId));
+  const addNoteSection = document.querySelector('.add-note-section');
+  if (addNoteSection) {
+    if (order?.status === 'בוטל') {
+      addNoteSection.style.display = 'none';
+      if (!document.getElementById('cancelNoteMsg')) {
+        const msg = document.createElement('div');
+        msg.id = 'cancelNoteMsg';
+        msg.style = 'text-align: center; padding: 10px; color: #ef4444; background: #fee2e2; border-radius: 8px; margin-bottom: 15px; font-weight: bold;';
+        msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> הזמנה מבוטלת - ניתן להציג את סיבת הביטול בלבד';
+        addNoteSection.parentNode.insertBefore(msg, addNoteSection);
+      }
     } else {
-      authorSelect.selectedIndex = 0;
+      addNoteSection.style.display = 'block';
+      document.getElementById('cancelNoteMsg')?.remove();
     }
   }
-  
+
   loadOrderNotes(orderId);
 }
 
@@ -2028,22 +2113,13 @@ window.onclick = function(event) {
 }
 
 function loadOrderNotes(orderId) {
-  const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+  const order = (window.allOrdersCache || []).find(o => String(o.id) === String(orderId)) || (window.pastOrdersCache || []).find(o => String(o.id) === String(orderId));
   const historyDiv = document.getElementById('notesHistory');
   historyDiv.innerHTML = '';
   
   if (!order) return;
   
-  let notes = [];
-  try {
-    notes = order.admin_note ? JSON.parse(order.admin_note) : [];
-    if (!Array.isArray(notes)) {
-      if (order.admin_note) notes = [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }];
-      else notes = [];
-    }
-  } catch(e) {
-    if (order.admin_note) notes = [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }];
-  }
+  let notes = safeParseNotes(order.admin_note);
   
   if (notes.length === 0) {
     historyDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">אין הערות עדיין</div>';
@@ -2084,10 +2160,7 @@ async function deleteOrderNote(indexInSorted) {
   const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
   if (!order) return;
 
-  let notes = [];
-  try {
-    notes = JSON.parse(order.admin_note);
-  } catch(e) { return; }
+  let notes = safeParseNotes(order.admin_note);
 
   // Need to find the actual index in original array (sorted is decending)
   notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -2124,15 +2197,7 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', async function
   const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
   if (!order) return;
   
-  let notes = [];
-  try {
-    notes = order.admin_note ? JSON.parse(order.admin_note) : [];
-    if (!Array.isArray(notes)) {
-      notes = order.admin_note ? [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }] : [];
-    }
-  } catch(e) {
-    notes = order.admin_note ? [{ content: order.admin_note, author: "מנהל", timestamp: new Date().toISOString() }] : [];
-  }
+  let notes = safeParseNotes(order.admin_note);
   
   const newNote = {
     content,
@@ -2323,7 +2388,7 @@ async function fillWithDemoData() {
   const session = window.currentUserSession;
   if (!session) return;
   
-  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף 7 הזמנות חדשות למערכת לצורך הדגמה.</b>', async () => {
+  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף כ-100 הזמנות חדשות הפרוסות על פני 10 חודשים (7 אחורה ו-3 קדימה).</b>', async () => {
     const btn = document.getElementById('fillDemoDataBtn');
   const originalText = btn.innerHTML;
   btn.disabled = true;
@@ -2345,70 +2410,110 @@ async function fillWithDemoData() {
   ];
   
   const today = new Date();
-  
-  const todayStr = today.toISOString().split('T')[0];
-  
   const demoOrders = [];
-  for (let i = 0; i < 7; i++) {
-    const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
-    const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
-    const size = sizes[Math.floor(Math.random() * sizes.length)];
-    
-    let status = 'מאושר';
-    if (i >= 3 && i <= 5) status = 'ממתין';
-    if (i === 6) status = 'בוטל';
-    let checkIn, checkOut;
-    
-    if (i === 0) {
-      // One dog leaving today
-      const prev = new Date(today);
-      prev.setDate(today.getDate() - 3);
-      checkIn = prev;
-      checkOut = new Date(today);
-    } else if (i === 1) {
-      // One dog entering today
-      checkIn = new Date(today);
-      const future = new Date(today);
-      future.setDate(today.getDate() + 4);
-      checkOut = future;
-    } else {
-      // Spread dates: some in the past, some now, some in the future
-      const offset = Math.floor(Math.random() * 20) - 10;
-      checkIn = new Date(today);
-      checkIn.setDate(today.getDate() + offset);
-      
-      const duration = Math.floor(Math.random() * 5) + 1;
-      checkOut = new Date(checkIn);
-      checkOut.setDate(checkIn.getDate() + duration);
+
+  // Generate data from 7 months back to 3 months forward
+  for (let m = -7; m <= 3; m++) {
+    // Business growth: Increase number of orders over time
+    // -7 months: ~5 orders, 0 months: ~12 orders, +3 months: ~15 orders
+    const baseOrders = 5;
+    const growthFactor = (m + 7) * 1; 
+    const numOrdersThisMonth = baseOrders + growthFactor + Math.floor(Math.random() * 3);
+
+    for (let i = 0; i < numOrdersThisMonth; i++) {
+        const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
+        const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        
+        let status = Math.random() > 0.1 ? 'מאושר' : 'בוטל';
+        
+        // Random date within this specific month
+        const orderMonth = new Date(today.getFullYear(), today.getMonth() + m, 1);
+        const daysInMonth = new Date(orderMonth.getFullYear(), orderMonth.getMonth() + 1, 0).getDate();
+        const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+        
+        const checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), randomDay);
+        const duration = Math.floor(Math.random() * 5) + 2; // 2-7 days
+        const checkOut = new Date(checkIn);
+        checkOut.setDate(checkIn.getDate() + duration);
+        
+        const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const checkInNormalized = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+        const checkOutNormalized = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+        
+        const isArrived = checkInNormalized <= todayNormalized && status !== 'ממתין';
+        const isDeparted = checkOutNormalized < todayNormalized && isArrived;
+        
+        let adminNotes = [];
+        if (status !== 'בוטל') {
+            const isFuture = checkInNormalized > todayNormalized;
+            
+            const activityPool = [
+                'נראה קצת עצוב הבוקר, לעקוב',
+                'אכל את כל האוכל בתיאבון',
+                'שיחק יפה עם שאר הכלבים בחצר',
+                'קיבל את הכדור של הבוקר',
+                'ישן טוב בלילה',
+                'זקוק למקלחת לפני היציאה'
+            ];
+
+            const interactionPool = [
+                'הבעלים ביקש לעדכן בוואטסאפ בערב',
+                'תיאום איסוף לשעה 17:00',
+                'ביקשו מקלחת לפני היציאה',
+                'הלקוח שאל לגבי הנחה לשהייה ארוכה',
+                'תיאום כניסה מוקדמת ב-08:00',
+                'הלקוח ציין שהכלב רגיש לרעשים חזקים'
+            ];
+
+            const pool = isFuture ? interactionPool : activityPool;
+
+            const numNotes = Math.floor(Math.random() * 2) + 1;
+            let availablePool = [...pool];
+            for (let j = 0; j < numNotes; j++) {
+                if (availablePool.length === 0) break;
+                const randomIndex = Math.floor(Math.random() * availablePool.length);
+                const content = availablePool.splice(randomIndex, 1)[0];
+                
+                adminNotes.push({
+                    content: content,
+                    author: 'מנהל',
+                    timestamp: new Date(checkIn.getTime() + Math.random() * 86400000).toISOString()
+                });
+            }
+        }
+
+        if (status === 'בוטל') {
+            const cancelReasons = ['הכלב חלה לצערנו', 'שינוי בתוכניות הנסיעה', 'החליטו להשאיר אצל המשפחה', 'נמצא פנסיון קרוב יותר'];
+            adminNotes.push({
+                content: `ביטול: ${cancelReasons[Math.floor(Math.random() * cancelReasons.length)]}`,
+                author: 'מערכת',
+                timestamp: checkIn.toISOString()
+            });
+        }
+        
+        const adminNoteJson = JSON.stringify(adminNotes) + " (DEMO_DATA)";
+
+        demoOrders.push({
+            user_id: session.user.id,
+            owner_name: ownerName,
+            dog_name: dogName,
+            dog_breed: size,
+            dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
+            phone: '05' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
+            check_in: checkIn.toISOString().split('T')[0],
+            check_out: checkOut.toISOString().split('T')[0],
+            status: status,
+            is_arrived: isArrived,
+            is_departed: isDeparted,
+            is_paid: status === 'בוטל' ? false : (isDeparted || Math.random() > 0.7),
+            price_per_day: 130 + Math.floor((m + 7) / 2) * 5, // Growth in jumps of 5
+            neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
+            notes: realNotes[Math.floor(Math.random() * realNotes.length)],
+            admin_note: adminNoteJson,
+            created_at: checkIn.toISOString()
+        });
     }
-    
-    // Normalize dates for comparison (remove time component)
-    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const checkInNormalized = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
-    const checkOutNormalized = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
-    
-    const isArrived = checkInNormalized <= todayNormalized && status !== 'ממתין';
-    const isDeparted = checkOutNormalized < todayNormalized && isArrived;
-    
-    demoOrders.push({
-      user_id: session.user.id,
-      owner_name: ownerName,
-      dog_name: dogName,
-      dog_breed: size,
-      dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
-      phone: '05' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
-      check_in: checkIn.toISOString().split('T')[0],
-      check_out: checkOut.toISOString().split('T')[0],
-      status: status,
-      is_arrived: isArrived,
-      is_departed: isDeparted,
-      is_paid: isDeparted || Math.random() > 0.7,
-      price_per_day: 130,
-      neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
-      notes: realNotes[Math.floor(Math.random() * realNotes.length)],
-      admin_note: 'DEMO_DATA',
-      created_at: new Date().toISOString()
-    });
   }
   
   // Mark approved orders as having confirmation sent
@@ -2463,15 +2568,30 @@ async function clearDemoData() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מוחק...';
 
     try {
-      const { error } = await pensionNetSupabase
+      // Step 1: Find all orders that match demo criteria
+      const { data: matches, error: fetchError } = await pensionNetSupabase
+        .from('orders')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .or('admin_note.ilike.%DEMO_DATA%,admin_note.ilike.%דוגמה%,notes.ilike.%DEMO_DATA%,notes.ilike.%דוגמה%,dog_breed.ilike.%גולדן%,dog_breed.ilike.%רועה%,dog_breed.ilike.%לברדור%,dog_breed.ilike.%פודל%,dog_breed.ilike.%בולדוג%,dog_breed.ilike.%בלוג%,dog_breed.ilike.%שיטסו%,dog_breed.ilike.%מלטז%,dog_breed.ilike.%פינצ%,dog_breed.ilike.%ביגל%,dog_breed.ilike.%מעורב%,owner_name.ilike.%ישראל ישראלי%,owner_name.ilike.%שחר כהן%');
+
+      if (fetchError) throw fetchError;
+
+      if (!matches || matches.length === 0) {
+        showToast('לא נמצאו נתוני דמו למחיקה', 'info');
+        return;
+      }
+
+      // Step 2: Delete by IDs (more reliable)
+      const idsToDelete = matches.map(m => m.id);
+      const { error: deleteError } = await pensionNetSupabase
         .from('orders')
         .delete()
-        .eq('user_id', session.user.id)
-        .or('notes.eq.DEMO_DATA,admin_note.eq.DEMO_DATA,notes.like.דוגמה אמיתית%');
+        .in('id', idsToDelete);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
-      showToast('<i class="fas fa-trash-alt"></i> <strong>נתוני הדמו נמחקו בהצלחה!</strong>', 'success');
+      showToast(`<i class="fas fa-trash-alt"></i> <strong>${matches.length} נתוני דמו נמחקו בהצלחה!</strong>`, 'success');
       setTimeout(() => location.reload(), 1500);
     } catch (err) {
       console.error('Error clearing demo data:', err);
