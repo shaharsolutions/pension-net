@@ -317,7 +317,7 @@ function generateWhatsAppConfirmationLink(row) {
   
   if (isSent) {
     return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
-      <span class="whatsapp-sent-badge">נשלח ✓</span>
+      <span class="whatsapp-sent-badge">✓ נשלח</span>
       <button class="whatsapp-reset-btn" data-reset-order="${row.id}" title="אפס סטטוס">↺</button>
     </div>`;
   }
@@ -337,7 +337,7 @@ async function markConfirmationSent(orderId) {
   const container = document.getElementById(`confirm-container-${orderId}`);
   if (container) {
     container.innerHTML = `
-      <span class="whatsapp-sent-badge">נשלח ✓</span>
+      <span class="whatsapp-sent-badge">✓ נשלח</span>
       <button class="whatsapp-reset-btn" data-reset-order="${orderId}" title="אפס סטטוס">↺</button>
     `;
   }
@@ -767,7 +767,7 @@ function renderPastOrdersTable() {
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
-    <td data-label="אישור"><span class="whatsapp-sent-badge">נשלח ✓</span></td>
+    <td data-label="אישור"><span class="whatsapp-sent-badge">✓ נשלח</span></td>
     <td data-label="כניסה" class="wide-date-column">
       <input type="date" class="date-input" data-id="${
         row.id
@@ -1980,14 +1980,16 @@ async function toggleAdminMode() {
     updateModeUI();
   } else {
     // Switching to manager mode - ask for PIN
-    if (!window.managerPin) {
-      showToast('נא להגדיר קוד PIN בטאב ההגדרות תחילה', 'error');
-      return;
+    const success = await verifyManagerAccess();
+    if (success) {
+      window.isAdminMode = true;
+      updateModeUI();
     }
-    
-    await verifyManagerAccess();
   }
 }
+
+// Make toggleAdminMode globally accessible
+window.toggleAdminMode = toggleAdminMode;
 
 // --- Admin Notes Modal Logic ---
 window.currentlyEditingOrderId = null;
