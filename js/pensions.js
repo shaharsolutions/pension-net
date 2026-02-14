@@ -76,10 +76,11 @@ async function getUserLocation() {
                 setTimeout(() => statusToast.style.display = 'none', 3000);
             },
             (error) => {
-                console.error("Error getting location:", error);
-                statusToast.innerHTML = '<i class="fas fa-exclamation-triangle"></i> לא ניתן לאתר מיקום';
+                // Silently handle location failure - the app will work fine without it
+                console.log("Geolocation unavailable, showing all pensions without distance sorting.");
+                statusToast.innerHTML = '<i class="fas fa-info-circle"></i> חיפוש ללא זיהוי מיקום';
                 setTimeout(() => statusToast.style.display = 'none', 3000);
-                processPensions(); // Still process even without user location
+                processPensions(); 
             }
         );
     } else {
@@ -212,14 +213,16 @@ function renderPensions() {
         <div class="pension-card ${!p.is_visible ? 'hidden-by-admin' : ''}" data-id="${p.user_id}" onclick="focusPension('${p.user_id}')">
             ${(p.distance && p.distance !== Infinity) ? `<span class="badge">${p.distance.toFixed(1)} ק"מ</span>` : ''}
             
-            ${isAdmin ? `
-                <button class="visibility-toggle" onclick="toggleVisibility(event, '${p.user_id}', ${p.is_visible})">
-                    <i class="fas ${p.is_visible ? 'fa-eye' : 'fa-eye-slash'}"></i> 
-                    ${p.is_visible ? 'גלוי' : 'מוסתר'}
-                </button>
-            ` : ''}
-
-            <h3>${p.business_name}</h3>
+            <h3>
+                ${isAdmin ? `
+                    <label class="admin-checkbox" onclick="event.stopPropagation()">
+                        <input type="checkbox" ${p.is_visible ? 'checked' : ''} 
+                               onchange="toggleVisibility(event, '${p.user_id}')">
+                        <span class="checkmark"></span>
+                    </label>
+                ` : ''}
+                ${p.business_name}
+            </h3>
             <div class="location">
                 <i class="fas fa-map-marker-alt"></i> ${p.location || 'מיקום לא צוין'}
             </div>
@@ -269,9 +272,9 @@ function checkAdminPassword() {
     }
 }
 
-async function toggleVisibility(event, userId, currentStatus) {
+async function toggleVisibility(event, userId) {
     event.stopPropagation();
-    const newStatus = !currentStatus;
+    const newStatus = event.target.checked;
     
     const { error } = await pensionsSupabase
         .from('profiles')
@@ -281,10 +284,13 @@ async function toggleVisibility(event, userId, currentStatus) {
     if (error) {
         console.error("Error updating visibility:", error);
         alert('שגיאה בעדכון הסטטוס');
+        event.target.checked = !newStatus; // Rollback UI
     } else {
         // Update local data and re-render
         const pension = pensionsData.find(p => p.user_id === userId);
         if (pension) pension.is_visible = newStatus;
+        
+        // We only re-render if we want the "hidden" style to apply immediately
         renderPensions();
     }
 }
