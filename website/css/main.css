@@ -478,7 +478,10 @@ nav.scrolled {
     display: flex;
     align-items: baseline;
     justify-content: center;
-    gap: 4px;
+    direction: rtl;
+}
+
+.stat-item.ltr-stat .stat-number {
     direction: ltr;
 }
 
@@ -538,6 +541,7 @@ nav.scrolled {
     font-size: 2.5rem;
     color: var(--secondary);
     margin-bottom: 15px;
+    white-space: nowrap; /* המנעות משבירת שורה */
 }
 
 .section-header p {
@@ -1191,7 +1195,7 @@ nav.scrolled {
     }
 
     .section-header h2 {
-        font-size: 2rem;
+        font-size: clamp(1.4rem, 5vw, 2rem);
     }
 
     .stats-grid {

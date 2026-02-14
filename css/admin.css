@@ -222,11 +222,12 @@ header h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   padding-bottom: 20px;
   gap: 20px;
   flex-wrap: wrap;
+  background: linear-gradient(to bottom, transparent, rgba(248, 250, 252, 0.5));
 }
 
 /* --- CSS ללוח השנה החדש ולכפתורים --- */
@@ -313,11 +314,17 @@ header h1 {
 .calendar-table td.today {
   border: 2px solid var(--primary);
   background-color: #eff6ff;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+}
+
+.calendar-table td.today .day-number {
+  color: var(--primary);
 }
 
 .calendar-table td.empty-day {
-  background-color: transparent;
-  border: none;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+  opacity: 0.4;
   box-shadow: none;
   cursor: default;
 }
@@ -716,19 +723,142 @@ textarea.admin-note:focus {
 
 .date-input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
   text-align: center;
-  transition: all 0.2s;
-  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fdfdfd;
+  color: #1e293b;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.date-input:hover {
+  border-color: var(--primary-light);
+  background: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .date-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%236366f1" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>');
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  filter: none;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: #f1f5f9;
+}
+
+/* Flatpickr Premium Theme Overrides */
+.flatpickr-calendar.premium-datepicker {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  font-family: 'Heebo', sans-serif;
+  padding: 10px;
+  width: 330px !important;
+}
+
+.flatpickr-months {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.flatpickr-month {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.flatpickr-current-month {
+  font-size: 115%;
+  font-weight: 800;
+}
+
+.flatpickr-weekday {
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.flatpickr-day {
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #334155;
+  font-weight: 600;
+  height: 44px;
+  line-height: 44px;
+  margin: 3px;
+}
+
+.flatpickr-day:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+.flatpickr-day.today {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.flatpickr-day.selected {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: white !important;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+  transform: scale(1.05);
+}
+
+.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+  color: #cbd5e1;
+  opacity: 0.4;
+}
+
+.flatpickr-prev-month, .flatpickr-next-month {
+  padding: 10px !important;
+  color: var(--primary) !important;
+  fill: var(--primary) !important;
+}
+
+.flatpickr-input[readonly] {
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-month {
+  height: 40px;
+}
+
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-next-month {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-select {

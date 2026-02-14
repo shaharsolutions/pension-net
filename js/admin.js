@@ -199,6 +199,39 @@ function calculateDays(checkIn, checkOut) {
   return diffDays;
 }
 
+function initFlatpickr() {
+  if (typeof flatpickr === 'undefined') return;
+  
+  flatpickr(".date-input", {
+    locale: "he",
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+    allowInput: false,
+    disableMobile: true,
+    // theme: "material_blue", // Styling via admin.css
+    onOpen: function(selectedDates, dateStr, instance) {
+      instance.calendarContainer.classList.add("premium-datepicker");
+    },
+    onChange: function(selectedDates, dateStr, instance) {
+      const row = instance.element.closest("tr");
+      if (row) {
+        updateCheckOutFromDays(row);
+        // Refresh day name display if exists
+        const displayDiv = instance.element.nextElementSibling;
+        if (displayDiv && selectedDates.length > 0) {
+          const date = selectedDates[0];
+          const dayName = date.toLocaleDateString("he-IL", { weekday: "long" });
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          displayDiv.textContent = `${day}/${month}/${year} (${dayName})`;
+        }
+      }
+    }
+  });
+}
+
 function updateCheckOutFromDays(row) {
   const daysInput = row.querySelector(".days-input");
   const checkInInput = row.querySelector('.date-input[data-field="check_in"]');
@@ -804,14 +837,13 @@ function renderPastOrdersTable() {
     const pricePerDay = row.price_per_day || 130;
     const totalPrice = days * pricePerDay;
 
-    // Determine if fields should be disabled
-    let detailsDisabled = "";
-    if (!window.isAdminMode) {
-      const activeStaffName = document.getElementById('activeStaffSelect')?.value;
-      const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
-      const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false };
-      if (!perms.edit_details) detailsDisabled = "disabled";
-    }
+    // Calculate permissions
+    const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+    const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+    const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false, edit_status: false };
+    
+    const detailsDisabled = (!window.isAdminMode && !perms.edit_details) ? "disabled" : "";
+    const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
     tr.innerHTML = `
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
@@ -819,21 +851,21 @@ function renderPastOrdersTable() {
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
     <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
     <td data-label="כניסה" class="wide-date-column">
-      <input type="date" class="date-input" ${detailsDisabled} data-id="${
+      <input type="text" class="date-input" ${detailsDisabled} data-id="${
         row.id
       }" data-field="check_in" value="${formatDateForInput(
       row.check_in
-    )}" />
+    )}" readonly />
     <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
       row.check_in
     )}</div>
     </td>
     <td data-label="יציאה" class="wide-date-column">
-      <input type="date" class="date-input" ${detailsDisabled} data-id="${
+      <input type="text" class="date-input" ${detailsDisabled} data-id="${
         row.id
       }" data-field="check_out" value="${formatDateForInput(
       row.check_out
-    )}" />
+    )}" readonly />
     <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
       row.check_out
     )}</div>
@@ -882,7 +914,7 @@ function renderPastOrdersTable() {
       </div>
     </td>
     <td data-label="סטטוס">
-      <select data-id="${row.id}" ${detailsDisabled} class="status-select ${
+      <select data-id="${row.id}" ${statusDisabled} class="status-select ${
         row.status === "מאושר"
           ? "status-approved"
           : row.status === "בוטל"
@@ -908,7 +940,8 @@ function renderPastOrdersTable() {
   `;
     tbody.appendChild(tr);
   });
-
+  
+  initFlatpickr();
   renderPastOrdersPagination(
     totalRows,
     window.pastOrdersCurrentPage,
@@ -941,6 +974,15 @@ function renderPastOrdersTable() {
 
           tooltip.textContent = `עלות שהייה: ${total}₪`;
         }
+      });
+    });
+
+    // Handle status color classes
+    document.querySelectorAll('#pastOrdersTable .status-select').forEach(select => {
+      select.addEventListener('change', function() {
+        this.classList.remove('status-approved', 'status-cancelled');
+        if (this.value === 'מאושר') this.classList.add('status-approved');
+        if (this.value === 'בוטל') this.classList.add('status-cancelled');
       });
     });
 }
@@ -1269,14 +1311,13 @@ function renderFutureOrdersTable() {
       const pricePerDay = row.price_per_day || 130;
       const totalPrice = days * pricePerDay;
 
-      // Determine if fields should be disabled
-      let detailsDisabled = "";
-      if (!window.isAdminMode) {
-        const activeStaffName = document.getElementById('activeStaffSelect')?.value;
-        const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
-        const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false };
-        if (!perms.edit_details) detailsDisabled = "disabled";
-      }
+      // Calculate permissions
+      const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+      const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+      const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false, edit_status: false };
+      
+      const detailsDisabled = (!window.isAdminMode && !perms.edit_details) ? "disabled" : "";
+      const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
       tr.innerHTML = `
       <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
@@ -1284,21 +1325,21 @@ function renderFutureOrdersTable() {
       <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
       <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
       <td data-label="כניסה" class="wide-date-column">
-        <input type="date" class="date-input" ${detailsDisabled} data-id="${
+        <input type="text" class="date-input" ${detailsDisabled} data-id="${
           row.id
         }" data-field="check_in" value="${formatDateForInput(
         row.check_in
-      )}" />
+      )}" readonly />
       <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
         row.check_in
       )}</div>
       </td>
       <td data-label="יציאה" class="wide-date-column">
-        <input type="date" class="date-input" ${detailsDisabled} data-id="${
+        <input type="text" class="date-input" ${detailsDisabled} data-id="${
           row.id
         }" data-field="check_out" value="${formatDateForInput(
         row.check_out
-      )}" />
+      )}" readonly />
       <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
         row.check_out
       )}</div>
@@ -1347,7 +1388,7 @@ function renderFutureOrdersTable() {
         </div>
       </td>
       <td data-label="סטטוס">
-        <select data-id="${row.id}" ${detailsDisabled} class="status-select ${
+        <select data-id="${row.id}" ${statusDisabled} class="status-select ${
         row.status === "מאושר"
           ? "status-approved"
           : row.status === "בוטל"
@@ -1442,6 +1483,16 @@ function renderFutureOrdersTable() {
         }
       });
     });
+    // Handle status color classes
+    document.querySelectorAll('#futureOrdersTable .status-select').forEach(select => {
+      select.addEventListener('change', function() {
+        this.classList.remove('status-approved', 'status-cancelled');
+        if (this.value === 'מאושר') this.classList.add('status-approved');
+        if (this.value === 'בוטל') this.classList.add('status-cancelled');
+      });
+    });
+
+    initFlatpickr();
 }
 
 // Event Listeners for Future Orders Filtering
@@ -1574,6 +1625,9 @@ loadData();
 
 // Auto-restore saved profile if PIN is still valid
 (async function initializeProfile() {
+  // Small delay to ensure loadSettings has started setting managerName
+  await new Promise(r => setTimeout(r, 500));
+  
   const savedProfile = localStorage.getItem('pensionNet_activeStaff');
   const now = Date.now();
   const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
@@ -1587,6 +1641,9 @@ loadData();
     if (initialSelect) initialSelect.value = savedProfile;
     
     window.isSessionVerified = true;
+    window.isAdminMode = (savedProfile === window.managerName);
+    updateModeUI();
+    
     const overlay = document.getElementById('login-overlay');
     if (overlay) overlay.style.setProperty('display', 'none', 'important');
   } else if (!pinValid) {
@@ -1594,6 +1651,8 @@ loadData();
     localStorage.setItem('pensionNet_activeStaff', 'צוות');
     const activeSelect = document.getElementById('activeStaffSelect');
     if (activeSelect) activeSelect.value = 'צוות';
+    window.isAdminMode = false;
+    updateModeUI();
   }
 })();
 
@@ -1872,6 +1931,7 @@ async function verifyManagerAccess(targetName = null) {
             window.isAdminMode = true;
             createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות PIN מוצלח)');
         } else {
+            window.isAdminMode = false;
             createAuditLog('UPDATE', `אימות PIN מוצלח עבור עובד: ${targetName}`);
         }
         
@@ -2077,6 +2137,7 @@ async function handleInitialProfileChange() {
     window.isSessionVerified = true;
     window.overlayManuallyClosed = false;
     showToast(`ברוך הבא, ${name}`, 'success');
+    updateModeUI();
   } else {
     select.value = '';
   }
@@ -2108,6 +2169,7 @@ async function handleActiveStaffChange() {
   // Access verified
   localStorage.setItem('pensionNet_activeStaff', name);
   showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
+  updateModeUI();
 }
 
 // Ensure staff mode on start
