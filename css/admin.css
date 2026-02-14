@@ -956,8 +956,8 @@ textarea.admin-note:focus {
   display: flex;
   gap: 12px;
   margin-bottom: 25px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
@@ -968,26 +968,34 @@ textarea.admin-note:focus {
 
 .tab-btn {
   flex: 1;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 16px;
   font-weight: 600;
-  color: #718096;
+  color: rgba(255, 255, 255, 0.8);
   padding: 12px;
   cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(4px);
 }
 
 .tab-btn:hover {
-  background: #f7fafc;
-  color: #4a5568;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
-  background: #eff6ff;
+  background: #ffffff;
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-color: #ffffff;
 }
 
 .tab-content {

@@ -235,20 +235,34 @@ async function loadAnalytics() {
         }, 0);
 
         const revenueChange = lastMonthRevenue > 0 ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : 0;
+        const revenueChangeNum = parseFloat(revenueChange);
 
         document.getElementById("monthlyRevenue").textContent = formatCurrencyLocal(thisMonthRevenue);
         const revChangeEl = document.getElementById("revenueChange");
-        revChangeEl.textContent = `${revenueChange > 0 ? "+" : ""}${revenueChange}% מהחודש הקודם`;
-        revChangeEl.className = `stat-change ${revenueChange >= 0 ? "positive" : "negative"}`;
+        
+        if (revenueChangeNum === 0) {
+            revChangeEl.textContent = `אין שינוי מהחודש הקודם`;
+            revChangeEl.className = `stat-change neutral`;
+        } else {
+            revChangeEl.textContent = `${revenueChangeNum > 0 ? "+" : ""}${revenueChange}% מהחודש הקודם`;
+            revChangeEl.className = `stat-change ${revenueChangeNum > 0 ? "positive" : "negative"}`;
+        }
 
         const uniqueDogsThisMonth = new Set(thisMonthOrders.map((o) => o.dog_name)).size;
         const uniqueDogsLastMonth = new Set(lastMonthOrders.map((o) => o.dog_name)).size;
         const dogsChange = uniqueDogsLastMonth > 0 ? (((uniqueDogsThisMonth - uniqueDogsLastMonth) / uniqueDogsLastMonth) * 100).toFixed(1) : 0;
+        const dogsChangeNum = parseFloat(dogsChange);
 
         document.getElementById("monthlyDogs").textContent = uniqueDogsThisMonth;
         const dogsChangeEl = document.getElementById("dogsChange");
-        dogsChangeEl.textContent = `${dogsChange > 0 ? "+" : ""}${dogsChange}% מהחודש הקודם`;
-        dogsChangeEl.className = `stat-change ${dogsChange >= 0 ? "positive" : "negative"}`;
+
+        if (dogsChangeNum === 0) {
+            dogsChangeEl.textContent = `אין שינוי מהחודש הקודם`;
+            dogsChangeEl.className = `stat-change neutral`;
+        } else {
+            dogsChangeEl.textContent = `${dogsChangeNum > 0 ? "+" : ""}${dogsChange}% מהחודש הקודם`;
+            dogsChangeEl.className = `stat-change ${dogsChangeNum > 0 ? "positive" : "negative"}`;
+        }
 
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         let totalOccupancy = 0;

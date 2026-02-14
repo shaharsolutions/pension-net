@@ -119,6 +119,11 @@
         color: #f44336;
       }
 
+      .stat-change.neutral {
+        background: #e3f2fd;
+        color: #2196f3;
+      }
+
       .chart-container {
         background: white;
         border-radius: 16px;
