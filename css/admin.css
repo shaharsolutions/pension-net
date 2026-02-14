@@ -1647,26 +1647,28 @@ body.staff-mode :is(.price-input, .days-input, .date-input, .status-select, .pri
   opacity: 0.7;
 }
 
-/* Permission Overrides */
-body.staff-mode.perm-edit-status .status-select {
+/* Permission Overrides - Higher Specificity to win over base staff-mode/no-identity */
+body.staff-mode.perm-edit-status select.status-select,
+body.staff-mode.perm-edit-details select.status-select,
+body.staff-mode.perm-edit-details .price-input,
+body.staff-mode.perm-edit-details .days-input,
+body.staff-mode.perm-edit-details .date-input,
+body.staff-mode.perm-edit-details .price-btn {
   pointer-events: auto !important;
-  background-color: white !important;
-  color: inherit !important;
+  background-color: #ffffff !important;
+  color: var(--text-main) !important;
   opacity: 1 !important;
+  cursor: auto !important;
+  filter: none !important;
 }
 
-body.staff-mode.perm-edit-details :is(.price-input, .days-input, .date-input, .price-btn) {
+body.staff-mode.perm-manage-payments .payment-input,
+body.staff-mode.perm-manage-payments #payments-table button {
   pointer-events: auto !important;
-  background-color: white !important;
-  color: inherit !important;
+  background-color: #ffffff !important;
+  color: var(--text-main) !important;
   opacity: 1 !important;
-}
-
-body.staff-mode.perm-manage-payments :is(.payment-input, #payments-table button) {
-  pointer-events: auto !important;
-  background-color: white !important;
-  color: inherit !important;
-  opacity: 1 !important;
+  cursor: auto !important;
 }
 
 /* Audit Logs */

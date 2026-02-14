@@ -804,30 +804,39 @@ function renderPastOrdersTable() {
     const pricePerDay = row.price_per_day || 130;
     const totalPrice = days * pricePerDay;
 
+    // Determine if fields should be disabled
+    let detailsDisabled = "";
+    if (!window.isAdminMode) {
+      const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+      const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+      const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false };
+      if (!perms.edit_details) detailsDisabled = "disabled";
+    }
+
     tr.innerHTML = `
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
     <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
     <td data-label="כניסה" class="wide-date-column">
-      <input type="date" class="date-input" data-id="${
+      <input type="date" class="date-input" ${detailsDisabled} data-id="${
         row.id
       }" data-field="check_in" value="${formatDateForInput(
       row.check_in
     )}" />
-      <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
-        row.check_in
-      )}</div>
+    <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
+      row.check_in
+    )}</div>
     </td>
     <td data-label="יציאה" class="wide-date-column">
-      <input type="date" class="date-input" data-id="${
+      <input type="date" class="date-input" ${detailsDisabled} data-id="${
         row.id
       }" data-field="check_out" value="${formatDateForInput(
       row.check_out
     )}" />
-      <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
-        row.check_out
-      )}</div>
+    <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
+      row.check_out
+    )}</div>
     </td>
     <td data-label="כלב">${row.dog_name}</td>
     <td data-label="גיל">${row.dog_age}</td>
@@ -845,12 +854,12 @@ function renderPastOrdersTable() {
     </td>
     <td data-label="מחיר" class="price-cell">
       <div class="price-wrapper">
-        <div class="price-controls">
-          <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
-          <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+        <div class="price-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
+          <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+          <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
         </div>
         <div class="price-input-container">
-          <input type="number" class="price-input" data-id="${
+          <input type="number" class="price-input" ${detailsDisabled} data-id="${
             row.id
           }" value="${pricePerDay}" min="0" step="10" />
         </div>
@@ -859,12 +868,12 @@ function renderPastOrdersTable() {
     </td>
     <td data-label="ימים">
       <div class="days-wrapper">
-        <div class="days-controls">
-          <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
-          <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+        <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
+          <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+          <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
         </div>
         <div class="days-input-container">
-          <input type="number" class="days-input" data-id="${
+          <input type="number" class="days-input" ${detailsDisabled} data-id="${
             row.id
           }" data-checkin="${
           row.check_in
@@ -872,13 +881,25 @@ function renderPastOrdersTable() {
         </div>
       </div>
     </td>
-    <td data-label="סטטוס" class="${
-      row.status === "מאושר"
-        ? "status-approved"
-        : row.status === "בוטל"
-        ? "status-cancelled"
-        : ""
-    }">${row.status}</td>
+    <td data-label="סטטוס">
+      <select data-id="${row.id}" ${detailsDisabled} class="status-select ${
+        row.status === "מאושר"
+          ? "status-approved"
+          : row.status === "בוטל"
+          ? "status-cancelled"
+          : ""
+      }">
+        <option value="ממתין" ${
+          row.status === "ממתין" ? "selected" : ""
+        }>ממתין</option>
+        <option value="מאושר" ${
+          row.status === "מאושר" ? "selected" : ""
+        }>מאושר</option>
+        <option value="בוטל" ${
+          row.status === "בוטל" ? "selected" : ""
+        }>בוטל</option>
+      </select>
+    </td>
     <td data-label="ניהול" class="manager-note-column">
       <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
          <i class="fas fa-comments"></i> הערות (${safeParseNotes(row.admin_note).length})
@@ -1248,30 +1269,39 @@ function renderFutureOrdersTable() {
       const pricePerDay = row.price_per_day || 130;
       const totalPrice = days * pricePerDay;
 
+      // Determine if fields should be disabled
+      let detailsDisabled = "";
+      if (!window.isAdminMode) {
+        const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+        const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+        const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false };
+        if (!perms.edit_details) detailsDisabled = "disabled";
+      }
+
       tr.innerHTML = `
       <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
       <td data-label="בעלים">${row.owner_name || ""}</td>
       <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
       <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
       <td data-label="כניסה" class="wide-date-column">
-        <input type="date" class="date-input" data-id="${
+        <input type="date" class="date-input" ${detailsDisabled} data-id="${
           row.id
         }" data-field="check_in" value="${formatDateForInput(
         row.check_in
       )}" />
-        <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
-          row.check_in
-        )}</div>
+      <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
+        row.check_in
+      )}</div>
       </td>
       <td data-label="יציאה" class="wide-date-column">
-        <input type="date" class="date-input" data-id="${
+        <input type="date" class="date-input" ${detailsDisabled} data-id="${
           row.id
         }" data-field="check_out" value="${formatDateForInput(
         row.check_out
       )}" />
-        <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
-          row.check_out
-        )}</div>
+      <div style="font-size: 11px; color: #666; margin-top: 4px;">${formatDateOnly(
+        row.check_out
+      )}</div>
       </td>
       <td data-label="כלב">${row.dog_name || ""}</td>
       <td data-label="גיל">${row.dog_age || ""}</td>
@@ -1289,12 +1319,12 @@ function renderFutureOrdersTable() {
       </td>
       <td data-label="מחיר" class="price-cell">
         <div class="price-wrapper">
-          <div class="price-controls">
-            <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
-            <button class="price-btn" onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
+          <div class="price-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
+            <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
+            <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), -10)">▼</button>
           </div>
           <div class="price-input-container">
-            <input type="number" class="price-input" data-id="${
+            <input type="number" class="price-input" ${detailsDisabled} data-id="${
               row.id
             }" value="${pricePerDay}" min="0" step="10" />
           </div>
@@ -1303,12 +1333,12 @@ function renderFutureOrdersTable() {
       </td>
       <td data-label="ימים">
         <div class="days-wrapper">
-          <div class="days-controls">
-            <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
-            <button class="price-btn" onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
+          <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
+            <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
+            <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
           </div>
           <div class="days-input-container">
-            <input type="number" class="days-input" data-id="${
+            <input type="number" class="days-input" ${detailsDisabled} data-id="${
               row.id
             }" data-checkin="${
             row.check_in
@@ -1317,7 +1347,7 @@ function renderFutureOrdersTable() {
         </div>
       </td>
       <td data-label="סטטוס">
-        <select data-id="${row.id}" class="status-select ${
+        <select data-id="${row.id}" ${detailsDisabled} class="status-select ${
         row.status === "מאושר"
           ? "status-approved"
           : row.status === "בוטל"
@@ -1384,9 +1414,10 @@ function renderFutureOrdersTable() {
               // Replace ALL notes with ONLY the cancellation reason for cancelled orders
               const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
               if (order) {
+                const activeStaffName = document.getElementById('activeStaffSelect')?.value || 'מנהל';
                 let notes = [{
                   content: `סיבת ביטול: ${reason}`,
-                  author: 'מנהל',
+                  author: activeStaffName === 'צוות' ? 'מנהל' : activeStaffName,
                   timestamp: new Date().toISOString()
                 }];
                 
@@ -1437,6 +1468,20 @@ document
     const saveBtn = document.getElementById("saveButton");
     saveBtn.classList.add("loading");
     saveBtn.disabled = true;
+
+    // Check permissions
+    if (!window.isAdminMode) {
+      const activeStaffName = document.getElementById('activeStaffSelect')?.value;
+      const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+      const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : { edit_details: false };
+      
+      if (!perms.edit_details && !perms.edit_status) {
+        showToast("אין לך הרשאה לבצע שינויים אלו", 'error');
+        saveBtn.disabled = false;
+        saveBtn.classList.remove("loading");
+        return;
+      }
+    }
 
     try {
       const rows = document.querySelectorAll(
@@ -1580,7 +1625,6 @@ async function switchTab(tabName) {
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (globalSaveBtn) {
     globalSaveBtn.style.display = (tabName === 'settings' || tabName === 'audit') ? 'none' : 'block';
-    globalSaveBtn.classList.add('only-manager');
   }
 
   // Handle data loading for specific tabs
@@ -1971,6 +2015,23 @@ function updateModeUI() {
        document.body.classList.remove('no-identity');
     }
 
+    // Toggle global save button visibility based on permissions
+    const globalSaveBtn = document.getElementById('saveButtonContainer');
+    if (globalSaveBtn) {
+      if (window.isAdminMode || perms.edit_status || perms.edit_details) {
+        // Show if in manager mode OR has any edit permission
+        // Still respect tab display logic (if switchTab hidden it, it might still be none)
+        const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (activeTab === 'settings' || activeTab === 'audit') {
+          globalSaveBtn.style.display = 'none';
+        } else {
+          globalSaveBtn.style.display = 'block';
+        }
+      } else {
+        globalSaveBtn.style.display = 'none';
+      }
+    }
+
     // If on protected tab while in staff mode AND PIN expired, switch to ongoing
     const now = Date.now();
     const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
@@ -1991,6 +2052,10 @@ function updateModeUI() {
        }
     }
   }
+  
+  // Re-render tables to apply disabled/enabled status to fields
+  renderPastOrdersTable();
+  renderFutureOrdersTable();
   
   // Refresh notes view if open to show/hide delete buttons
   if (window.currentlyEditingOrderId) {
@@ -2077,6 +2142,13 @@ async function openNotesModal(orderId, dogName, ownerName) {
   document.getElementById('modalDogName').textContent = `${dogName} (${ownerName})`;
   document.getElementById('notesModal').style.display = 'block';
   document.getElementById('newNoteContent').value = '';
+  
+  // Set default author to currently active identity
+  const activeStaffSelect = document.getElementById('activeStaffSelect');
+  const noteAuthorSelect = document.getElementById('noteAuthorSelect');
+  if (activeStaffSelect && noteAuthorSelect && activeStaffSelect.value !== 'צוות') {
+    noteAuthorSelect.value = activeStaffSelect.value;
+  }
   
   const order = (window.allOrdersCache || []).find(o => String(o.id) === String(orderId)) || (window.pastOrdersCache || []).find(o => String(o.id) === String(orderId));
   const addNoteSection = document.querySelector('.add-note-section');
