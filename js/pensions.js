@@ -202,7 +202,7 @@ function renderPensions() {
 
     listContainer.innerHTML = sortedData.map(p => `
         <div class="pension-card" data-id="${p.user_id}" onclick="focusPension('${p.user_id}')">
-            ${p.distance !== Infinity ? `<span class="badge">${p.distance.toFixed(1)} ק"מ</span>` : ''}
+            ${(p.distance && p.distance !== Infinity) ? `<span class="badge">${p.distance.toFixed(1)} ק"מ</span>` : ''}
             <h3>${p.business_name}</h3>
             <div class="location">
                 <i class="fas fa-map-marker-alt"></i> ${p.location || 'מיקום לא צוין'}
