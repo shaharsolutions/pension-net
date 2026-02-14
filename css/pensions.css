@@ -437,6 +437,17 @@ body.pensions-page {
     box-shadow: 0 0 20px rgba(255,255,255,0.1);
 }
 
+.admin-access-btn.active {
+    background: #ef4444;
+    color: white;
+    border-color: #fca5a5;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.admin-access-btn.active:hover {
+    background: #dc2626;
+}
+
 /* Modal */
 .modal-overlay {
     position: fixed;

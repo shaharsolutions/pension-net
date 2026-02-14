@@ -245,14 +245,26 @@ function renderPensions() {
 // --- Admin Functions ---
 
 function setupAdminListeners() {
-    document.getElementById('adminLoginTrigger').addEventListener('dblclick', () => {
-        document.getElementById('adminModal').style.display = 'flex';
+    const trigger = document.getElementById('adminLoginTrigger');
+    
+    trigger.addEventListener('click', () => {
+        if (isAdmin) {
+            if (confirm('האם לצאת ממצב מנהל?')) {
+                logoutAdmin();
+            }
+        } else {
+            document.getElementById('adminModal').style.display = 'flex';
+        }
     });
+}
 
-    // Also support clicking for easier access if preferred, but double click is cleaner
-    document.getElementById('adminLoginTrigger').addEventListener('click', () => {
-        document.getElementById('adminModal').style.display = 'flex';
-    });
+function logoutAdmin() {
+    isAdmin = false;
+    const trigger = document.getElementById('adminLoginTrigger');
+    trigger.classList.remove('active');
+    trigger.innerHTML = '<i class="fas fa-user-shield"></i>';
+    alert('יצאת ממצב מנהל.');
+    renderPensions();
 }
 
 function closeAdminModal() {
@@ -264,6 +276,10 @@ function checkAdminPassword() {
     const pass = document.getElementById('adminPassword').value;
     if (pass === ADMIN_PASS) {
         isAdmin = true;
+        const trigger = document.getElementById('adminLoginTrigger');
+        trigger.classList.add('active');
+        trigger.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+        
         closeAdminModal();
         alert('ברוך הבא מנהל! כעת תוכל לשלוט בנראות הפנסיונים.');
         renderPensions();
