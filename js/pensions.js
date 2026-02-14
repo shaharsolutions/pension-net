@@ -8,6 +8,8 @@ let markers = [];
 let pensionsData = [];
 let userLocation = null;
 let activeFilter = 'distance';
+let isAdmin = false;
+const ADMIN_PASS = 'SC1627s@';
 
 // Geocoding cache to minimize Nominatim hits
 const geocodeCache = new Map();
@@ -27,6 +29,9 @@ async function init() {
 
     // 5. Event Listeners
     setupEventListeners();
+
+    // 6. Admin Setup
+    setupAdminListeners();
 }
 
 function initMap() {
@@ -86,7 +91,7 @@ async function getUserLocation() {
 async function fetchPensions() {
     const { data, error } = await pensionsSupabase
         .from('profiles')
-        .select('id, business_name, location, phone, max_capacity, default_price')
+        .select('user_id, business_name, location, phone, max_capacity, default_price, is_visible')
         .not('business_name', 'is', null);
 
     if (error) {
@@ -177,6 +182,9 @@ function sortPensions() {
     const searchTerm = document.getElementById('pensionSearch').value.toLowerCase();
     
     let filtered = pensionsData.filter(p => {
+        // If not admin, only show visible ones
+        if (!isAdmin && p.is_visible === false) return false;
+
         const nameMatch = (p.business_name || '').toLowerCase().includes(searchTerm);
         const locationMatch = (p.location || '').toLowerCase().includes(searchTerm);
         return nameMatch || locationMatch;
@@ -201,8 +209,16 @@ function renderPensions() {
     }
 
     listContainer.innerHTML = sortedData.map(p => `
-        <div class="pension-card" data-id="${p.user_id}" onclick="focusPension('${p.user_id}')">
+        <div class="pension-card ${!p.is_visible ? 'hidden-by-admin' : ''}" data-id="${p.user_id}" onclick="focusPension('${p.user_id}')">
             ${(p.distance && p.distance !== Infinity) ? `<span class="badge">${p.distance.toFixed(1)} ק"מ</span>` : ''}
+            
+            ${isAdmin ? `
+                <button class="visibility-toggle" onclick="toggleVisibility(event, '${p.user_id}', ${p.is_visible})">
+                    <i class="fas ${p.is_visible ? 'fa-eye' : 'fa-eye-slash'}"></i> 
+                    ${p.is_visible ? 'גלוי' : 'מוסתר'}
+                </button>
+            ` : ''}
+
             <h3>${p.business_name}</h3>
             <div class="location">
                 <i class="fas fa-map-marker-alt"></i> ${p.location || 'מיקום לא צוין'}
@@ -221,6 +237,56 @@ function renderPensions() {
             </div>
         </div>
     `).join('');
+}
+
+// --- Admin Functions ---
+
+function setupAdminListeners() {
+    document.getElementById('adminLoginTrigger').addEventListener('dblclick', () => {
+        document.getElementById('adminModal').style.display = 'flex';
+    });
+
+    // Also support clicking for easier access if preferred, but double click is cleaner
+    document.getElementById('adminLoginTrigger').addEventListener('click', () => {
+        document.getElementById('adminModal').style.display = 'flex';
+    });
+}
+
+function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+    document.getElementById('adminPassword').value = '';
+}
+
+function checkAdminPassword() {
+    const pass = document.getElementById('adminPassword').value;
+    if (pass === ADMIN_PASS) {
+        isAdmin = true;
+        closeAdminModal();
+        alert('ברוך הבא מנהל! כעת תוכל לשלוט בנראות הפנסיונים.');
+        renderPensions();
+    } else {
+        alert('סיסמה שגויה!');
+    }
+}
+
+async function toggleVisibility(event, userId, currentStatus) {
+    event.stopPropagation();
+    const newStatus = !currentStatus;
+    
+    const { error } = await pensionsSupabase
+        .from('profiles')
+        .update({ is_visible: newStatus })
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error("Error updating visibility:", error);
+        alert('שגיאה בעדכון הסטטוס');
+    } else {
+        // Update local data and re-render
+        const pension = pensionsData.find(p => p.user_id === userId);
+        if (pension) pension.is_visible = newStatus;
+        renderPensions();
+    }
 }
 
 function renderMarkers() {

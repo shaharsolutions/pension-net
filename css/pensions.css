@@ -409,3 +409,157 @@ body.pensions-page {
     font-size: 13px;
     backdrop-filter: blur(5px);
 }
+
+/* Admin Access Styles */
+.admin-access-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    z-index: 1000;
+    transition: var(--transition);
+    border: 1px solid var(--glass-border);
+}
+
+.admin-access-btn:hover {
+    background: var(--bg-card);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    backdrop-filter: blur(12px);
+}
+
+.modal-content {
+    background: #1e293b;
+    padding: 40px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    border: 1px solid var(--glass-border);
+}
+
+.modal-content h3 { 
+    margin-top: 0; 
+    color: white; 
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.modal-content p {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Visibility Toggles */
+.visibility-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 10;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pension-card.hidden-by-admin {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    border: 2px dashed rgba(239, 68, 68, 0.4) !important;
+}
+
+.pension-card.hidden-by-admin::before {
+    content: 'מושבת';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ef4444;
+    color: white;
+    padding: 4px 12px;
+    font-size: 11px;
+    border-radius: 6px;
+    font-weight: 800;
+    z-index: 11;
+}
+
+@media (max-width: 768px) {
+    .admin-access-btn {
+        bottom: auto;
+        top: 20px;
+        left: 20px;
+    }
+}
