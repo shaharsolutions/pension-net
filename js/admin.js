@@ -209,6 +209,7 @@ function initFlatpickr() {
     altFormat: "d/m/Y",
     allowInput: false,
     disableMobile: true,
+    // static: true, // הסרתי כי זה עלול להפריע לסגירה בלחיצה בחוץ
     // theme: "material_blue", // Styling via admin.css
     onOpen: function(selectedDates, dateStr, instance) {
       instance.calendarContainer.classList.add("premium-datepicker");
@@ -1621,8 +1622,7 @@ document
     }
   });
 
-loadData();
-
+// Removed redundant loadData() call
 // Auto-restore saved profile if PIN is still valid
 (async function initializeProfile() {
   // Small delay to ensure loadSettings has started setting managerName

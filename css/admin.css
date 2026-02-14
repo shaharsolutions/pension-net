@@ -596,7 +596,7 @@ textarea.admin-note:focus {
 .price-input-container {
   position: relative;
   display: inline-block;
-  min-width: 90px;
+  width: 70px;
 }
 
 .price-input-container::after {
@@ -649,7 +649,7 @@ textarea.admin-note:focus {
 .days-input-container {
   position: relative;
   display: inline-block;
-  min-width: 75px;
+  width: 70px;
 }
 
 .days-input {
@@ -704,7 +704,7 @@ textarea.admin-note:focus {
 }
 
 .wide-date-column {
-  min-width: 160px;
+  min-width: 140px;
   white-space: nowrap;
 }
 
@@ -722,7 +722,7 @@ textarea.admin-note:focus {
 }
 
 .date-input {
-  width: 100%;
+  width: 130px;
   padding: 10px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
