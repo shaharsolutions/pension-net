@@ -98,6 +98,18 @@
         </div>
     </div>
 
+    <!-- Admin Confirm Logout Modal -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>יציאה ממצב מנהל</h3>
+            <p>האם אתה בטוח שברצונך לצאת? הצ'קבוקסים לניהול יוסתרו.</p>
+            <div class="modal-actions">
+                <button onclick="closeConfirmModal()" class="btn-secondary">ביטול</button>
+                <button onclick="logoutAdmin()" class="btn-primary" style="background: #ef4444; border: none;">צא עכשיו</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

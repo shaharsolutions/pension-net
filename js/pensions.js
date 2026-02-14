@@ -249,13 +249,15 @@ function setupAdminListeners() {
     
     trigger.addEventListener('click', () => {
         if (isAdmin) {
-            if (confirm('האם לצאת ממצב מנהל?')) {
-                logoutAdmin();
-            }
+            document.getElementById('confirmModal').style.display = 'flex';
         } else {
             document.getElementById('adminModal').style.display = 'flex';
         }
     });
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
 }
 
 function logoutAdmin() {
@@ -263,7 +265,7 @@ function logoutAdmin() {
     const trigger = document.getElementById('adminLoginTrigger');
     trigger.classList.remove('active');
     trigger.innerHTML = '<i class="fas fa-user-shield"></i>';
-    alert('יצאת ממצב מנהל.');
+    closeConfirmModal();
     renderPensions();
 }
 
@@ -281,10 +283,16 @@ function checkAdminPassword() {
         trigger.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
         
         closeAdminModal();
-        alert('ברוך הבא מנהל! כעת תוכל לשלוט בנראות הפנסיונים.');
         renderPensions();
     } else {
-        alert('סיסמה שגויה!');
+        const passInput = document.getElementById('adminPassword');
+        passInput.style.borderColor = '#ef4444';
+        passInput.value = '';
+        passInput.placeholder = 'סיסמה שגויה!';
+        setTimeout(() => {
+            passInput.style.borderColor = 'var(--glass-border)';
+            passInput.placeholder = 'סיסמה...';
+        }, 2000);
     }
 }
 
