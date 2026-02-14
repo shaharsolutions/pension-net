@@ -239,11 +239,11 @@ function renderMarkers() {
                 <div style="direction: rtl; text-align: right;">
                     <h4 style="margin: 0 0 5px 0;">${p.business_name}</h4>
                     <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">${p.location}</p>
-                    <a href="order.html?owner=${p.id}" style="color: #6366f1; font-weight: bold; text-decoration: none; font-size: 12px;">מעבר להזמנה &raquo;</a>
+                    <a href="order.html?owner=${p.user_id}" style="color: #6366f1; font-weight: bold; text-decoration: none; font-size: 12px;">מעבר להזמנה &raquo;</a>
                 </div>
             `);
             
-            marker.pensionId = p.id;
+            marker.pensionId = p.user_id;
             markers.push(marker);
             bounds.extend([p.lat, p.lng]);
             hasCoords = true;
@@ -257,7 +257,7 @@ function renderMarkers() {
 }
 
 function focusPension(id) {
-    const pension = pensionsData.find(p => p.id === id);
+    const pension = pensionsData.find(p => p.user_id === id);
     if (pension && pension.lat && pension.lng) {
         map.flyTo([pension.lat, pension.lng], 14);
         
