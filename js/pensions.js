@@ -201,7 +201,7 @@ function renderPensions() {
     }
 
     listContainer.innerHTML = sortedData.map(p => `
-        <div class="pension-card" data-id="${p.id}" onclick="focusPension('${p.id}')">
+        <div class="pension-card" data-id="${p.user_id}" onclick="focusPension('${p.user_id}')">
             ${p.distance !== Infinity ? `<span class="badge">${p.distance.toFixed(1)} ק"מ</span>` : ''}
             <h3>${p.business_name}</h3>
             <div class="location">
@@ -216,7 +216,7 @@ function renderPensions() {
                 </div>
             </div>
             <div class="card-actions">
-                <a href="order.html?owner=${p.id}" class="card-btn btn-primary" onclick="event.stopPropagation()">הזמן עכשיו</a>
+                <a href="order.html?owner=${p.user_id}" class="card-btn btn-primary" onclick="event.stopPropagation()">הזמן עכשיו</a>
                 <a href="tel:${p.phone}" class="card-btn btn-outline" onclick="event.stopPropagation()">התקשר</a>
             </div>
         </div>
