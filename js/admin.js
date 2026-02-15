@@ -2546,30 +2546,61 @@ async function fillWithDemoData() {
   const today = new Date();
   const demoOrders = [];
 
-  // Generate data from 7 months back to 3 months forward
-  for (let m = -7; m <= 3; m++) {
-    // Business growth: Increase number of orders over time
-    // -7 months: ~5 orders, 0 months: ~12 orders, +3 months: ~15 orders
-    const baseOrders = 5;
-    const growthFactor = (m + 7) * 1; 
-    const numOrdersThisMonth = baseOrders + growthFactor + Math.floor(Math.random() * 3);
+    // Generate data from 7 months back to 1 month forward
+    for (let m = -7; m <= 1; m++) {
+        let numOrdersThisMonth;
+        if (m < 0) {
+            const baseOrders = 5;
+            const growthFactor = (m + 7) * 1; 
+            numOrdersThisMonth = baseOrders + growthFactor + Math.floor(Math.random() * 3);
+        } else if (m === 0) {
+            numOrdersThisMonth = 10; // Regular amount for current month
+        } else {
+            numOrdersThisMonth = 3; // Exactly 3 future orders
+        }
 
-    for (let i = 0; i < numOrdersThisMonth; i++) {
-        const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
-        const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
-        const size = sizes[Math.floor(Math.random() * sizes.length)];
-        
-        let status = Math.random() > 0.1 ? 'מאושר' : 'בוטל';
-        
-        // Random date within this specific month
-        const orderMonth = new Date(today.getFullYear(), today.getMonth() + m, 1);
-        const daysInMonth = new Date(orderMonth.getFullYear(), orderMonth.getMonth() + 1, 0).getDate();
-        const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
-        
-        const checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), randomDay);
-        const duration = Math.floor(Math.random() * 5) + 2; // 2-7 days
-        const checkOut = new Date(checkIn);
-        checkOut.setDate(checkIn.getDate() + duration);
+        for (let i = 0; i < numOrdersThisMonth; i++) {
+            const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
+            const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
+            const size = sizes[Math.floor(Math.random() * sizes.length)];
+            
+            let status = Math.random() > 0.1 ? 'מאושר' : 'בוטל';
+            
+            // Generate date
+            const orderMonth = new Date(today.getFullYear(), today.getMonth() + m, 1);
+            const daysInMonth = new Date(orderMonth.getFullYear(), orderMonth.getMonth() + 1, 0).getDate();
+            
+            let checkIn;
+            let duration = Math.floor(Math.random() * 5) + 2; // 2-7 days
+            
+            if (m === 0) {
+                if (i === 0) {
+                    // Forced: Entry today
+                    checkIn = new Date(today);
+                    status = 'מאושר';
+                } else if (i === 1) {
+                    // Forced: Exit today
+                    checkIn = new Date(today);
+                    checkIn.setDate(today.getDate() - duration);
+                    status = 'מאושר';
+                } else {
+                    // Ensure other current month orders are in the past
+                    const pastDay = Math.floor(Math.random() * today.getDate()) + 1;
+                    checkIn = new Date(today.getFullYear(), today.getMonth(), pastDay);
+                }
+            } else if (m > 0) {
+                // Future orders: m=1
+                const futureDay = Math.floor(Math.random() * daysInMonth) + 1;
+                checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), futureDay);
+                status = 'מאושר'; // Future orders usually shown as approved in demo
+            } else {
+                // Past months
+                const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+                checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), randomDay);
+            }
+            
+            const checkOut = new Date(checkIn);
+            checkOut.setDate(checkIn.getDate() + duration);
         
         const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const checkInNormalized = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
