@@ -82,6 +82,59 @@
         text-align: center;
         margin-bottom: 60px;
         animation: fadeInDown 0.8s ease-out;
+        position: relative;
+      }
+
+      .header-nav-top {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: flex;
+        gap: 12px;
+        z-index: 10;
+      }
+
+      .header-nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: white;
+        padding: 10px 20px;
+        border-radius: 12px;
+        color: #1e293b;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+      }
+
+      .header-nav-btn:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-color: #cbd5e0;
+      }
+
+      .header-nav-btn.primary-nav {
+        background: #6366f1;
+        color: white;
+        border-color: #6366f1;
+      }
+
+      .header-nav-btn.primary-nav:hover {
+        background: #4f46e5;
+        border-color: #4f46e5;
+      }
+
+      @media (max-width: 768px) {
+        .header-nav-top {
+          position: static;
+          margin-bottom: 20px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
       }
 
       /* Sections & Cards */
@@ -293,6 +346,10 @@
     
     <div class="main-wrapper">
       <header>
+        <div class="header-nav-top">
+          <a href="admin.html" class="header-nav-btn"><i class="fas fa-arrow-right"></i> חזרה לניהול</a>
+          <a href="growth.html" class="header-nav-btn"><i class="fas fa-chart-line"></i> צפייה בדוחות</a>
+        </div>
         <h1>מדריך תובנות חכמות</h1>
         <div class="subtitle">הסבר מקיף למנהל הפנסיון על יכולות הניתוח והדוחות במערכת</div>
       </header>
@@ -463,7 +520,6 @@
 
       <div class="nav-footer">
           <a href="admin.html" class="nav-btn">← חזרה למערכת הניהול</a>
-          <a href="growth.html" class="nav-btn primary">📊 צפייה בדוחות בפועל</a>
       </div>
     
     </div>
