@@ -53,12 +53,29 @@ body {
 .btn-primary {
   background: #667eea;
   color: white;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
 }
 
 .btn-primary:hover {
   background: #5a67d8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
 }
 
 /* Helper Classes */

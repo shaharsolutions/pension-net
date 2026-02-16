@@ -9,6 +9,7 @@ let pensionsData = [];
 let userLocation = null;
 let activeFilter = 'distance';
 let isAdmin = false;
+let isInitialLoading = true;
 const ADMIN_PASS = 'SC1627s@';
 
 // Geocoding cache to minimize Nominatim hits
@@ -101,6 +102,7 @@ async function fetchPensions() {
     }
 
     pensionsData = data || [];
+    isInitialLoading = false;
     await processPensions();
 }
 
@@ -201,8 +203,19 @@ function sortPensions() {
 }
 
 function renderPensions() {
-    const sortedData = sortPensions();
     const listContainer = document.getElementById('pensionList');
+    
+    if (isInitialLoading) {
+        listContainer.innerHTML = `
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>טוען פנסיונים מתוך המערכת...</p>
+            </div>
+        `;
+        return;
+    }
+
+    const sortedData = sortPensions();
     
     if (sortedData.length === 0) {
         listContainer.innerHTML = '<div class="loading-state"><p>לא נמצאו פנסיונים תואמים</p></div>';

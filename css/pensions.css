@@ -1,7 +1,7 @@
 :root {
-    --primary: #6366f1;
+    --primary: #667eea;
     --primary-light: #818cf8;
-    --primary-glow: rgba(99, 102, 241, 0.4);
+    --primary-glow: rgba(102, 126, 234, 0.4);
     --accent: #10b981;
     --bg-dark: #0f172a;
     --bg-card: rgba(30, 41, 59, 0.4);
@@ -341,7 +341,7 @@ body.pensions-page {
     width: 40px;
     height: 40px;
     border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: var(--primary-color);
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 16px;
