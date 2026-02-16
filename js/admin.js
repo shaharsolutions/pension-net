@@ -1686,10 +1686,10 @@ async function switchTab(tabName) {
     selectedBtn.classList.add('active');
   }
 
-  // Hide global save button on settings/audit tabs
+  // Ensure global save button is visible on ongoing and history tabs
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (globalSaveBtn) {
-    globalSaveBtn.style.display = (tabName === 'settings' || tabName === 'audit') ? 'none' : 'block';
+    globalSaveBtn.style.display = (tabName === 'ongoing' || tabName === 'history') ? 'block' : 'none';
   }
 
   // Handle data loading for specific tabs
@@ -2107,13 +2107,27 @@ function updateModeUI() {
 
   // Toggle global save button visibility (FOR BOTH MODES)
   if (globalSaveBtn) {
-    if (allowSave) {
-      // Still respect tab display logic
-      const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-      if (activeTab === 'settings' || activeTab === 'audit') {
-        globalSaveBtn.style.display = 'none';
-      } else {
-        globalSaveBtn.style.display = 'block';
+    // Button should be visible if on 'ongoing' or 'history' tab, regardless of allowSave
+    // but we will disable it if not explicitly allowed to prevent confusion.
+    const activeTabAttr = document.querySelector('.tab-btn.active')?.getAttribute('onclick') || '';
+    const activeTab = activeTabAttr.match(/'([^']+)'/)?.[1];
+    const isSaveTab = (activeTab === 'ongoing' || activeTab === 'history');
+    
+    if (isSaveTab) {
+      globalSaveBtn.style.display = 'block';
+      const btn = document.getElementById('saveButton');
+      if (btn) {
+        // We keep it enabled if they are in admin mode or have any edit permission
+        btn.disabled = !allowSave;
+        if (!allowSave) {
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+          btn.title = 'אין לך הרשאה לשמור שינויים';
+        } else {
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.title = '';
+        }
       }
     } else {
       globalSaveBtn.style.display = 'none';
