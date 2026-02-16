@@ -16,6 +16,12 @@ async function checkAuthStatus() {
 const checkAuth = checkAuthStatus;
 
 async function logout() {
+  localStorage.removeItem('pensionet_last_pin_verified');
+  localStorage.removeItem('pensionNet_activeStaff');
+  window.lastPinVerificationTime = 0;
+  window.isSessionVerified = false;
+  window.isAdminMode = false;
+  window.overlayManuallyClosed = false;
   await Auth.logout();
 }
 
@@ -195,8 +201,8 @@ function calculateDays(checkIn, checkOut) {
   const start = new Date(checkIn);
   const end = new Date(checkOut);
   const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+  const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return nights + 1;
 }
 
 function initFlatpickr() {
@@ -251,7 +257,7 @@ function updateCheckOutFromDays(row) {
   const day = parseInt(parts[2]);
 
   const date = new Date(year, month, day);
-  date.setDate(date.getDate() + days);
+  date.setDate(date.getDate() + (days - 1));
 
   const newYear = date.getFullYear();
   const newMonth = String(date.getMonth() + 1).padStart(2, "0");
@@ -1879,6 +1885,9 @@ async function verifyManagerAccess(targetName = null) {
   // Check for 5-minute cooldown
   const now = Date.now();
   if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000)) {
+    if (targetName) {
+      window.isAdminMode = !isVerifyingStaff;
+    }
     return true;
   }
 
@@ -2031,9 +2040,17 @@ window.managerName = '';
 function updateModeUI() {
   const badge = document.getElementById('modeStatusLabel');
   const staffSelectorContainer = document.getElementById('activeStaffSelectorContainer');
+  const overlay = document.getElementById('login-overlay');
+  const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (!badge) return;
 
+  const now = Date.now();
+  const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+  const activeStaffName = document.getElementById('activeStaffSelect')?.value || 'צוות';
+  let allowSave = false;
+
   if (window.isAdminMode) {
+    allowSave = true;
     badge.innerHTML = '<i class="fas fa-unlock"></i> מצב מנהל';
     badge.className = 'mode-badge manager';
     document.body.classList.remove('staff-mode', 'no-identity');
@@ -2045,8 +2062,6 @@ function updateModeUI() {
     if (select && window.managerName) {
       select.value = window.managerName;
     }
-    const overlay = document.getElementById('login-overlay');
-    if (overlay) overlay.style.display = 'none';
   } else {
     badge.innerHTML = '<i class="fas fa-lock"></i> מצב עובד';
     badge.className = 'mode-badge staff';
@@ -2054,62 +2069,63 @@ function updateModeUI() {
     if (staffSelectorContainer) staffSelectorContainer.style.display = 'flex';
     
     // Switch permissions based on selected active employee
-    const activeStaffName = document.getElementById('activeStaffSelect')?.value;
     const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
     
     const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : (window.globalStaffPermissions || {
+       edit_status: false,
        edit_details: false
     });
 
     // Apply permissions
-    if (perms.edit_status) document.body.classList.add('perm-edit-status');
-    else document.body.classList.remove('perm-edit-status');
+    if (perms.edit_status) {
+      document.body.classList.add('perm-edit-status');
+      allowSave = true;
+    } else {
+      document.body.classList.remove('perm-edit-status');
+    }
     
-    if (perms.edit_details) document.body.classList.add('perm-edit-details');
-    else document.body.classList.remove('perm-edit-details');
+    if (perms.edit_details) {
+      document.body.classList.add('perm-edit-details');
+      allowSave = true;
+    } else {
+      document.body.classList.remove('perm-edit-details');
+    }
 
     // LOCK ACTIONS: If no staff identity defined and not in admin mode
-    if (!window.isAdminMode && activeStaffName === 'צוות') {
+    if (activeStaffName === 'צוות') {
        document.body.classList.add('no-identity');
     } else {
        document.body.classList.remove('no-identity');
     }
 
-    // Toggle global save button visibility based on permissions
-    const globalSaveBtn = document.getElementById('saveButtonContainer');
-    if (globalSaveBtn) {
-      if (window.isAdminMode || perms.edit_status || perms.edit_details) {
-        // Show if in manager mode OR has any edit permission
-        // Still respect tab display logic (if switchTab hidden it, it might still be none)
-        const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-        if (activeTab === 'settings' || activeTab === 'audit') {
-          globalSaveBtn.style.display = 'none';
-        } else {
-          globalSaveBtn.style.display = 'block';
-        }
-      } else {
-        globalSaveBtn.style.display = 'none';
-      }
-    }
-
     // If on protected tab while in staff mode AND PIN expired, switch to ongoing
-    const now = Date.now();
-    const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
-    
     const activeTabBtn = document.querySelector('.tab-btn.active');
     if (!pinValid && activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
       switchTab('ongoing');
     }
+  }
 
-    // LOCK: If no valid profile selected OR PIN expired, show login overlay
+  // Toggle global save button visibility (FOR BOTH MODES)
+  if (globalSaveBtn) {
+    if (allowSave) {
+      // Still respect tab display logic
+      const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+      if (activeTab === 'settings' || activeTab === 'audit') {
+        globalSaveBtn.style.display = 'none';
+      } else {
+        globalSaveBtn.style.display = 'block';
+      }
+    } else {
+      globalSaveBtn.style.display = 'none';
+    }
+  }
+
+  // LOCK: If no valid profile selected OR PIN expired, show login overlay (FOR BOTH MODES)
+  if (overlay) {
     if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed) {
-       const overlay = document.getElementById('login-overlay');
-       if (overlay) overlay.style.setProperty('display', 'flex', 'important');
-    } else if (pinValid || window.isAdminMode || window.overlayManuallyClosed) {
-       const overlay = document.getElementById('login-overlay');
-       if (overlay && overlay.style.display !== 'none') {
-         overlay.style.setProperty('display', 'none', 'important');
-       }
+       overlay.style.setProperty('display', 'flex', 'important');
+    } else {
+       overlay.style.setProperty('display', 'none', 'important');
     }
   }
   

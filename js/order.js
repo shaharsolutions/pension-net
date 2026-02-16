@@ -313,13 +313,11 @@ function updateDaysDisplay() {
   
   if (checkIn && checkOut) {
     const days = calculateDays(checkIn, checkOut); // Uses utils.js
-    if (days >= 0) {
-      if (days === 0) {
-        daysText.textContent = `יום כיף בגן 🐾`;
-      } else if (days === 1) {
-        daysText.textContent = `לילה אחד בפנסיון 🐾`;
+    if (days >= 1) {
+      if (days === 1) {
+        daysText.textContent = `יום אחד בפנסיון 🐾`;
       } else {
-        daysText.textContent = `${days} לילות בפנסיון 🐾`;
+        daysText.textContent = `${days} ימים בפנסיון 🐾`;
       }
       daysDisplay.classList.add('show');
     } else {
