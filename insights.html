@@ -19,7 +19,7 @@
     />
 
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/common.css?v=1" />
     <style>
       :root {
         --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -35,12 +35,41 @@
       }
 
       body {
-        /* Gradient inhereted from common.css, but we refine defaults here */
+        background-color: #f8fafc !important; 
+        background-image: none !important; /* Kill the common.css gradient */
         font-family: "Heebo", sans-serif;
         color: var(--text-primary);
         min-height: 100vh;
         padding: 40px 20px;
         line-height: 1.6;
+      }
+
+      /* Background refinement for the main content to pop */
+      header h1 {
+        color: #1e293b !important;
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        text-shadow: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+        letter-spacing: -1px;
+      }
+
+      header .subtitle {
+        color: #64748b !important;
+        font-size: 1.3rem;
+        opacity: 1 !important;
+        font-weight: 400;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .nav-btn {
+        background: var(--glass-bg);
+        color: #6366f1;
+        border: 1px solid #e2e8f0;
       }
 
       /* Main Layout */
@@ -52,29 +81,7 @@
       header {
         text-align: center;
         margin-bottom: 60px;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         animation: fadeInDown 0.8s ease-out;
-      }
-
-      header h1 {
-        font-family: 'Outfit', sans-serif;
-        font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 12px;
-        letter-spacing: -1px;
-        background: linear-gradient(to right, #fff, #e0e7ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        drop-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-
-      header .subtitle {
-        font-size: 1.3rem;
-        opacity: 0.9;
-        font-weight: 300;
-        max-width: 600px;
-        margin: 0 auto;
       }
 
       /* Sections & Cards */
@@ -319,7 +326,7 @@
               <div class="insight-icon-wrapper">📈</div>
               אחוז תפוסה
             </div>
-            <p class="description">חישוב ממוצע של ימי התפוסה ביחס לקיבולת המקסימלית (15 כלבים).</p>
+            <p class="description">חישוב ממוצע של ימי התפוסה ביחס לקיבולת המקסימלית שהוגדרה עבור הפנסיון.</p>
             <div class="value-prop">למה זה חשוב? זיהוי ימים ריקים שניתן למלא או עומס שמחייב היערכות.</div>
           </div>
 
