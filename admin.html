@@ -241,24 +241,31 @@
         </div>
 
         <div class="container">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-            <h3 style="margin: 0;">הזמנות עתידיות</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-              <div class="search-wrapper" style="position: relative;">
-                <input type="text" id="futureSearchInput" placeholder="חיפוש חופשי..." style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; width: 200px;">
+          <div class="table-header">
+            <h3 class="table-title"><i class="fas fa-calendar-alt" style="color: var(--primary);"></i> הזמנות עתידיות</h3>
+            <div class="table-filters">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="futureSearchInput" placeholder="חיפוש חופשי (שם, טלפון, כלב)...">
               </div>
-              <select id="futureStatusFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;">
-                <option value="all">כל הסטטוסים</option>
-                <option value="ממתין">ממתין (חדש)</option>
-                <option value="מאושר">מאושר</option>
-                <option value="בוטל">בוטל</option>
-              </select>
-              <select id="futureSortSelect" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;">
-                <option value="check_in_asc">כניסה (מהקרוב לרחוק)</option>
-                <option value="check_in_desc">כניסה (מהרחוק לקרוב)</option>
-                <option value="order_date_desc">תאריך הזמנה (חדש לישן)</option>
-                <option value="dog_name">שם הכלב (א-ת)</option>
-              </select>
+              <div class="filter-group">
+                <i class="fas fa-filter"></i>
+                <select id="futureStatusFilter">
+                  <option value="all">כל הסטטוסים</option>
+                  <option value="ממתין">ממתין (חדש)</option>
+                  <option value="מאושר">מאושר</option>
+                  <option value="בוטל">בוטל</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <i class="fas fa-sort-amount-down"></i>
+                <select id="futureSortSelect">
+                  <option value="check_in_asc">כניסה (מהקרוב לרחוק)</option>
+                  <option value="check_in_desc">כניסה (מהרחוק לקרוב)</option>
+                  <option value="order_date_desc">תאריך הזמנה (חדש לישן)</option>
+                  <option value="dog_name">שם הכלב (א-ת)</option>
+                </select>
+              </div>
             </div>
           </div>
           <table id="futureOrdersTable">
@@ -288,17 +295,14 @@
 
       <div id="tab-history" class="tab-content">
         <div class="container" id="historyTableContainer">
-          <h3>היסטוריית הזמנות</h3>
-          <div style="margin-bottom: 12px">
-            <label for="historySearchInput" style="font-weight: bold"
-              >חיפוש בהיסטוריית ההזמנות:</label
-            >
-            <input
-              type="text"
-              id="historySearchInput"
-              placeholder="הקלד לחיפוש..."
-              style="margin-top: 4px; margin-bottom: 8px; max-width: 300px"
-            />
+          <div class="table-header">
+            <h3 class="table-title"><i class="fas fa-history" style="color: var(--primary);"></i> היסטוריית הזמנות</h3>
+            <div class="table-filters">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="historySearchInput" placeholder="חיפוש בהיסטוריה (שם, טלפון, כלב)...">
+              </div>
+            </div>
           </div>
           <div id="pastOrdersTableWrapper">
             <table id="pastOrdersTable">

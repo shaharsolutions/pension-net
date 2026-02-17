@@ -233,6 +233,105 @@ header h1 {
   background: linear-gradient(to bottom, transparent, rgba(248, 250, 252, 0.5));
 }
 
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.table-title {
+  margin: 0 !important;
+  font-size: 22px !important;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.table-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+  max-width: 350px;
+}
+
+.search-box i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-box input {
+  padding-right: 35px !important;
+  height: 42px;
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+}
+
+.search-box input:focus {
+  background: white !important;
+  border-color: var(--primary) !important;
+}
+
+.filter-group {
+  position: relative;
+  min-width: 160px;
+}
+
+.filter-group i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  font-size: 13px;
+}
+
+.filter-group select {
+  padding-right: 32px !important;
+  height: 42px;
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+  -webkit-appearance: none;
+  appearance: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filter-group select:focus {
+  background: white !important;
+}
+
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .table-filters {
+    justify-content: flex-start;
+  }
+  
+  .search-box, .filter-group {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+}
+
 /* --- CSS ללוח השנה החדש ולכפתורים --- */
 #calendarViewControls {
   display: flex;
