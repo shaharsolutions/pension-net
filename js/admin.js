@@ -319,7 +319,15 @@ function formatPhoneForWhatsApp(phone) {
 function createWhatsAppLink(phone) {
   if (!phone) return "";
   const formattedPhone = formatPhoneForWhatsApp(phone);
-  return `<a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-link">${phone} <i class="fab fa-whatsapp"></i></a>`;
+  const cleanPhone = phone.replace(/[\s\-]/g, "");
+  return `
+    <div class="phone-actions">
+      <a href="tel:${cleanPhone}" class="phone-link">${phone}</a>
+      <a href="https://wa.me/${formattedPhone}" target="_blank" class="whatsapp-icon-link" title="פתיחת צ'אט בווטסאפ">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+    </div>
+  `;
 }
 
 function generateWhatsAppConfirmationLink(row) {

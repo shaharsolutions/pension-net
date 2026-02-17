@@ -925,6 +925,38 @@ textarea.admin-note:focus {
   color: #047857;
 }
 
+.phone-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.phone-link {
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.phone-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.whatsapp-icon-link {
+  color: #25d366;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.whatsapp-icon-link:hover {
+  color: #128c7e;
+  transform: scale(1.15);
+}
+
 #saveButtonContainer {
   position: fixed;
   bottom: 30px;
