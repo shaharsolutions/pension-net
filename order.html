@@ -175,7 +175,24 @@
           <div class="form-group" style="margin-top:24px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <button type="button" id="prevMonthBtn" onclick="changeCapacityMonth(-1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;"><i class="fas fa-chevron-right"></i></button>
-              <h3 id="capacityMonthTitle" style="color:#667eea; margin:0; font-size: 18px;">טוען...</h3>
+              <div id="capacityPicker" style="display: flex; gap: 4px; align-items: center; color: #667eea; font-weight: 700;">
+                <select id="capacityMonth" onchange="jumpCapacityToDate()" style="border: none; background: transparent; font-size: 18px; font-weight: 700; color: #667eea; cursor: pointer; padding: 2px; outline: none; font-family: inherit;">
+                  <option value="0">ינואר</option>
+                  <option value="1">פברואר</option>
+                  <option value="2">מרץ</option>
+                  <option value="3">אפריל</option>
+                  <option value="4">מאי</option>
+                  <option value="5">יוני</option>
+                  <option value="6">יולי</option>
+                  <option value="7">אוגוסט</option>
+                  <option value="8">ספטמבר</option>
+                  <option value="9">אוקטובר</option>
+                  <option value="10">נובמבר</option>
+                  <option value="11">דצמבר</option>
+                </select>
+                <select id="capacityYear" onchange="jumpCapacityToDate()" style="border: none; background: transparent; font-size: 18px; font-weight: 700; color: #667eea; cursor: pointer; padding: 2px; outline: none; font-family: inherit;">
+                </select>
+              </div>
               <button type="button" id="nextMonthBtn" onclick="changeCapacityMonth(1)" style="background:none; border:none; font-size:20px; cursor:pointer; color:#667eea; padding: 5px;"><i class="fas fa-chevron-left"></i></button>
             </div>
             

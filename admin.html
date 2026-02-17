@@ -207,11 +207,24 @@
               >
                 &lt; חודש קודם
               </button>
-              <span
-                id="currentMonthYear"
-                style="font-size: 24px; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 8px 16px; border-radius: 12px; min-width: 180px; display: inline-block; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02);"
-                >טוען...</span
-              >
+              <div id="monthYearPicker" style="display: inline-flex; gap: 8px; align-items: center; background: #f1f5f9; padding: 4px 12px; border-radius: 12px; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02); min-width: 200px; justify-content: center;">
+                <select id="calendarMonth" onchange="jumpToDate()" style="border: none; background: transparent; font-size: 18px; font-weight: 800; color: #1e293b; cursor: pointer; padding: 4px; outline: none; font-family: inherit; min-width: 95px;">
+                  <option value="0">ינואר</option>
+                  <option value="1">פברואר</option>
+                  <option value="2">מרץ</option>
+                  <option value="3">אפריל</option>
+                  <option value="4">מאי</option>
+                  <option value="5">יוני</option>
+                  <option value="6">יולי</option>
+                  <option value="7">אוגוסט</option>
+                  <option value="8">ספטמבר</option>
+                  <option value="9">אוקטובר</option>
+                  <option value="10">נובמבר</option>
+                  <option value="11">דצמבר</option>
+                </select>
+                <select id="calendarYear" onchange="jumpToDate()" style="border: none; background: transparent; font-size: 18px; font-weight: 800; color: #1e293b; cursor: pointer; padding: 4px; outline: none; font-family: inherit;">
+                </select>
+              </div>
               <button
                 id="nextMonth"
                 class="header-btn"

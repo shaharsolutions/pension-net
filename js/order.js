@@ -124,10 +124,23 @@ async function loadMonthlyCapacity() {
   const year = currentCapacityDate.getFullYear();
   const month = currentCapacityDate.getMonth();
   
-  // Update Title
-  const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
-  const titleEl = document.getElementById('capacityMonthTitle');
-  if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+  // Update Selects
+  const monthSelect = document.getElementById('capacityMonth');
+  const yearSelect = document.getElementById('capacityYear');
+  
+  if (monthSelect) monthSelect.value = month;
+  if (yearSelect) {
+    if (yearSelect.options.length === 0) {
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear; y <= currentYear + 2; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+      }
+    }
+    yearSelect.value = year;
+  }
 
   // Calculate range
   const firstDay = new Date(year, month, 1);
@@ -240,6 +253,31 @@ function changeCapacityMonth(offset) {
     }
 
     currentCapacityDate = targetDate;
+    loadMonthlyCapacity();
+}
+
+function jumpCapacityToDate() {
+    const monthSelect = document.getElementById('capacityMonth');
+    const yearSelect = document.getElementById('capacityYear');
+    if (!monthSelect || !yearSelect) return;
+    
+    const month = parseInt(monthSelect.value);
+    const year = parseInt(yearSelect.value);
+    
+    const targetDate = new Date(year, month, 1);
+    const today = new Date();
+    const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    
+    // Check range for booking calendar
+    if (targetDate.getTime() < minDate.getTime()) {
+        currentCapacityDate = minDate;
+    } else if (targetDate.getTime() > maxDate.getTime()) {
+        currentCapacityDate = maxDate;
+    } else {
+        currentCapacityDate = targetDate;
+    }
+    
     loadMonthlyCapacity();
 }
 

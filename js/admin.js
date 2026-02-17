@@ -530,15 +530,27 @@ function safeParseNotes(noteStr) {
 
 function renderMonthlyCalendar(allOrders) {
   const calendarGrid = document.getElementById("monthlyCalendarGrid");
-  const header = document.getElementById("currentMonthYear");
   const date = window.currentCalendarDate;
-
-  // Set month/year display
-  const monthName = date.toLocaleDateString("he-IL", {
-    year: "numeric",
-    month: "long",
-  });
-  header.textContent = monthName;
+  
+  // Update Selects
+  const monthSelect = document.getElementById("calendarMonth");
+  const yearSelect = document.getElementById("calendarYear");
+  
+  if (monthSelect) monthSelect.value = date.getMonth();
+  
+  if (yearSelect) {
+    // Populate years if empty
+    if (yearSelect.options.length === 0) {
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+      }
+    }
+    yearSelect.value = date.getFullYear();
+  }
 
   // Calculate calendar start/end
   const firstDayOfMonth = new Date(
@@ -721,6 +733,23 @@ function changeMonth(delta) {
   } else {
     loadData();
   }
+}
+
+function jumpToDate() {
+    const monthSelect = document.getElementById("calendarMonth");
+    const yearSelect = document.getElementById("calendarYear");
+    if (!monthSelect || !yearSelect) return;
+    
+    const month = parseInt(monthSelect.value);
+    const year = parseInt(yearSelect.value);
+    
+    window.currentCalendarDate = new Date(year, month, 1);
+    
+    if (window.allOrdersCache.length > 0) {
+        renderMonthlyCalendar(window.allOrdersCache);
+    } else {
+        loadData();
+    }
 }
 
 function toggleCalendarCollapse(button) {
