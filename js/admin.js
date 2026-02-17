@@ -1,6 +1,8 @@
 window.isSessionVerified = false;
 window.businessName = '';
 window.lastPinVerificationTime = parseInt(localStorage.getItem('pensionet_last_pin_verified') || '0');
+const PIN_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 Hours in MS
+
 
 // --- Supabase Auth Integration ---
 async function checkAuthStatus() {
@@ -38,7 +40,7 @@ function closeProfileOverlay() {
     
     // If no valid session exists, ensure identity is reset to 'צוות'
     const now = Date.now();
-    const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+    const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < PIN_EXPIRATION_MS);
     
     if (!pinValid) {
       const activeSelect = document.getElementById('activeStaffSelect');
@@ -1673,7 +1675,7 @@ document
   
   const savedProfile = localStorage.getItem('pensionNet_activeStaff');
   const now = Date.now();
-  const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
+  const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < PIN_EXPIRATION_MS);
   
   if (savedProfile && savedProfile !== 'צוות' && pinValid) {
     // PIN is still valid, restore profile without asking again
@@ -1921,7 +1923,7 @@ async function verifyManagerAccess(targetName = null) {
   
   // Check for 5-minute cooldown
   const now = Date.now();
-  if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000)) {
+  if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < PIN_EXPIRATION_MS)) {
     if (targetName) {
       window.isAdminMode = !isVerifyingStaff;
     }

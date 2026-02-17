@@ -10,7 +10,7 @@ let userLocation = null;
 let activeFilter = 'distance';
 let isAdmin = false;
 let isInitialLoading = true;
-const ADMIN_PASS = 'SC1627s@';
+const ADMIN_PASS = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.DIRECTORY_ADMIN_PASS : 'SC1627s@';
 
 // Geocoding cache to minimize Nominatim hits
 const geocodeCache = new Map();
