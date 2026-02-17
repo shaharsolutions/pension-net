@@ -132,7 +132,7 @@ async function loadMonthlyCapacity() {
   if (yearSelect) {
     if (yearSelect.options.length === 0) {
       const currentYear = new Date().getFullYear();
-      for (let y = currentYear; y <= currentYear + 2; y++) {
+      for (let y = currentYear; y <= currentYear + 1; y++) {
         const opt = document.createElement("option");
         opt.value = y;
         opt.textContent = y;
@@ -243,7 +243,7 @@ async function loadMonthlyCapacity() {
 function changeCapacityMonth(offset) {
     const today = new Date();
     const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 12, 1);
     
     // Calculate target (normalized)
     const targetDate = new Date(currentCapacityDate.getFullYear(), currentCapacityDate.getMonth() + offset, 1);
@@ -267,7 +267,7 @@ function jumpCapacityToDate() {
     const targetDate = new Date(year, month, 1);
     const today = new Date();
     const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 12, 1);
     
     // Check range for booking calendar
     if (targetDate.getTime() < minDate.getTime()) {
@@ -284,7 +284,7 @@ function jumpCapacityToDate() {
 function updateNavigationButtons() {
     const today = new Date();
     const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const maxDate = new Date(today.getFullYear(), today.getMonth() + 12, 1);
     
     const viewDate = new Date(currentCapacityDate.getFullYear(), currentCapacityDate.getMonth(), 1);
     
@@ -361,9 +361,33 @@ function updateDaysDisplay() {
     } else {
       daysDisplay.classList.remove('show');
     }
+
+    // Auto-jump calendar to the month of check-in if it's different
+    const dIn = new Date(checkIn);
+    if (!isNaN(dIn)) {
+        const dYear = dIn.getFullYear();
+        const dMonth = dIn.getMonth();
+        if (dYear !== currentCapacityDate.getFullYear() || dMonth !== currentCapacityDate.getMonth()) {
+            currentCapacityDate = new Date(dYear, dMonth, 1);
+        }
+    }
+  } else if (checkIn) {
+    // If only check-in is selected, also jump to that month
+    const dIn = new Date(checkIn);
+    if (!isNaN(dIn)) {
+        const dYear = dIn.getFullYear();
+        const dMonth = dIn.getMonth();
+        if (dYear !== currentCapacityDate.getFullYear() || dMonth !== currentCapacityDate.getMonth()) {
+            currentCapacityDate = new Date(dYear, dMonth, 1);
+        }
+    }
+    daysDisplay.classList.remove('show');
   } else {
     daysDisplay.classList.remove('show');
   }
+  
+  // Refresh calendar display
+  loadMonthlyCapacity();
 }
 
 let lastCheckInValue = '';
@@ -376,6 +400,8 @@ function handleCheckInChange() {
   // Sync logic: if check-out is empty OR was exactly the same as the old check-in, update it
   if (newValue && (!checkOutInput.value || checkOutInput.value === lastCheckInValue)) {
     checkOutInput.value = newValue;
+    // When manually selecting check-in, we prepare to select check-out next
+    selectionPhase = 2;
   }
   
   lastCheckInValue = newValue;
