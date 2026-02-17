@@ -882,7 +882,7 @@ function renderPastOrdersTable() {
     const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
     tr.innerHTML = `
-    <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
+    <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
     <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
@@ -1313,7 +1313,7 @@ function filterFutureOrdersData() {
         data.sort((a,b) => new Date(b.check_in) - new Date(a.check_in));
         break;
       case 'order_date_desc':
-        data.sort((a,b) => new Date(b.order_date) - new Date(a.order_date));
+        data.sort((a,b) => new Date(b.order_date || b.created_at) - new Date(a.order_date || a.created_at));
         break;
       case 'dog_name':
         data.sort((a,b) => (a.dog_name || '').localeCompare(b.dog_name || '', 'he'));
@@ -1356,7 +1356,7 @@ function renderFutureOrdersTable() {
       const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
       tr.innerHTML = `
-      <td data-label="תאריך הזמנה">${formatDateTime(row.order_date)}</td>
+      <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
       <td data-label="בעלים">${row.owner_name || ""}</td>
       <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
       <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
