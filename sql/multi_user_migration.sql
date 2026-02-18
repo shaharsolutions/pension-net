@@ -22,8 +22,8 @@ CREATE POLICY "Owners have full access to their own data"
 ON orders
 FOR ALL
 TO authenticated
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
 
 -- 2. ANONYMOUS USERS (Customers)
 -- Customers need to see existing orders for a specific owner to check capacity and identify their own previous dogs
@@ -65,13 +65,13 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policies for profiles
 CREATE POLICY "Users can view their own profile" ON public.profiles
-    FOR SELECT TO authenticated USING (auth.uid() = user_id);
+    FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update their own profile" ON public.profiles
-    FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+    FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert their own profile" ON public.profiles
-    FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+    FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 
 -- 4. PUBLIC ACCESS (Clients)
 -- Clients need to see business name and location to verify they are on the right booking page
