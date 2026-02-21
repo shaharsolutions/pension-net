@@ -14,6 +14,16 @@ const ADMIN_PASS = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.DIRECTORY_ADMI
 
 // Geocoding cache to minimize Nominatim hits
 const geocodeCache = new Map();
+// Load cache from localStorage
+try {
+    const savedCache = localStorage.getItem('pension_geocode_cache');
+    if (savedCache) {
+        const parsed = JSON.parse(savedCache);
+        parsed.forEach(([key, val]) => geocodeCache.set(key, val));
+    }
+} catch (e) {
+    console.warn("Could not load geocode cache", e);
+}
 
 async function init() {
     // 1. Initialize Supabase
@@ -82,7 +92,8 @@ async function getUserLocation() {
                 statusToast.innerHTML = '<i class="fas fa-info-circle"></i> חיפוש ללא זיהוי מיקום';
                 setTimeout(() => statusToast.style.display = 'none', 3000);
                 processPensions(); 
-            }
+            },
+            { timeout: 5000 } // Add 5 second timeout
         );
     } else {
         statusToast.style.display = 'none';
@@ -103,30 +114,25 @@ async function fetchPensions() {
 
     pensionsData = data || [];
     isInitialLoading = false;
-    await processPensions();
+    
+    // Initial process to show data immediately
+    processPensions();
 }
 
+let isProcessingGeocodes = false;
 async function processPensions() {
-    const listContainer = document.getElementById('pensionList');
-    
-    // Sequential geocoding to respect Nominatim rate limit (1 req/sec)
-    for (const pension of pensionsData) {
-        if (!pension.location) continue;
-        
-        // Skip if already has coords or in cache
+    if (isInitialLoading) return;
+
+    // 1. Calculate distances for what we already have (cached or previously geocoded)
+    pensionsData.forEach(pension => {
         if (!pension.lat || !pension.lng) {
-            let coords = await geocodeAddress(pension.location);
-            if (coords) {
-                pension.lat = coords.lat;
-                pension.lng = coords.lng;
-                
-                // Save to persistent cache
-                geocodeCache.set(pension.location, coords);
-                localStorage.setItem('pension_geocode_cache', JSON.stringify([...geocodeCache]));
+            const cached = geocodeCache.get(pension.location);
+            if (cached) {
+                pension.lat = cached.lat;
+                pension.lng = cached.lng;
             }
         }
 
-        // Calculate distance if user location is available
         if (userLocation && pension.lat && pension.lng) {
             pension.distance = calculateDistance(
                 userLocation.lat, userLocation.lng,
@@ -135,14 +141,48 @@ async function processPensions() {
         } else {
             pension.distance = Infinity;
         }
-    }
+    });
 
-    // 2. Sort pensions
-    sortPensions();
-
-    // 3. Render
+    // 2. Initial Render (What we have right now)
     renderPensions();
     renderMarkers();
+
+    // 3. Sequential geocoding for missing ones in the background
+    if (isProcessingGeocodes) return;
+    isProcessingGeocodes = true;
+
+    try {
+        for (const pension of pensionsData) {
+            if (!pension.location) continue;
+            
+            // Skip if already has coords
+            if (!pension.lat || !pension.lng) {
+                let coords = await geocodeAddress(pension.location);
+                if (coords) {
+                    pension.lat = coords.lat;
+                    pension.lng = coords.lng;
+                    
+                    // Save to persistent cache
+                    geocodeCache.set(pension.location, coords);
+                    localStorage.setItem('pension_geocode_cache', JSON.stringify([...geocodeCache]));
+
+                    // Update distance
+                    if (userLocation) {
+                        pension.distance = calculateDistance(
+                            userLocation.lat, userLocation.lng,
+                            pension.lat, pension.lng
+                        );
+                    }
+                    
+                    // Refresh UI as we get more markers
+                    renderPensions();
+                    renderMarkers();
+                }
+            }
+        }
+    } finally {
+        isProcessingGeocodes = false;
+    }
 }
 
 async function geocodeAddress(address) {
