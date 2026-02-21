@@ -26,17 +26,22 @@ try {
 }
 
 async function init() {
-    // 1. Initialize Supabase
-    pensionsSupabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+    // 1. Initialize Supabase - Disable session persistence to avoid "Invalid Refresh Token" noise on public page
+    pensionsSupabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    });
 
     // 2. Initialize Map (Center on Israel by default)
     initMap();
 
-    // 3. Get User Location
-    getUserLocation();
-
-    // 4. Fetch Pensions
+    // 3. Fetch Pensions
     await fetchPensions();
+
+    // 4. Get User Location (Optional enhancement)
+    getUserLocation();
 
     // 5. Event Listeners
     setupEventListeners();
@@ -452,8 +457,8 @@ function setupEventListeners() {
         sidebar.classList.toggle('visible');
         const btn = document.getElementById('toggleMobileView');
         btn.innerHTML = sidebar.classList.contains('visible') 
-            ? '<i class="fas fa-map"></i> הצג מפה' 
-            : '<i class="fas fa-list"></i> הצג רשימה';
+            ? '<i class="fas fa-map-marked-alt"></i> חזרה למפה' 
+            : '<i class="fas fa-list-ul"></i> הצג רשימת פנסיונים';
     });
 }
 
