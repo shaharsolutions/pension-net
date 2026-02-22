@@ -1009,6 +1009,324 @@ nav.scrolled {
 }
 
 /* ==============================
+   Contact Form Section
+   ============================== */
+.contact-section {
+    background: linear-gradient(180deg, var(--background) 0%, var(--surface) 100%);
+}
+
+.contact-form-wrapper {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.contact-form-card {
+    background: white;
+    border-radius: 28px;
+    padding: 50px;
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.08);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.contact-form-card:hover {
+    box-shadow: 0 25px 70px rgba(99, 102, 241, 0.12);
+}
+
+.form-decoration {
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    pointer-events: none;
+}
+
+.form-deco-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(16, 185, 129, 0.06));
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.form-deco-circle.small {
+    width: 100px;
+    height: 100px;
+    top: 60px;
+    left: 80px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(124, 58, 237, 0.04));
+}
+
+.form-icon-header {
+    text-align: center;
+    margin-bottom: 35px;
+    position: relative;
+    z-index: 1;
+}
+
+.form-main-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 18px;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    animation: icon-pulse 3s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+    0%, 100% { box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3); }
+    50% { box-shadow: 0 12px 35px rgba(99, 102, 241, 0.45); }
+}
+
+.form-icon-header h3 {
+    font-size: 1.5rem;
+    color: var(--secondary);
+    margin-bottom: 6px;
+}
+
+.form-icon-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Form Fields */
+#leadForm .form-group {
+    margin-bottom: 22px;
+    position: relative;
+}
+
+#leadForm .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+#leadForm label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+#leadForm label i {
+    color: var(--primary);
+    font-size: 0.85rem;
+    width: 16px;
+    text-align: center;
+}
+
+#leadForm input,
+#leadForm select {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    font-size: 1rem;
+    font-family: 'Heebo', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+
+#leadForm input::placeholder {
+    color: #94a3b8;
+}
+
+#leadForm input:focus,
+#leadForm select:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+#leadForm input.invalid,
+#leadForm select.invalid {
+    border-color: #ef4444;
+    background: #fef2f2;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+}
+
+#leadForm select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 16px center;
+    padding-left: 40px;
+}
+
+.field-error {
+    display: block;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 6px;
+    min-height: 20px;
+}
+
+/* Submit Button */
+.form-submit-btn {
+    width: 100%;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Heebo', sans-serif;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.form-submit-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+}
+
+.form-submit-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.form-submit-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.form-submit-btn.loading {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    box-shadow: 0 6px 20px rgba(100, 116, 139, 0.3);
+}
+
+.form-submit-btn.success {
+    background: linear-gradient(135deg, var(--accent), #059669);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    animation: success-bounce 0.5s ease;
+}
+
+@keyframes success-bounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.05); }
+    60% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+.btn-text, .btn-loading, .btn-success {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Form Footer Note */
+.form-footer-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.83rem;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.form-footer-note i {
+    color: var(--accent);
+    font-size: 0.75rem;
+}
+
+/* Form Error Message */
+.form-submit-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 12px;
+    animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(8px); }
+    75% { transform: translateX(-8px); }
+}
+
+/* Contact Info Side */
+.contact-info-side {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
+}
+
+.info-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1));
+    color: var(--primary);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.info-card h4 {
+    font-size: 1.1rem;
+    color: var(--secondary);
+    margin-bottom: 8px;
+}
+
+.info-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ==============================
    CTA Section
    ============================== */
 .cta-section {
@@ -1258,6 +1576,24 @@ nav.scrolled {
         font-size: 1.8rem;
     }
 
+    .contact-form-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-form-card {
+        padding: 30px 20px;
+    }
+
+    .contact-info-side {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .info-card {
+        padding: 20px;
+    }
+
     .footer-content {
         flex-direction: column;
         text-align: center;
@@ -1290,6 +1626,25 @@ nav.scrolled {
 
     .features-grid {
         grid-template-columns: 1fr;
+    }
+
+    #leadForm .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .contact-info-side {
+        grid-template-columns: 1fr;
+    }
+
+    .form-main-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
+    }
+
+    .form-icon-header h3 {
+        font-size: 1.25rem;
     }
 }
 

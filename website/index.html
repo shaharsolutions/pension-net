@@ -74,7 +74,7 @@
             <li><a href="#how-it-works">איך זה עובד</a></li>
             <li><a href="../pensions.html">חיפוש פנסיון</a></li>
             <li><a href="#demo">הדגמה</a></li>
-
+            <li><a href="#contact">השאירו פרטים</a></li>
         </ul>
         <a href="../login.html" class="cta-btn">כניסת מנהל</a>
     </nav>
@@ -371,6 +371,110 @@
         </div>
     </section>
 
+    <!-- Contact Form Section -->
+    <section id="contact" class="section contact-section">
+        <div class="section-header reveal">
+            <div class="section-tag">השאירו פרטים</div>
+            <h2>רוצים לשמוע עוד? דברו איתנו</h2>
+            <p>מלאו את הטופס ונחזור אליכם בהקדם עם כל המידע שתצטרכו להתחיל.</p>
+        </div>
+
+        <div class="contact-form-wrapper reveal">
+            <div class="contact-form-card">
+                <div class="form-decoration">
+                    <div class="form-deco-circle"></div>
+                    <div class="form-deco-circle small"></div>
+                </div>
+                
+                <div class="form-icon-header">
+                    <div class="form-main-icon">
+                        <i class="fas fa-paw"></i>
+                    </div>
+                    <h3>טופס השארת פרטים</h3>
+                    <p>נשמח לספר לכם עוד על המערכת</p>
+                </div>
+
+                <form id="leadForm" novalidate>
+                    <div class="form-group">
+                        <label for="leadFullName">
+                            <i class="fas fa-user"></i>
+                            שם מלא
+                        </label>
+                        <input type="text" id="leadFullName" name="full_name" placeholder="הזינו את שמכם המלא" required autocomplete="name">
+                        <span class="field-error" id="errorFullName"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="leadEmail">
+                                <i class="fas fa-envelope"></i>
+                                אימייל
+                            </label>
+                            <input type="email" id="leadEmail" name="email" placeholder="your@email.com" required dir="ltr" autocomplete="email">
+                            <span class="field-error" id="errorEmail"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="leadPhone">
+                                <i class="fas fa-phone-alt"></i>
+                                טלפון
+                            </label>
+                            <input type="tel" id="leadPhone" name="phone" placeholder="050-0000000" required dir="ltr" autocomplete="tel">
+                            <span class="field-error" id="errorPhone"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="leadPensionSize">
+                            <i class="fas fa-dog"></i>
+                            גודל הפנסיון
+                        </label>
+                        <select id="leadPensionSize" name="pension_size" required>
+                            <option value="" disabled selected>בחרו את גודל הפנסיון שלכם</option>
+                            <option value="small">קטן (עד 10 כלבים)</option>
+                            <option value="medium">בינוני (10-30 כלבים)</option>
+                            <option value="large">גדול (30+ כלבים)</option>
+                        </select>
+                        <span class="field-error" id="errorPensionSize"></span>
+                    </div>
+
+                    <button type="submit" class="form-submit-btn" id="leadSubmitBtn">
+                        <span class="btn-text">שלחו פרטים</span>
+                        <span class="btn-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> שולח...
+                        </span>
+                        <span class="btn-success" style="display: none;">
+                            <i class="fas fa-check"></i> נשלח בהצלחה!
+                        </span>
+                    </button>
+                </form>
+
+                <div class="form-footer-note">
+                    <i class="fas fa-lock"></i>
+                    הפרטים שלכם מאובטחים ולא יועברו לצד שלישי
+                </div>
+            </div>
+
+            <div class="contact-info-side">
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-comments"></i></div>
+                    <h4>ליווי אישי</h4>
+                    <p>נחזור אליכם תוך 24 שעות לשיחת היכרות קצרה.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-gift"></i></div>
+                    <h4>ללא עלות</h4>
+                    <p>הצטרפות לפיילוט היא בחינם לחלוטין. ללא התחייבות וללא כרטיס אשראי.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h4>פרטיות מוגנת</h4>
+                    <p>הפרטים שלכם מאובטחים ומשמשים אותנו ליצירת קשר בלבד.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Final CTA Section -->
     <section class="section cta-section">
         <div class="cta-card reveal">
@@ -410,6 +514,7 @@
                 <ul>
                     <li><a href="#features">פיצ'רים</a></li>
                     <li><a href="#how-it-works">איך זה עובד</a></li>
+                    <li><a href="#contact">השאירו פרטים</a></li>
                     <li><a href="../presentation.html" target="_blank">המצגת העסקית</a></li>
                     <li><a href="../login.html">כניסת מערכת</a></li>
                 </ul>
@@ -427,6 +532,208 @@
         </div>
     </footer>
 
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/main.js"></script>
+    <script>
+    // ==============================
+    // Lead Form Handler
+    // ==============================
+    (function() {
+        const SUPABASE_URL = 'https://smzgfffeehrozxsqtgqa.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtemdmZmZlZWhyb3p4c3F0Z3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNTU4NTYsImV4cCI6MjA3NDgzMTg1Nn0.LvIQLvj7HO7xXJhTALLO5GeYZ1DU50L3q8Act5wXfi4';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const form = document.getElementById('leadForm');
+        const submitBtn = document.getElementById('leadSubmitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        const btnSuccess = submitBtn.querySelector('.btn-success');
+
+        // Pension size labels for email
+        const pensionSizeLabels = {
+            'small': 'קטן (עד 10 כלבים)',
+            'medium': 'בינוני (10-30 כלבים)',
+            'large': 'גדול (30+ כלבים)'
+        };
+
+        // Validation
+        function validateField(field, errorEl, message) {
+            if (!field.value.trim()) {
+                errorEl.textContent = message;
+                field.classList.add('invalid');
+                return false;
+            }
+            errorEl.textContent = '';
+            field.classList.remove('invalid');
+            return true;
+        }
+
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function validatePhone(phone) {
+            return /^[\d\-\+\s]{9,15}$/.test(phone.replace(/\s/g, ''));
+        }
+
+        // Clear errors on input
+        form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('input', () => {
+                field.classList.remove('invalid');
+                const errorEl = field.parentElement.querySelector('.field-error');
+                if (errorEl) errorEl.textContent = '';
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fullName = document.getElementById('leadFullName');
+            const email = document.getElementById('leadEmail');
+            const phone = document.getElementById('leadPhone');
+            const pensionSize = document.getElementById('leadPensionSize');
+
+            // Validate all fields
+            let isValid = true;
+            
+            if (!validateField(fullName, document.getElementById('errorFullName'), 'נא להזין שם מלא')) {
+                isValid = false;
+            }
+            
+            if (!validateField(email, document.getElementById('errorEmail'), 'נא להזין כתובת אימייל')) {
+                isValid = false;
+            } else if (!validateEmail(email.value)) {
+                document.getElementById('errorEmail').textContent = 'כתובת אימייל לא תקינה';
+                email.classList.add('invalid');
+                isValid = false;
+            }
+
+            if (!validateField(phone, document.getElementById('errorPhone'), 'נא להזין מספר טלפון')) {
+                isValid = false;
+            } else if (!validatePhone(phone.value)) {
+                document.getElementById('errorPhone').textContent = 'מספר טלפון לא תקין';
+                phone.classList.add('invalid');
+                isValid = false;
+            }
+
+            if (!validateField(pensionSize, document.getElementById('errorPensionSize'), 'נא לבחור גודל פנסיון')) {
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Show loading state
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+
+            try {
+                // 1) Insert into Supabase
+                const leadData = {
+                    full_name: fullName.value.trim(),
+                    email: email.value.trim(),
+                    phone: phone.value.trim(),
+                    pension_size: pensionSize.value
+                };
+
+                const { error } = await supabase
+                    .from('leads')
+                    .insert([leadData]);
+
+                if (error) throw error;
+
+                // 2) Send email notification via Resend
+                try {
+                    const pensionLabel = pensionSizeLabels[leadData.pension_size] || leadData.pension_size;
+                    const now = new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' });
+                    
+                    await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer re_NkPPW2mw_MSz3NvVEf9Z1hMvuUpDyRqBb'
+                        },
+                        body: JSON.stringify({
+                            from: 'Pension-Net <onboarding@resend.dev>',
+                            to: ['shaharsolutions@gmail.com'],
+                            subject: `🐾 ליד חדש: ${leadData.full_name} - ${pensionLabel}`,
+                            html: `
+                                <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
+                                    <div style="background: linear-gradient(135deg, #6366f1, #7c3aed); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                                        <h1 style="color: white; margin: 0; font-size: 24px;">🐾 ליד חדש מפנסיון-נט!</h1>
+                                    </div>
+                                    <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                                        <h2 style="color: #1e293b; margin-top: 0;">פרטי הליד:</h2>
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                                            <tr>
+                                                <td style="padding: 12px 16px; background: #f1f5f9; font-weight: 700; width: 120px; color: #475569;">👤 שם מלא</td>
+                                                <td style="padding: 12px 16px; background: #f1f5f9; color: #1e293b;">${leadData.full_name}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px 16px; font-weight: 700; color: #475569;">📧 אימייל</td>
+                                                <td style="padding: 12px 16px; color: #1e293b;"><a href="mailto:${leadData.email}" style="color: #6366f1;">${leadData.email}</a></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px 16px; background: #f1f5f9; font-weight: 700; color: #475569;">📱 טלפון</td>
+                                                <td style="padding: 12px 16px; background: #f1f5f9; color: #1e293b;"><a href="tel:${leadData.phone}" style="color: #6366f1;">${leadData.phone}</a></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px 16px; font-weight: 700; color: #475569;">🏠 גודל פנסיון</td>
+                                                <td style="padding: 12px 16px; color: #1e293b;">${pensionLabel}</td>
+                                            </tr>
+                                        </table>
+                                        <div style="margin-top: 20px; padding: 12px 16px; background: #eff6ff; border-radius: 8px; font-size: 13px; color: #64748b; text-align: center;">
+                                            📅 התקבל ב-${now}
+                                        </div>
+                                    </div>
+                                </div>
+                            `
+                        })
+                    });
+                } catch (emailErr) {
+                    // Email sending failure shouldn't block the success flow
+                    console.warn('Email notification failed:', emailErr);
+                }
+
+                // Show success
+                btnLoading.style.display = 'none';
+                btnSuccess.style.display = 'inline-flex';
+                submitBtn.classList.remove('loading');
+                submitBtn.classList.add('success');
+
+                // Reset form after delay
+                setTimeout(() => {
+                    form.reset();
+                    btnSuccess.style.display = 'none';
+                    btnText.style.display = 'inline-flex';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('success');
+                }, 4000);
+
+            } catch (err) {
+                console.error('Lead submission error:', err);
+                btnLoading.style.display = 'none';
+                btnText.style.display = 'inline-flex';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+                
+                // Show inline error
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'form-submit-error';
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> שגיאה בשליחת הטופס. נא לנסות שוב.';
+                
+                const existingError = form.querySelector('.form-submit-error');
+                if (existingError) existingError.remove();
+                
+                submitBtn.parentElement.insertBefore(errorMsg, submitBtn.nextSibling);
+                
+                setTimeout(() => errorMsg.remove(), 5000);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
