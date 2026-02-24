@@ -2097,10 +2097,110 @@ body.staff-mode.perm-manage-payments #payments-table button {
     gap: 10px;
   }
 
+  .movement-box {
+    padding: 14px;
+  }
+
+  .movement-box h4 {
+    font-size: 14px;
+  }
+
   .container {
-    padding: 15px;
+    padding: 12px;
     border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  /* Calendar header & controls */
+  .container-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-bottom: 12px;
     margin-bottom: 15px;
+  }
+
+  .container-header-row h3,
+  #viewTitle {
+    font-size: 16px !important;
+    text-align: center;
+  }
+
+  #calendarViewControls {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .calendar-toggle-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  #addCustomEventBtn {
+    margin-right: 0 !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Calendar month navigation */
+  #calendarHeader {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #calendarHeader button {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  #monthYearPicker {
+    min-width: unset !important;
+  }
+
+  #monthYearPicker select {
+    font-size: 15px !important;
+  }
+
+  /* Calendar grid scroll */
+  #monthlyCalendarGrid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Table headers & filters */
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .table-title {
+    font-size: 16px !important;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .table-filters {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-box {
+    min-width: unset;
+    max-width: none;
+    width: 100%;
+  }
+
+  .filter-group {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .filter-group select {
+    width: 100%;
   }
 
   /* Table responsiveness - cards for mobile */
@@ -2183,11 +2283,72 @@ body.staff-mode.perm-manage-payments #payments-table button {
   /* Settings grid */
   .settings-grid {
     grid-template-columns: 1fr;
-    padding: 15px;
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .settings-grid .settings-section[style*="grid-column: span 2"],
+  .settings-grid .settings-section {
+    grid-column: span 1 !important;
+  }
+
+  .settings-container {
+    padding: 8px;
+  }
+
+  .settings-card {
+    border-radius: 16px;
+  }
+
+  .settings-header {
+    padding: 18px 16px;
+  }
+
+  .settings-header h3 {
+    font-size: 17px;
+  }
+
+  .settings-section {
+    padding: 16px;
+  }
+
+  .settings-section h4 {
+    font-size: 15px;
+  }
+
+  .settings-section input {
+    font-size: 14px;
+    padding: 10px 12px;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-actions {
+    padding: 16px 12px;
+    flex-direction: column;
+    gap: 10px !important;
+  }
+
+  .save-settings-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+
+  .staff-tags {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-manager div[style*="display:flex"] {
+    flex-direction: column;
+  }
+
+  .toggle-label {
+    font-size: 13px;
   }
 
   .modal-content {

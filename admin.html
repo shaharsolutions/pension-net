@@ -192,6 +192,14 @@
               >
                 כווץ <i class="fas fa-chevron-up"></i>
               </button>
+              <button
+                id="addCustomEventBtn"
+                class="header-btn manager-only"
+                style="margin-right: 10px; background: #6366f1; color: white; border: none;"
+                onclick="openCustomEventModal()"
+              >
+                הוספת אירוע <i class="fas fa-plus"></i>
+              </button>
             </div>
           </div>
 
@@ -580,6 +588,90 @@
           <button id="pinCancelBtn" class="btn" style="flex: 1; background: #f1f5f9; color: #64748b; padding: 12px; border-radius: 10px; font-weight: 600;">ביטול</button>
           <button id="pinConfirmBtn" class="btn" style="flex: 1; background: #6366f1; color: white; padding: 12px; border-radius: 10px; font-weight: 600;">אישור</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Custom Event Modal -->
+    <div id="customEventModal" class="modal">
+      <div class="modal-content" style="max-width: 440px; padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25);">
+        
+        <!-- Premium Gradient Header -->
+        <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%); padding: 24px 28px; position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -20px; left: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: -30px; right: -10px; width: 80px; height: 80px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+          <div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 42px; height: 42px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                <i class="fas fa-calendar-plus" style="color: white; font-size: 18px;"></i>
+              </div>
+              <div>
+                <h3 style="color: white; margin: 0; font-size: 18px; font-weight: 700;">הוספת אירוע</h3>
+                <p style="color: rgba(255,255,255,0.75); margin: 2px 0 0; font-size: 12px;">יופיע על לוח השנה החודשי</p>
+              </div>
+            </div>
+            <span class="close-modal" onclick="closeCustomEventModal()" style="color: white; opacity: 0.8; font-size: 24px; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">&times;</span>
+          </div>
+        </div>
+
+        <!-- Form Body -->
+        <form id="customEventForm" style="padding: 24px 28px 28px;">
+          
+          <!-- Event Name -->
+          <div style="margin-bottom: 20px;">
+            <label for="eventName" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+              <i class="fas fa-tag" style="color: #6366f1; margin-left: 6px;"></i>שם האירוע
+            </label>
+            <input type="text" id="eventName" required placeholder="למשל: סגור לשיפוצים, חופשה משפחתית" 
+                   style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.3s; outline: none; box-sizing: border-box;"
+                   onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)'" 
+                   onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+          </div>
+
+          <!-- Date Row -->
+          <div style="display: flex; gap: 14px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+              <label for="eventStartDate" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                <i class="fas fa-calendar-day" style="color: #10b981; margin-left: 6px;"></i>תאריך התחלה
+              </label>
+              <input type="text" id="eventStartDate" class="date-input" required readonly
+                     style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.3s; outline: none; background: #f9fafb; box-sizing: border-box;"
+                     onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.1)'" 
+                     onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+            </div>
+            <div style="flex: 1;">
+              <label for="eventEndDate" style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                <i class="fas fa-calendar-check" style="color: #f59e0b; margin-left: 6px;"></i>תאריך סיום
+              </label>
+              <input type="text" id="eventEndDate" class="date-input" required readonly
+                     style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.3s; outline: none; background: #f9fafb; box-sizing: border-box;"
+                     onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 3px rgba(245,158,11,0.1)'" 
+                     onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+            </div>
+          </div>
+
+          <!-- Color Picker -->
+          <div style="margin-bottom: 24px;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px;">
+              <i class="fas fa-palette" style="color: #8b5cf6; margin-left: 6px;"></i>צבע תגית בלוח השנה
+            </label>
+            <div id="eventColorSwatches" style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div class="color-swatch" data-color="#f87171" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #f87171; cursor: pointer; transition: all 0.2s; border: 3px solid transparent; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></div>
+              <div class="color-swatch" data-color="#fbbf24" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #fbbf24; cursor: pointer; transition: all 0.2s; border: 3px solid transparent; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></div>
+              <div class="color-swatch" data-color="#34d399" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #34d399; cursor: pointer; transition: all 0.2s; border: 3px solid transparent; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></div>
+              <div class="color-swatch selected" data-color="#60a5fa" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #60a5fa; cursor: pointer; transition: all 0.2s; border: 3px solid #1e40af; display: flex; align-items: center; justify-content: center; transform: scale(1.1); box-shadow: 0 0 0 3px rgba(96,165,250,0.3);" onmouseover="this.style.transform='scale(1.15)'" onmouseout="if(!this.classList.contains('selected'))this.style.transform='scale(1)'; else this.style.transform='scale(1.1)'"><i class="fas fa-check" style="color: white; font-size: 14px;"></i></div>
+              <div class="color-swatch" data-color="#a78bfa" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #a78bfa; cursor: pointer; transition: all 0.2s; border: 3px solid transparent; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></div>
+              <div class="color-swatch" data-color="#f472b6" onclick="selectEventColor(this)" style="width: 38px; height: 38px; border-radius: 10px; background: #f472b6; cursor: pointer; transition: all 0.2s; border: 3px solid transparent; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"></div>
+            </div>
+            <input type="hidden" id="eventColor" value="#60a5fa">
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(99,102,241,0.35);"
+                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(99,102,241,0.45)'"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px rgba(99,102,241,0.35)'">
+            <i class="fas fa-plus-circle"></i> הוספת אירוע
+          </button>
+        </form>
       </div>
     </div>
 

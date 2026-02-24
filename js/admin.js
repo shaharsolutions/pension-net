@@ -682,10 +682,26 @@ async function renderMonthlyCalendar(allOrders) {
     const pD = (n) => String(n).padStart(2, '0');
     const formattedDate = `${date.getFullYear()}-${pD(date.getMonth() + 1)}-${pD(dayCounter)}`;
     const holidayHebrew = holidays[formattedDate];
+    
+    // Find all custom events that overlap with this date
+    let customEventsHTML = '';
+    const currentDayTime = new Date(formattedDate).getTime();
+    if (window.pensionCustomEvents) {
+        const todaysCustomEvents = window.pensionCustomEvents.filter(ev => {
+           let eStart = new Date(ev.start_date).getTime();
+           let eEnd = new Date(ev.end_date).getTime();
+           return currentDayTime >= eStart && currentDayTime <= eEnd;
+        });
+        
+        todaysCustomEvents.forEach(ev => {
+            customEventsHTML += `<div class="holiday-label custom-evt" style="font-size: 11px; color: #fff; background: ${ev.color || '#60a5fa'}; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; cursor: pointer;" onclick="promptDeleteCustomEvent('${ev.id}')">${ev.title}</div>`;
+        });
+    }
 
     calendarHTML += `<td class="${classes}">
           <div class="day-number">${dayCounter} (${dayName})</div>
           ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
+          ${customEventsHTML}
           ${dogsInDay > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsInDay} כלבים</div>` : ''}
           <div class="day-content">${dogsContentHTML}</div>
       </td>`;
@@ -2491,7 +2507,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data, custom_events')
       .eq('user_id', session.user.id)
       .single();
 
@@ -2566,6 +2582,7 @@ async function loadSettings() {
       });
 
       window.clientsData = profile.clients_data || {};
+      window.pensionCustomEvents = profile.custom_events || [];
       
       const sessionData = window.currentUserSession;
       if (sessionData && sessionData.user) {
@@ -3239,9 +3256,10 @@ function processClientsData() {
        c.totalRevenue += days * (order.price_per_day || parseInt(document.getElementById('settings-default-price')?.value) || 130);
     }
     
-    const checkOut = new Date(order.check_out);
-    if (checkOut > c.lastOrderDate) {
-       c.lastOrderDate = checkOut;
+    // Track the actual order creation date for "Last Order"
+    const orderCreationDate = new Date(order.order_date || order.created_at);
+    if (orderCreationDate > c.lastOrderDate) {
+       c.lastOrderDate = orderCreationDate;
        // Update name to latest known name
        if (order.owner_name) c.name = order.owner_name;
     }
@@ -3397,4 +3415,195 @@ async function saveClientPrice(phoneKey, priceValue) {
     console.error('Error saving client data:', err);
     showToast('שגיאה בשמירת נתוני לקוח', 'error');
   }
+}
+
+// Custom Calendar Events Management
+function selectEventColor(el) {
+  // Deselect all swatches
+  document.querySelectorAll('#eventColorSwatches .color-swatch').forEach(swatch => {
+    swatch.classList.remove('selected');
+    swatch.innerHTML = '';
+    swatch.style.border = '3px solid transparent';
+    swatch.style.transform = 'scale(1)';
+    swatch.style.boxShadow = 'none';
+    // Re-attach hover
+    swatch.onmouseout = function() { this.style.transform = 'scale(1)'; };
+  });
+  
+  // Select clicked swatch
+  el.classList.add('selected');
+  el.innerHTML = '<i class="fas fa-check" style="color: white; font-size: 14px;"></i>';
+  const color = el.dataset.color;
+  el.style.border = '3px solid ' + darkenColor(color);
+  el.style.transform = 'scale(1.1)';
+  el.style.boxShadow = '0 0 0 3px ' + color + '4d';
+  el.onmouseout = function() { this.style.transform = 'scale(1.1)'; };
+  
+  document.getElementById('eventColor').value = color;
+}
+
+function darkenColor(hex) {
+  let r = parseInt(hex.slice(1,3), 16);
+  let g = parseInt(hex.slice(3,5), 16);
+  let b = parseInt(hex.slice(5,7), 16);
+  r = Math.max(0, r - 60);
+  g = Math.max(0, g - 60);
+  b = Math.max(0, b - 60);
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function openCustomEventModal() {
+  document.getElementById('eventName').value = '';
+  document.getElementById('eventColor').value = '#60a5fa';
+  
+  // Reset color swatches
+  document.querySelectorAll('#eventColorSwatches .color-swatch').forEach(swatch => {
+    swatch.classList.remove('selected');
+    swatch.innerHTML = '';
+    swatch.style.border = '3px solid transparent';
+    swatch.style.transform = 'scale(1)';
+    swatch.style.boxShadow = 'none';
+    swatch.onmouseout = function() { this.style.transform = 'scale(1)'; };
+  });
+  // Select default (blue)
+  const defaultSwatch = document.querySelector('#eventColorSwatches .color-swatch[data-color="#60a5fa"]');
+  if (defaultSwatch) selectEventColor(defaultSwatch);
+  
+  // Make sure flatpickr is initialized on these inputs
+  if (typeof flatpickr !== 'undefined') {
+      window._eventEndPicker = flatpickr('#eventEndDate', {
+         locale: "he",
+         dateFormat: "Y-m-d",
+         altInput: true,
+         altFormat: "d/m/Y",
+         allowInput: false,
+         disableMobile: true,
+         onOpen: function(selectedDates, dateStr, instance) {
+            instance.calendarContainer.classList.add("premium-datepicker");
+         }
+      });
+      window._eventEndPicker.clear();
+
+      flatpickr('#eventStartDate', {
+         locale: "he",
+         dateFormat: "Y-m-d",
+         altInput: true,
+         altFormat: "d/m/Y",
+         allowInput: false,
+         disableMobile: true,
+         onOpen: function(selectedDates, dateStr, instance) {
+            instance.calendarContainer.classList.add("premium-datepicker");
+         },
+         onChange: function(selectedDates, dateStr) {
+            if (selectedDates.length > 0 && window._eventEndPicker) {
+               window._eventEndPicker.setDate(selectedDates[0], true);
+            }
+         }
+      }).clear();
+  } else {
+      document.getElementById('eventStartDate').value = '';
+      document.getElementById('eventEndDate').value = '';
+  }
+  
+  document.getElementById('customEventModal').style.display = 'block';
+}
+
+function closeCustomEventModal() {
+  document.getElementById('customEventModal').style.display = 'none';
+}
+
+document.getElementById('customEventForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const title = document.getElementById('eventName').value;
+  const startDate = document.getElementById('eventStartDate').value;
+  const endDate = document.getElementById('eventEndDate').value;
+  const color = document.getElementById('eventColor').value;
+  
+  if (!startDate || !endDate) return;
+  if (startDate > endDate) {
+    showToast('תאריך התחלה חייב להיות לפני תאריך סיום', 'error');
+    return;
+  }
+  
+  const session = window.currentUserSession;
+  if (!session) {
+    showToast('נא להתחבר תחילה', 'error');
+    return;
+  }
+  
+  const newEvent = {
+    id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    title: title,
+    start_date: startDate,
+    end_date: endDate,
+    color: color
+  };
+  
+  const updatedEvents = [...(window.pensionCustomEvents || []), newEvent];
+  
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const orgText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update({ custom_events: updatedEvents })
+      .eq('user_id', session.user.id);
+      
+    if (error) throw error;
+    
+    window.pensionCustomEvents = updatedEvents;
+    showToast('אירוע נוסף בהצלחה', 'success');
+    closeCustomEventModal();
+    renderMonthlyCalendar(window.allOrdersCache); // Re-render calendar
+  } catch (err) {
+    console.error('Error saving custom event:', err);
+    // Silent degradation fallback
+    if (err.code === 'PGRST204' || String(err.message).includes('custom_events')) {
+       showToast('יש להריץ את סקריפט ה-SQL לעדכון מסד הנתונים', 'error');
+    } else {
+       showToast('שגיאה בשמירת האירוע', 'error');
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = orgText;
+  }
+});
+
+function promptDeleteCustomEvent(eventId) {
+    // Only managers can delete events
+    if (!window.isAdminMode) {
+        showToast('רק מנהל יכול למחוק אירועים', 'error');
+        return;
+    }
+    
+    showConfirm(
+        '<i class="fas fa-trash-alt" style="color: #ef4444;"></i> מחיקת אירוע מותאם אישית',
+        'האם אתה בטוח שברצונך למחוק אירוע זה? פעולה זו אינה הפיכה.',
+        async () => {
+            const session = window.currentUserSession;
+            if (!session) return;
+            
+            const updatedEvents = window.pensionCustomEvents.filter(ev => ev.id !== eventId);
+            
+            try {
+                const { error } = await pensionNetSupabase
+                    .from('profiles')
+                    .update({ custom_events: updatedEvents })
+                    .eq('user_id', session.user.id);
+                    
+                if (error) throw error;
+                
+                window.pensionCustomEvents = updatedEvents;
+                showToast('אירוע נמחק בהצלחה', 'success');
+                renderMonthlyCalendar(window.allOrdersCache);
+            } catch (err) {
+                console.error('Error deleting custom event:', err);
+                showToast('שגיאה במחיקת אירוע', 'error');
+            }
+        }
+    );
 }
