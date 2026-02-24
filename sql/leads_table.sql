@@ -21,7 +21,7 @@ CREATE POLICY "Allow anonymous inserts on leads"
 ON public.leads
 FOR INSERT
 TO anon
-WITH CHECK (true);
+WITH CHECK (auth.role() = 'anon');
 
 -- Allow authenticated users to read all leads (for admin)  
 CREATE POLICY "Allow authenticated users to read leads"
@@ -35,7 +35,8 @@ CREATE POLICY "Allow authenticated users to update leads"
 ON public.leads
 FOR UPDATE
 TO authenticated
-USING (true);
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
 -- Index for faster queries
 CREATE INDEX idx_leads_created_at ON public.leads(created_at DESC);

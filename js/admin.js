@@ -538,7 +538,38 @@ function safeParseNotes(noteStr) {
   }
 }
 
-function renderMonthlyCalendar(allOrders) {
+window.jewishHolidaysCache = {};
+
+async function getJewishHolidays(year, month) {
+  if (localStorage.getItem('pensionNet_showHolidays') === 'false') return {};
+  
+  const cacheKey = `${year}-${month}`;
+  if (window.jewishHolidaysCache[cacheKey]) {
+    return window.jewishHolidaysCache[cacheKey];
+  }
+
+  try {
+    const res = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&nx=on&il=on&year=${year}&month=${month+1}`);
+    const data = await res.json();
+    const holidays = {};
+    if (data && data.items) {
+      data.items.forEach(item => {
+        if (item.category === 'holiday') {
+          holidays[item.date] = holidays[item.date] 
+            ? holidays[item.date] + ', ' + item.hebrew 
+            : item.hebrew;
+        }
+      });
+    }
+    window.jewishHolidaysCache[cacheKey] = holidays;
+    return holidays;
+  } catch (error) {
+    console.error("Error fetching holidays:", error);
+    return {};
+  }
+}
+
+async function renderMonthlyCalendar(allOrders) {
   const calendarGrid = document.getElementById("monthlyCalendarGrid");
   const date = window.currentCalendarDate;
   
@@ -575,6 +606,8 @@ function renderMonthlyCalendar(allOrders) {
   );
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const holidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
   let calendarHTML = '<table class="calendar-table"><thead><tr>';
   // ימי השבוע ב-JavaScript מתחילים מ-0 (ראשון)
@@ -646,8 +679,13 @@ function renderMonthlyCalendar(allOrders) {
       classes += " busy";
     }
 
+    const pD = (n) => String(n).padStart(2, '0');
+    const formattedDate = `${date.getFullYear()}-${pD(date.getMonth() + 1)}-${pD(dayCounter)}`;
+    const holidayHebrew = holidays[formattedDate];
+
     calendarHTML += `<td class="${classes}">
           <div class="day-number">${dayCounter} (${dayName})</div>
+          ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
           ${dogsInDay > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsInDay} כלבים</div>` : ''}
           <div class="day-content">${dogsContentHTML}</div>
       </td>`;
@@ -1275,6 +1313,7 @@ async function loadData() {
       return checkOut < now;
     });
     renderPastOrdersTable();
+    processClientsData();
 
     document
       .querySelectorAll("textarea.admin-note")
@@ -2452,7 +2491,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data')
       .eq('user_id', session.user.id)
       .single();
 
@@ -2509,6 +2548,11 @@ async function loadSettings() {
       if (pinInput && !pinInput.value) {
         pinInput.value = window.managerPin;
       }
+      
+      const showHolidaysInput = document.getElementById('settings-show-holidays');
+      if (showHolidaysInput) {
+        showHolidaysInput.checked = localStorage.getItem('pensionNet_showHolidays') !== 'false';
+      }
 
       window.currentStaffMembers = (profile.staff_members || []).map(s => {
         // Migration: convert string staff to objects if needed
@@ -2520,6 +2564,18 @@ async function loadSettings() {
         }
         return s;
       });
+
+      window.clientsData = profile.clients_data || {};
+      
+      const sessionData = window.currentUserSession;
+      if (sessionData && sessionData.user) {
+        let localFallback = localStorage.getItem('pensionNet_clientsData_fallback_' + sessionData.user.id);
+        if (localFallback) {
+          try {
+             window.clientsData = { ...JSON.parse(localFallback), ...window.clientsData };
+          } catch(e) {}
+        }
+      }
 
       window.globalStaffPermissions = {
         edit_status: false,
@@ -2563,6 +2619,11 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     staff_members: window.currentStaffMembers,
     manager_pin: document.getElementById('settings-admin-pin').value
   };
+
+  const showHolidaysInput = document.getElementById('settings-show-holidays');
+  if (showHolidaysInput) {
+    localStorage.setItem('pensionNet_showHolidays', showHolidaysInput.checked);
+  }
 
   try {
     const { error } = await pensionNetSupabase
@@ -3137,4 +3198,203 @@ async function updatePricePerDay(orderId, newPrice) {
     } catch (err) {
         console.error("Error updating price per day:", err);
     }
+}
+
+// Clients Management
+window.clientsData = window.clientsData || {};
+window.clientsCurrentPage = 1;
+const CLIENTS_PER_PAGE = 20;
+
+function formatPhoneKey(phone) {
+  if (!phone) return 'unknown';
+  return phone.replace(/[\s\-]/g, "").replace(/^0/, "972");
+}
+
+function processClientsData() {
+  const clientsMap = {};
+  const cache = window.allOrdersCache || [];
+  
+  cache.forEach(order => {
+    if (!order.phone) return;
+    const phoneKey = formatPhoneKey(order.phone);
+    if (!clientsMap[phoneKey]) {
+      clientsMap[phoneKey] = {
+        name: order.owner_name || 'לא ידוע',
+        originalPhone: order.phone,
+        phoneKey: phoneKey,
+        dogs: new Set(),
+        totalOrders: 0,
+        totalRevenue: 0,
+        lastOrderDate: new Date('1970-01-01')
+      };
+    }
+    
+    const c = clientsMap[phoneKey];
+    if (order.dog_name) c.dogs.add(order.dog_name);
+    
+    // Status should be anything that brought revenue? Or maybe just status !== canceled
+    if (order.status !== 'בוטל') {
+       c.totalOrders++;
+       const days = calculateDays(order.check_in, order.check_out);
+       c.totalRevenue += days * (order.price_per_day || parseInt(document.getElementById('settings-default-price')?.value) || 130);
+    }
+    
+    const checkOut = new Date(order.check_out);
+    if (checkOut > c.lastOrderDate) {
+       c.lastOrderDate = checkOut;
+       // Update name to latest known name
+       if (order.owner_name) c.name = order.owner_name;
+    }
+  });
+
+  // Convert Set to array and calculate stats
+  const clientsList = Object.values(clientsMap).map(c => {
+    c.dogsArray = Array.from(c.dogs);
+    // Custom price
+    c.customPrice = window.clientsData[c.phoneKey]?.default_price || null;
+    return c;
+  });
+  
+  // Sort by last order descending
+  clientsList.sort((a,b) => b.lastOrderDate - a.lastOrderDate);
+  
+  window.processedClients = clientsList;
+  
+  // Update Stats UI
+  if (document.getElementById('statsTotalClients')) {
+    const activeClients = clientsList.filter(c => c.totalOrders > 0);
+    const avgOrders = activeClients.length ? (clientsList.reduce((acc, c) => acc + c.totalOrders, 0) / activeClients.length).toFixed(1) : 0;
+    const totalDogs = clientsList.reduce((acc, c) => acc + c.dogsArray.length, 0);
+    
+    document.getElementById('statsTotalClients').textContent = clientsList.length;
+    document.getElementById('statsAvgOrdersPerClient').textContent = avgOrders;
+    document.getElementById('statsTotalDogs').textContent = totalDogs;
+  }
+  
+  renderClientsTable();
+}
+
+function filterClientsData(searchTerm) {
+  if (!searchTerm) return window.processedClients;
+  const term = searchTerm.toLowerCase();
+  return window.processedClients.filter(c => 
+    c.name.toLowerCase().includes(term) ||
+    c.originalPhone.includes(term) ||
+    c.phoneKey.includes(term) ||
+    c.dogsArray.some(d => d.toLowerCase().includes(term))
+  );
+}
+
+function renderClientsTable() {
+  const tbody = document.querySelector("#clientsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  
+  const searchInput = document.getElementById('clientsSearchInput');
+  const filtered = filterClientsData(searchInput ? searchInput.value : '');
+  
+  const totalRows = filtered.length;
+  const maxPage = Math.max(1, Math.ceil(totalRows / CLIENTS_PER_PAGE));
+  if (window.clientsCurrentPage > maxPage) window.clientsCurrentPage = maxPage;
+
+  const startIdx = (window.clientsCurrentPage - 1) * CLIENTS_PER_PAGE;
+  const pageRows = filtered.slice(startIdx, startIdx + CLIENTS_PER_PAGE);
+
+  pageRows.forEach(c => {
+    const tr = document.createElement("tr");
+    
+    // Create an input for the default price
+    const currentPriceStr = c.customPrice ? c.customPrice : '';
+    const lastDateDisplay = c.lastOrderDate.getFullYear() > 1970 ? formatDateTime(c.lastOrderDate.toISOString()) : '-';
+    
+    tr.innerHTML = `
+      <td data-label="שם">${c.name}</td>
+      <td data-label="טלפון">${createWhatsAppLink(c.originalPhone)}</td>
+      <td data-label="כלבים">${c.dogsArray.join(', ')}</td>
+      <td data-label="סהכ הזמנות">${c.totalOrders}</td>
+      <td data-label="הזמנה אחרונה">${lastDateDisplay}</td>
+      <td data-label="הכנסה">₪${c.totalRevenue.toLocaleString()}</td>
+      <td data-label="מחיר ברירת מחדל" class="price-cell" style="text-align:center;">
+        <div class="price-input-container" style="display:inline-block; margin:auto;">
+          <input type="number" class="price-input client-price-input" 
+                 data-phonekey="${c.phoneKey}" 
+                 value="${currentPriceStr}" min="0" step="10" placeholder="רגיל" style="width:70px;" />
+        </div>
+      </td>
+      <td data-label="פעולות">
+        <button class="header-btn manager-only" style="background:#10b981; color:white; border:none; padding:6px 12px;" 
+                onclick="saveClientPrice('${c.phoneKey}', this.closest('tr').querySelector('.client-price-input').value)">
+          <i class="fas fa-save"></i> שמור
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  renderClientsPagination(totalRows, window.clientsCurrentPage, maxPage);
+  updateModeUI();
+}
+
+function renderClientsPagination(totalRows, currentPage, maxPage) {
+  const container = document.getElementById("clientsPagination");
+  if (!container) return;
+  let html = "";
+  html += `<button class="header-btn" style="background:#f1f5f9; color:#64748b;" onclick="window.clientsCurrentPage--; renderClientsTable()" ${currentPage === 1 ? "disabled" : ""}>הקודם</button>`;
+  html += `<span style="margin: 0 15px; font-weight: bold;">עמוד ${currentPage} מתוך ${maxPage} (${totalRows} לקוחות)</span>`;
+  html += `<button class="header-btn" style="background:#f1f5f9; color:#64748b;" onclick="window.clientsCurrentPage++; renderClientsTable()" ${currentPage === maxPage ? "disabled" : ""}>הבא</button>`;
+  container.innerHTML = html;
+}
+
+document.getElementById('clientsSearchInput')?.addEventListener('input', () => {
+  window.clientsCurrentPage = 1;
+  renderClientsTable();
+});
+
+async function saveClientPrice(phoneKey, priceValue) {
+  if (!window.clientsData) window.clientsData = {};
+  
+  if (!priceValue || priceValue === '') {
+     delete window.clientsData[phoneKey];
+  } else {
+     window.clientsData[phoneKey] = {
+        ...window.clientsData[phoneKey],
+        default_price: parseInt(priceValue)
+     };
+  }
+  
+  // Update localcache
+  const clientObj = window.processedClients.find(c => c.phoneKey === phoneKey);
+  if (clientObj) {
+      clientObj.customPrice = priceValue ? parseInt(priceValue) : null;
+  }
+  
+  // Save to DB profiles table
+  const session = window.currentUserSession;
+  if (!session) {
+      showToast('נא להתחבר תחילה', 'error');
+      return;
+  }
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update({ clients_data: window.clientsData })
+      .eq('user_id', session.user.id);
+      
+    if (error) {
+      if (error.code === 'PGRST204' || String(error.message).includes('column "clients_data" of relation "profiles" does not exist')) {
+          // Graceful degradation to localstorage if migration not run
+          localStorage.setItem('pensionNet_clientsData_fallback_' + session.user.id, JSON.stringify(window.clientsData));
+          showToast('מחיר נשמר מקומית (דרוש עדכון מסד נתונים)', 'success');
+      } else {
+          throw error;
+      }
+    } else {
+        showToast('מחיר אישי נשמר בהצלחה', 'success');
+    }
+    renderClientsTable();
+  } catch (err) {
+    console.error('Error saving client data:', err);
+    showToast('שגיאה בשמירת נתוני לקוח', 'error');
+  }
 }

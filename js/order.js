@@ -51,12 +51,13 @@ async function loadOwnerInfo() {
   try {
     const { data: profiles, error } = await client
       .from('profiles')
-      .select('phone, business_name, location')
+      .select('phone, business_name, location, default_price, clients_data')
       .eq('user_id', PENSION_OWNER_ID);
     
     if (error) throw error;
     
     const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+    window.pensionProfile = profile;
     console.log('Profile data found:', profile);
     
     if (profile) {
@@ -480,7 +481,12 @@ function showSummary() {
   const checkOut = formatDateWithDay(data.checkOut);
   
   const numDays = calculateDays(data.checkIn, data.checkOut);
-  const pricePerDay = 130;
+  
+  const phoneKey = phone.replace(/^0/, "972");
+  let customPrice = window.pensionProfile?.clients_data?.[phoneKey]?.default_price;
+  let defaultPensionPrice = window.pensionProfile?.default_price || 130;
+  
+  const pricePerDay = customPrice || defaultPensionPrice;
   const totalPrice = numDays * pricePerDay;
   
   const summary = `
@@ -752,6 +758,11 @@ async function submitForm() {
     finalPhone = '0' + phone;
   }
   
+  const phoneKeyForPrice = finalPhone.replace(/^0/, "972");
+  const customPriceDay = window.pensionProfile?.clients_data?.[phoneKeyForPrice]?.default_price;
+  const defaultPensionPriceDay = window.pensionProfile?.default_price || 130;
+  const priceToSave = customPriceDay || defaultPensionPriceDay;
+
   const orderData = {
     owner_name: formData.ownerName,
     phone: finalPhone, // שליחת מספר נקי
@@ -762,7 +773,8 @@ async function submitForm() {
     dog_breed: formData.dogSize || '',
     neutered: formData.neutered || 'לא צוין',
     notes: formData.notes || '',
-    user_id: PENSION_OWNER_ID
+    user_id: PENSION_OWNER_ID,
+    price_per_day: priceToSave
   };
   
   const client = getSupabase();
