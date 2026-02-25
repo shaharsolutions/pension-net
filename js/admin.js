@@ -3257,6 +3257,7 @@ function processClientsData() {
     c.dogsArray = Array.from(c.dogs);
     // Custom price
     c.customPrice = window.clientsData[c.phoneKey]?.default_price || null;
+    c.city = window.clientsData[c.phoneKey]?.city || '';
     return c;
   });
   
@@ -3286,6 +3287,7 @@ function filterClientsData(searchTerm) {
     c.name.toLowerCase().includes(term) ||
     c.originalPhone.includes(term) ||
     c.phoneKey.includes(term) ||
+    (c.city && c.city.toLowerCase().includes(term)) ||
     c.dogsArray.some(d => d.toLowerCase().includes(term))
   );
 }
@@ -3348,6 +3350,11 @@ function renderClientsTable() {
     tr.innerHTML = `
       <td data-label="שם">${c.name}</td>
       <td data-label="טלפון">${createWhatsAppLink(c.originalPhone)}</td>
+      <td data-label="עיר מגורים" style="text-align:center;">
+        <input type="text" class="client-city-input payment-input" 
+               placeholder="-" value="${c.city}" 
+               style="width:100px; padding:6px; text-align:center; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:auto;" />
+      </td>
       <td data-label="כלבים">${c.dogsArray.join(', ')}</td>
       <td data-label="סהכ הזמנות">${c.totalOrders}</td>
       <td data-label="הזמנה אחרונה">${lastDateDisplay}</td>
@@ -3361,7 +3368,7 @@ function renderClientsTable() {
       </td>
       <td data-label="פעולות">
         <button class="header-btn manager-only" style="background:#10b981; color:white; border:none; padding:6px 12px;" 
-                onclick="saveClientPrice('${c.phoneKey}', this.closest('tr').querySelector('.client-price-input').value)">
+                onclick="saveClientData('${c.phoneKey}', this.closest('tr').querySelector('.client-price-input').value, this.closest('tr').querySelector('.client-city-input').value)">
           <i class="fas fa-save"></i> שמור
         </button>
       </td>
@@ -3388,22 +3395,35 @@ document.getElementById('clientsSearchInput')?.addEventListener('input', () => {
   renderClientsTable();
 });
 
-async function saveClientPrice(phoneKey, priceValue) {
+async function saveClientData(phoneKey, priceValue, cityValue) {
   if (!window.clientsData) window.clientsData = {};
   
+  const currentData = window.clientsData[phoneKey] || {};
+  const newData = { ...currentData };
+  
   if (!priceValue || priceValue === '') {
+     delete newData.default_price;
+  } else {
+     newData.default_price = parseInt(priceValue);
+  }
+  
+  if (!cityValue || cityValue.trim() === '') {
+     delete newData.city;
+  } else {
+     newData.city = cityValue.trim();
+  }
+  
+  if (Object.keys(newData).length === 0) {
      delete window.clientsData[phoneKey];
   } else {
-     window.clientsData[phoneKey] = {
-        ...window.clientsData[phoneKey],
-        default_price: parseInt(priceValue)
-     };
+     window.clientsData[phoneKey] = newData;
   }
   
   // Update localcache
   const clientObj = window.processedClients.find(c => c.phoneKey === phoneKey);
   if (clientObj) {
       clientObj.customPrice = priceValue ? parseInt(priceValue) : null;
+      clientObj.city = cityValue ? cityValue.trim() : '';
   }
   
   // Save to DB profiles table
@@ -3423,12 +3443,12 @@ async function saveClientPrice(phoneKey, priceValue) {
       if (error.code === 'PGRST204' || String(error.message).includes('column "clients_data" of relation "profiles" does not exist')) {
           // Graceful degradation to localstorage if migration not run
           localStorage.setItem('pensionNet_clientsData_fallback_' + session.user.id, JSON.stringify(window.clientsData));
-          showToast('מחיר נשמר מקומית (דרוש עדכון מסד נתונים)', 'success');
+          showToast('הנתונים נשמרו מקומית (דרוש עדכון מסד נתונים)', 'success');
       } else {
           throw error;
       }
     } else {
-        showToast('מחיר אישי נשמר בהצלחה', 'success');
+        showToast('נתוני הלקוח נשמרו בהצלחה', 'success');
     }
     renderClientsTable();
   } catch (err) {
