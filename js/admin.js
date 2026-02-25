@@ -2667,203 +2667,149 @@ document.getElementById('fillDemoDataBtn')?.addEventListener('click', fillWithDe
 
 async function fillWithDemoData() {
   const session = window.currentUserSession;
-  if (!session) return;
-  
-  showConfirm('<i class="fas fa-magic"></i> מילוי נתוני דמו', 'האם אתה בטוח שברצונך למלא את המערכת בנתוני דמו? <br><br><b>פעולה זו תוסיף כ-100 הזמנות חדשות הפרוסות על פני 10 חודשים (7 אחורה ו-3 קדימה).</b>', async () => {
+  if (!session) {
+    showToast('עליך להיות מחובר כדי למלא נתוני דמו', 'error');
+    return;
+  }
+
+  showConfirm('<i class="fas fa-magic"></i> יצירת נתוני דמו', 'פעולה זו תוסיף כ-150 הזמנות פיקטיביות למערכת לצורך התנסות. <br><br><b>האם להמשיך?</b>', async () => {
     const btn = document.getElementById('fillDemoDataBtn');
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ממלא נתונים...';
-  
-  const dogNames = ['לוסי', 'מקס', 'בלה', 'צ\'ארלי', 'לולה', 'רוקי', 'ג\'ק', 'מיקה', 'סימבה', 'טוי', 'ג\'וי', 'לואי', 'סקיי', 'קוצ\'י', 'שוקו'];
-  const ownerNames = ['שחר כהן', 'מיכל לוי', 'ישראל ישראלי', 'דינה אברהם', 'רון מועלם', 'עדי שרון', 'דניאל יוסף', 'מיה ארז', 'יואב גל', 'נועה ברק'];
-  const sizes = ['קטן', 'בינוני', 'גדול'];
-  const realNotes = [
-    'אוכל פעמיים ביום, רגיש לעוף',
-    'ידידותי מאוד לכלבים אחרים',
-    'צריך כדור בבוקר עם האוכל',
-    'אוהב לשחק עם כדור טניס',
-    'חששן בהתחלה, זקוק לגישה עדינה',
-    'מעדיף לישון על ספה',
-    'מושך קצת בטיולים',
-    'רגיל ללינה בבית',
-    'אנרגטי מאוד, אוהב לרוץ'
-  ];
-  
-  const today = new Date();
-  const demoOrders = [];
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ממלא נתונים...';
+    
+    // Fixed owners and phones for consistency
+    const owners = [
+        { name: 'יוסי כהן', phone: '0501111111', dogs: ['רקס', 'לאסי'], price: 100 },
+        { name: 'שרה לוי', phone: '0522222222', dogs: ['בל'], price: 100 },
+        { name: 'דני רובס', phone: '0543333333', dogs: ['סימבה', 'נלה'], price: 100 },
+        { name: 'מיכל אברהם', phone: '0504444444', dogs: ['צ׳ארלי'], price: 100 },
+        { name: 'רון שחר', phone: '0525555555', dogs: ['לוקה', 'מקס'], price: 115 },
+        { name: 'גלית יצחק', phone: '0546666666', dogs: ['ביילי'], price: 115 },
+        { name: 'אבי ביטון', phone: '0507777777', dogs: ['לונה'], price: 115 },
+        { name: 'נועה קירל', phone: '0528888888', dogs: ['רוקי'], price: 115 },
+        { name: 'עומר אדם', phone: '0549999999', dogs: ['טופי'], price: 130 },
+        { name: 'עידן רייכל', phone: '0501234567', dogs: ['שוקו'], price: 130 },
+        { name: 'רוני סופר', phone: '0527654321', dogs: ['לאקי'], price: 130 },
+        { name: 'רחל המשוררת', phone: '0545554443', dogs: ['ג׳וני'], price: 130 }
+    ];
 
-    // Generate data from 7 months back to 1 month forward
-    for (let m = -7; m <= 1; m++) {
-        let numOrdersThisMonth;
-        if (m < 0) {
-            const baseOrders = 5;
-            const growthFactor = (m + 7) * 1; 
-            numOrdersThisMonth = baseOrders + growthFactor + Math.floor(Math.random() * 3);
-        } else if (m === 0) {
-            numOrdersThisMonth = 10; // Regular amount for current month
+    const sizes = ['קטן', 'בינוני', 'גדול'];
+    const realNotes = [
+      'אוכל פעמיים ביום, רגיש לעוף',
+      'ידידותי מאוד לכלבים אחרים',
+      'צריך כדור בבוקר עם האוכל',
+      'אוהב לשחק עם כדור טניס',
+      'חששן בהתחלה, זקוק לגישה עדינה',
+      'מעדיף לישון על ספה',
+      'מושך קצת בטיולים',
+      'רגיל ללינה בבית',
+      'אנרגטי מאוד, אוהב לרוץ'
+    ];
+    
+    const today = new Date();
+    const demoOrders = [];
+
+    // Generate 150 orders
+    for (let i = 0; i < 150; i++) {
+        const ownerIdx = Math.floor(Math.random() * owners.length);
+        const owner = owners[ownerIdx];
+        const dogName = owner.dogs[Math.floor(Math.random() * owner.dogs.length)];
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        
+        // Random offset between -90 and +90 days
+        const offsetDays = Math.floor(Math.random() * 180) - 90;
+        const checkIn = new Date(today);
+        checkIn.setDate(today.getDate() + offsetDays);
+        
+        const duration = Math.floor(Math.random() * 10) + 1;
+        const checkOut = new Date(checkIn);
+        checkOut.setDate(checkIn.getDate() + duration);
+        
+        let status;
+        const todayMs = new Date().setHours(0,0,0,0);
+        const checkInMs = new Date(checkIn).setHours(0,0,0,0);
+        const checkOutMs = new Date(checkOut).setHours(0,0,0,0);
+
+        if (checkOutMs < todayMs) {
+            status = Math.random() < 0.15 ? 'בוטל' : 'מאושר';
         } else {
-            numOrdersThisMonth = 3; // Exactly 3 future orders
+            const rnd = Math.random();
+            if (rnd < 0.2) status = 'ממתין';
+            else if (rnd < 0.3) status = 'בוטל';
+            else status = 'מאושר';
         }
 
-        for (let i = 0; i < numOrdersThisMonth; i++) {
-            const dogName = dogNames[Math.floor(Math.random() * dogNames.length)];
-            const ownerName = ownerNames[Math.floor(Math.random() * ownerNames.length)];
-            const size = sizes[Math.floor(Math.random() * sizes.length)];
-            
-            let status = Math.random() > 0.1 ? 'מאושר' : 'בוטל';
-            
-            // Generate date
-            const orderMonth = new Date(today.getFullYear(), today.getMonth() + m, 1);
-            const daysInMonth = new Date(orderMonth.getFullYear(), orderMonth.getMonth() + 1, 0).getDate();
-            
-            let checkIn;
-            let duration = Math.floor(Math.random() * 5) + 2; // 2-7 days
-            
-            if (m === 0) {
-                if (i === 0) {
-                    // Forced: Entry today
-                    checkIn = new Date(today);
-                    status = 'מאושר';
-                } else if (i === 1) {
-                    // Forced: Exit today
-                    checkIn = new Date(today);
-                    checkIn.setDate(today.getDate() - duration);
-                    status = 'מאושר';
-                } else {
-                    // Ensure other current month orders are in the past
-                    const pastDay = Math.floor(Math.random() * today.getDate()) + 1;
-                    checkIn = new Date(today.getFullYear(), today.getMonth(), pastDay);
-                }
-            } else if (m > 0) {
-                // Future orders: m=1
-                const futureDay = Math.floor(Math.random() * daysInMonth) + 1;
-                checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), futureDay);
-                status = 'מאושר'; // Future orders usually shown as approved in demo
-            } else {
-                // Past months
-                const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
-                checkIn = new Date(orderMonth.getFullYear(), orderMonth.getMonth(), randomDay);
-            }
-            
-            const checkOut = new Date(checkIn);
-            checkOut.setDate(checkIn.getDate() + duration);
+        const isArrived = (status === 'מאושר' && checkInMs <= todayMs && checkOutMs >= todayMs);
+        const isDeparted = (status === 'מאושר' && checkOutMs < todayMs);
         
-        const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const checkInNormalized = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
-        const checkOutNormalized = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
-        
-        const isArrived = checkInNormalized <= todayNormalized && status !== 'ממתין';
-        const isDeparted = checkOutNormalized < todayNormalized && isArrived;
-        
-        let adminNotes = [];
-        if (status !== 'בוטל') {
-            const isFuture = checkInNormalized > todayNormalized;
-            
-            const activityPool = [
-                'נראה קצת עצוב הבוקר, לעקוב',
-                'אכל את כל האוכל בתיאבון',
-                'שיחק יפה עם שאר הכלבים בחצר',
-                'קיבל את הכדור של הבוקר',
-                'ישן טוב בלילה',
-                'זקוק למקלחת לפני היציאה'
-            ];
-
-            const interactionPool = [
-                'הבעלים ביקש לעדכן בוואטסאפ בערב',
-                'תיאום איסוף לשעה 17:00',
-                'ביקשו מקלחת לפני היציאה',
-                'הלקוח שאל לגבי הנחה לשהייה ארוכה',
-                'תיאום כניסה מוקדמת ב-08:00',
-                'הלקוח ציין שהכלב רגיש לרעשים חזקים'
-            ];
-
-            const pool = isFuture ? interactionPool : activityPool;
-
-            const numNotes = Math.floor(Math.random() * 2) + 1;
-            let availablePool = [...pool];
-            for (let j = 0; j < numNotes; j++) {
-                if (availablePool.length === 0) break;
-                const randomIndex = Math.floor(Math.random() * availablePool.length);
-                const content = availablePool.splice(randomIndex, 1)[0];
-                
-                adminNotes.push({
-                    content: content,
-                    author: 'מנהל',
-                    timestamp: new Date(checkIn.getTime() + Math.random() * 86400000).toISOString()
-                });
-            }
-        }
+        let adminNotes = [{
+            content: 'מערכת: נתוני דמו',
+            author: 'SYSTEM',
+            type: 'DEMO_DATA',
+            timestamp: new Date().toISOString()
+        }];
 
         if (status === 'בוטל') {
-            const cancelReasons = ['הכלב חלה לצערנו', 'שינוי בתוכניות הנסיעה', 'החליטו להשאיר אצל המשפחה', 'נמצא פנסיון קרוב יותר'];
             adminNotes.push({
-                content: `ביטול: ${cancelReasons[Math.floor(Math.random() * cancelReasons.length)]}`,
+                content: 'ביטול: שינוי בתוכניות',
                 author: 'מערכת',
                 timestamp: checkIn.toISOString()
             });
         }
         
-        const adminNoteJson = JSON.stringify(adminNotes) + " (DEMO_DATA)";
-
         demoOrders.push({
             user_id: session.user.id,
-            owner_name: ownerName,
+            owner_name: owner.name,
             dog_name: dogName,
             dog_breed: size,
             dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
-            phone: '05' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
+            phone: owner.phone,
             check_in: checkIn.toISOString().split('T')[0],
             check_out: checkOut.toISOString().split('T')[0],
             status: status,
             is_arrived: isArrived,
             is_departed: isDeparted,
-            is_paid: status === 'בוטל' ? false : (isDeparted || Math.random() > 0.7),
-            price_per_day: 130 + Math.floor((m + 7) / 2) * 5, // Growth in jumps of 5
+            is_paid: isDeparted || (status === 'מאושר' && Math.random() > 0.6),
+            price_per_day: owner.price,
             neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
-            notes: realNotes[Math.floor(Math.random() * realNotes.length)],
-            admin_note: adminNoteJson,
-            created_at: checkIn.toISOString()
+            notes: Math.random() > 0.7 ? realNotes[Math.floor(Math.random() * realNotes.length)] : '',
+            admin_note: JSON.stringify(adminNotes),
+            created_at: new Date(checkIn.getTime() - (86400000 * 5)).toISOString()
         });
     }
-  }
-  
-  // Mark approved orders as having confirmation sent
-  const sentConfirmations = JSON.parse(localStorage.getItem('sentConfirmations') || '{}');
-  
-  try {
-    const { error } = await pensionNetSupabase
-      .from('orders')
-      .insert(demoOrders);
+    
+    // Update clients_data with discounted prices
+    const updatedClientsData = { ...(window.clientsData || {}) };
+    owners.forEach(o => {
+        const phoneKey = formatPhoneKey(o.phone);
+        updatedClientsData[phoneKey] = { default_price: o.price };
+    });
+
+    try {
+      // 1. Insert Orders
+      const { error: orderError } = await pensionNetSupabase.from('orders').insert(demoOrders);
+      if (orderError) throw orderError;
+
+      // 2. Update Profile with Clients Data
+      const { error: profileError } = await pensionNetSupabase
+        .from('profiles')
+        .update({ clients_data: updatedClientsData })
+        .eq('user_id', session.user.id);
       
-    if (error) throw error;
-    
-    // After successful insert, mark approved orders as sent
-    const { data: insertedOrders } = await pensionNetSupabase
-      .from('orders')
-      .select('id, status')
-      .eq('admin_note', 'DEMO_DATA')
-      .order('created_at', { ascending: false })
-      .limit(7);
-    
-    if (insertedOrders) {
-      insertedOrders.forEach(order => {
-        if (order.status === 'מאושר') {
-          sentConfirmations[order.id] = Date.now();
-        }
-      });
-      localStorage.setItem('sentConfirmations', JSON.stringify(sentConfirmations));
+      // We don't throw for profileError to be resilient to missing columns
+      if (profileError) console.warn('Resiliently ignored profile update error:', profileError);
+      else window.clientsData = updatedClientsData;
+
+      showToast('<i class="fas fa-magic"></i> <strong>נתוני הדמו הוספו בהצלחה!</strong>', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      console.error('Error adding demo data:', err);
+      showToast('שגיאה בהוספת נתוני דמו: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
     }
-    
-    showToast('<i class="fas fa-magic"></i> <strong>נתוני הדמו הוספו בהצלחה!</strong> &nbsp;המערכת תתרענן כעת...', 'success');
-    setTimeout(() => location.reload(), 2000);
-  } catch (err) {
-    console.error('Error adding demo data:', err);
-    showToast('שגיאה בהוספת נתוני דמו: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-  }
   });
 }
 
@@ -2885,7 +2831,7 @@ async function clearDemoData() {
         .from('orders')
         .select('id')
         .eq('user_id', session.user.id)
-        .or('admin_note.ilike.%DEMO_DATA%,admin_note.ilike.%דוגמה%,notes.ilike.%DEMO_DATA%,notes.ilike.%דוגמה%,dog_breed.ilike.%גולדן%,dog_breed.ilike.%רועה%,dog_breed.ilike.%לברדור%,dog_breed.ilike.%פודל%,dog_breed.ilike.%בולדוג%,dog_breed.ilike.%בלוג%,dog_breed.ilike.%שיטסו%,dog_breed.ilike.%מלטז%,dog_breed.ilike.%פינצ%,dog_breed.ilike.%ביגל%,dog_breed.ilike.%מעורב%,owner_name.ilike.%ישראל ישראלי%,owner_name.ilike.%שחר כהן%');
+        .or('admin_note.ilike.%DEMO_DATA%,admin_note.ilike.%דוגמה%,notes.ilike.%DEMO_DATA%');
 
       if (fetchError) throw fetchError;
 
@@ -2894,7 +2840,7 @@ async function clearDemoData() {
         return;
       }
 
-      // Step 2: Delete by IDs (more reliable)
+      // Step 2: Delete by IDs 
       const idsToDelete = matches.map(m => m.id);
       const { error: deleteError } = await pensionNetSupabase
         .from('orders')

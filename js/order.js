@@ -54,11 +54,16 @@ async function loadOwnerInfo() {
       .select('phone, business_name, location, default_price, clients_data')
       .eq('user_id', PENSION_OWNER_ID);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Profile fetch error:', error);
+      throw error;
+    }
     
     const profile = profiles && profiles.length > 0 ? profiles[0] : null;
     window.pensionProfile = profile;
     console.log('Profile data found:', profile);
+    console.log('clients_data from DB:', profile?.clients_data);
+    console.log('default_price from DB:', profile?.default_price);
     
     if (profile) {
       if (profile.phone) ADMIN_PHONE = profile.phone;
@@ -322,20 +327,35 @@ function onDateClick(day, month, year) {
   
   if (selectionPhase === 1) {
     // First click: Set check-in and temporary check-out (same day)
-    checkInInput.value = dateStr;
-    checkOutInput.value = dateStr;
+    if (window._orderCheckInPicker) {
+      window._orderCheckInPicker.setDate(dateStr, false);
+      window._orderCheckOutPicker.setDate(dateStr, false);
+    } else {
+      checkInInput.value = dateStr;
+      checkOutInput.value = dateStr;
+    }
     lastCheckInValue = dateStr;
     selectionPhase = 2; // Move to pick check-out
   } else {
     // Second click: Set check-out
-    if (dateStr < checkInInput.value) {
+    const currentIn = checkInInput.value;
+    if (dateStr < currentIn) {
         // If clicked earlier than check-in, restart with this as check-in
-        checkInInput.value = dateStr;
-        checkOutInput.value = dateStr;
+        if (window._orderCheckInPicker) {
+          window._orderCheckInPicker.setDate(dateStr, false);
+          window._orderCheckOutPicker.setDate(dateStr, false);
+        } else {
+          checkInInput.value = dateStr;
+          checkOutInput.value = dateStr;
+        }
         lastCheckInValue = dateStr;
         selectionPhase = 2; 
     } else {
-        checkOutInput.value = dateStr;
+        if (window._orderCheckOutPicker) {
+          window._orderCheckOutPicker.setDate(dateStr, false);
+        } else {
+          checkOutInput.value = dateStr;
+        }
         selectionPhase = 1; // Complete, next click starts over
     }
   }
@@ -400,7 +420,11 @@ function handleCheckInChange() {
   
   // Sync logic: if check-out is empty OR was exactly the same as the old check-in, update it
   if (newValue && (!checkOutInput.value || checkOutInput.value === lastCheckInValue)) {
-    checkOutInput.value = newValue;
+    if (window._orderCheckOutPicker) {
+      window._orderCheckOutPicker.setDate(newValue, false);
+    } else {
+      checkOutInput.value = newValue;
+    }
     // When manually selecting check-in, we prepare to select check-out next
     selectionPhase = 2;
   }
@@ -482,7 +506,16 @@ function showSummary() {
   
   const numDays = calculateDays(data.checkIn, data.checkOut);
   
-  const phoneKey = phone.replace(/^0/, "972");
+  // Normalize phone to match admin's formatPhoneKey: strip spaces/dashes, replace leading 0 with 972
+  let cleanPhone = phone.replace(/[\s\-]/g, "");
+  // If starts with +972, remove the +
+  if (cleanPhone.startsWith('+972')) cleanPhone = cleanPhone.substring(1);
+  // If starts with 0, replace with 972
+  if (cleanPhone.startsWith('0')) cleanPhone = '972' + cleanPhone.substring(1);
+  
+  const phoneKey = cleanPhone;
+  console.log('Looking up client price for phoneKey:', phoneKey, 'clients_data:', window.pensionProfile?.clients_data);
+  
   let customPrice = window.pensionProfile?.clients_data?.[phoneKey]?.default_price;
   let defaultPensionPrice = window.pensionProfile?.default_price || 130;
   
@@ -530,7 +563,7 @@ function showSummary() {
       </div>
       <div class="summary-item">
         <span class="summary-label">מחיר ליום:</span>
-        <span class="summary-value">${pricePerDay}₪</span>
+        <span class="summary-value">${pricePerDay}₪${customPrice ? ' <span style="background: #dbeafe; color: #1d4ed8; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-right: 6px; font-weight: 600;">מחיר אישי</span>' : ''}</span>
       </div>
       <div class="summary-item">
         <span class="summary-label">סה"כ לתשלום:</span>
@@ -550,12 +583,26 @@ function showSummary() {
 
 function getFormData() {
   const data = {};
-  document.querySelectorAll('#bookingForm input[type="text"], #bookingForm input[type="tel"], #bookingForm input[type="date"], #bookingForm textarea').forEach(input => {
-    data[input.name] = input.value;
+  
+  // Get all text-like inputs
+  document.querySelectorAll('#bookingForm input:not([type="radio"]):not([type="checkbox"]), #bookingForm select, #bookingForm textarea').forEach(input => {
+    if (input.name) {
+      data[input.name] = input.value;
+    }
   });
+  
+  // Explicitly check for checkIn and checkOut as they are critical
+  const checkIn = document.getElementById('checkInDate');
+  const checkOut = document.getElementById('checkOutDate');
+  if (checkIn) data.checkIn = checkIn.value;
+  if (checkOut) data.checkOut = checkOut.value;
+  
+  // Get checked radios
   document.querySelectorAll('#bookingForm input[type="radio"]:checked').forEach(radio => {
     data[radio.name] = radio.value;
   });
+  
+  console.log('Form data extracted:', data);
   return data;
 }
 
@@ -758,7 +805,10 @@ async function submitForm() {
     finalPhone = '0' + phone;
   }
   
-  const phoneKeyForPrice = finalPhone.replace(/^0/, "972");
+  let phoneKeyForPrice = finalPhone.replace(/[\s\-]/g, "");
+  if (phoneKeyForPrice.startsWith('+972')) phoneKeyForPrice = phoneKeyForPrice.substring(1);
+  if (phoneKeyForPrice.startsWith('0')) phoneKeyForPrice = '972' + phoneKeyForPrice.substring(1);
+  
   const customPriceDay = window.pensionProfile?.clients_data?.[phoneKeyForPrice]?.default_price;
   const defaultPensionPriceDay = window.pensionProfile?.default_price || 130;
   const priceToSave = customPriceDay || defaultPensionPriceDay;
@@ -791,8 +841,9 @@ async function submitForm() {
     .select();
   
   if (error) {
-    console.error('Error:', error);
-    showToast('אירעה שגיאה בשליחת ההזמנה. אנא נסו שוב.', 'error');
+    console.error('Detailed Supabase Error:', error);
+    const errorMsg = error.message || (typeof error === 'object' ? JSON.stringify(error) : error);
+    showToast('שגיאה בשליחת ההזמנה: ' + errorMsg, 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'שלח הזמנה ✓';
     return;
@@ -811,7 +862,15 @@ async function submitForm() {
   const checkIn = formatDateWithDay(formData.checkIn);
   const checkOut = formatDateWithDay(formData.checkOut);
   const totalDays = calculateDays(formData.checkIn, formData.checkOut);
-  const pricePerDay = 130;
+  
+  // Use custom client price if available
+  let finalPhoneKey = finalPhone.replace(/[\s\-]/g, "");
+  if (finalPhoneKey.startsWith('+972')) finalPhoneKey = finalPhoneKey.substring(1);
+  if (finalPhoneKey.startsWith('0')) finalPhoneKey = '972' + finalPhoneKey.substring(1);
+  const finalCustomPrice = window.pensionProfile?.clients_data?.[finalPhoneKey]?.default_price;
+  const finalDefaultPrice = window.pensionProfile?.default_price || 130;
+  const pricePerDay = finalCustomPrice || finalDefaultPrice;
+  
   const totalPrice = totalDays * pricePerDay;
   
   const finalSummary = `
@@ -885,6 +944,10 @@ function resetForm() {
     }
   });
   
+  // Clear flatpickr instances if they exist
+  if (window._orderCheckInPicker) window._orderCheckInPicker.clear();
+  if (window._orderCheckOutPicker) window._orderCheckOutPicker.clear();
+  
   document.getElementById('previousDogsContainer').style.display = 'none';
   document.getElementById('summaryPreview').innerHTML = '';
   document.getElementById('finalSummary').innerHTML = '';
@@ -928,9 +991,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   const checkOutInput = document.getElementById('checkOutDate');
   
   if (checkInInput && checkOutInput) {
-    checkInInput.addEventListener('input', handleCheckInChange);
-    checkOutInput.addEventListener('input', updateDaysDisplay);
-    checkInInput.addEventListener('change', handleCheckInChange);
-    checkOutInput.addEventListener('change', updateDaysDisplay);
+    if (typeof flatpickr !== 'undefined') {
+       window._orderCheckOutPicker = flatpickr('#checkOutDate', {
+          locale: "he",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d/m/Y",
+          allowInput: false,
+          disableMobile: true,
+          onOpen: function(selectedDates, dateStr, instance) {
+             instance.calendarContainer.classList.add("premium-datepicker");
+          },
+          onChange: function(selectedDates, dateStr) {
+             updateDaysDisplay();
+          }
+       });
+
+       window._orderCheckInPicker = flatpickr('#checkInDate', {
+          locale: "he",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d/m/Y",
+          allowInput: false,
+          disableMobile: true,
+          onOpen: function(selectedDates, dateStr, instance) {
+             instance.calendarContainer.classList.add("premium-datepicker");
+          },
+          onChange: function(selectedDates, dateStr) {
+             handleCheckInChange();
+          }
+       });
+    } else {
+       checkInInput.addEventListener('input', handleCheckInChange);
+       checkOutInput.addEventListener('input', updateDaysDisplay);
+       checkInInput.addEventListener('change', handleCheckInChange);
+       checkOutInput.addEventListener('change', updateDaysDisplay);
+    }
   }
 });

@@ -481,6 +481,100 @@ button:disabled {
   display: block;
 }
 
+/* Flatpickr Premium Theme Overrides */
+.flatpickr-calendar.premium-datepicker {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  font-family: inherit;
+  padding: 10px;
+  width: 330px !important;
+}
+
+.flatpickr-months {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.flatpickr-month {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.flatpickr-current-month {
+  font-size: 115%;
+  font-weight: 800;
+}
+
+.flatpickr-weekday {
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.flatpickr-day {
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #334155;
+  font-weight: 600;
+  height: 44px;
+  line-height: 44px;
+  margin: 3px;
+}
+
+.flatpickr-day:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+.flatpickr-day.today {
+  border-color: #667eea;
+  color: #667eea;
+  font-weight: 800;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.flatpickr-day.selected {
+  background: #667eea !important;
+  border-color: #667eea !important;
+  color: white !important;
+  box-shadow: 0 10px 15px -3px rgba(102, 126, 234, 0.4);
+  transform: scale(1.05);
+}
+
+.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+  color: #cbd5e1;
+  opacity: 0.4;
+}
+
+.flatpickr-prev-month, .flatpickr-next-month {
+  padding: 10px !important;
+  color: #667eea !important;
+  fill: #667eea !important;
+}
+
+.flatpickr-input[readonly] {
+  cursor: pointer;
+  background-color: transparent; /* Changed to fit the date-group bg */
+}
+
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-month {
+  height: 40px;
+}
+
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar.premium-datepicker .flatpickr-months .flatpickr-next-month {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   body {
