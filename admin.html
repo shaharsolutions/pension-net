@@ -78,6 +78,16 @@
         opacity: 1 !important;
         filter: none !important;
       }
+      
+      /* rtl flatpickr custom overrides to swap physical positions */
+      .premium-datepicker[dir="rtl"] .flatpickr-prev-month {
+        left: auto !important;
+        right: 0 !important;
+      }
+      .premium-datepicker[dir="rtl"] .flatpickr-next-month {
+        right: auto !important;
+        left: 0 !important;
+      }
     </style>
   </head>
   <body class="staff-mode">
