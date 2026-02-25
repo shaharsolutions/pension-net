@@ -2678,20 +2678,42 @@ async function fillWithDemoData() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ממלא נתונים...';
     
-    // Fixed owners and phones for consistency
-    const owners = [
-        { name: 'יוסי כהן', phone: '0501111111', dogs: ['רקס', 'לאסי'], price: 100 },
-        { name: 'שרה לוי', phone: '0522222222', dogs: ['בל'], price: 100 },
-        { name: 'דני רובס', phone: '0543333333', dogs: ['סימבה', 'נלה'], price: 100 },
-        { name: 'מיכל אברהם', phone: '0504444444', dogs: ['צ׳ארלי'], price: 100 },
-        { name: 'רון שחר', phone: '0525555555', dogs: ['לוקה', 'מקס'], price: 115 },
-        { name: 'גלית יצחק', phone: '0546666666', dogs: ['ביילי'], price: 115 },
-        { name: 'אבי ביטון', phone: '0507777777', dogs: ['לונה'], price: 115 },
-        { name: 'נועה קירל', phone: '0528888888', dogs: ['רוקי'], price: 115 },
-        { name: 'עומר אדם', phone: '0549999999', dogs: ['טופי'], price: 130 },
-        { name: 'עידן רייכל', phone: '0501234567', dogs: ['שוקו'], price: 130 },
-        { name: 'רוני סופר', phone: '0527654321', dogs: ['לאקי'], price: 130 },
-        { name: 'רחל המשוררת', phone: '0545554443', dogs: ['ג׳וני'], price: 130 }
+        const owners = [
+        { name: 'יוסי כהן', phone: '0501111111', dogs: ['רקס', 'לאסי'] },
+        { name: 'שרה לוי', phone: '0522222222', dogs: ['בל'] },
+        { name: 'דני רובס', phone: '0543333333', dogs: ['סימבה', 'נלה'] },
+        { name: 'מיכל אברהם', phone: '0504444444', dogs: ['צ׳ארלי'] },
+        { name: 'רון שחר', phone: '0525555555', dogs: ['לוקה', 'מקס'] },
+        { name: 'גלית יצחק', phone: '0546666666', dogs: ['ביילי'] },
+        { name: 'אבי ביטון', phone: '0507777777', dogs: ['לונה'] },
+        { name: 'נועה קירל', phone: '0528888888', dogs: ['רוקי'] },
+        { name: 'עומר אדם', phone: '0549999999', dogs: ['טופי'] },
+        { name: 'עידן רייכל', phone: '0501234567', dogs: ['שוקו'] },
+        { name: 'רוני סופר', phone: '0527654321', dogs: ['לאקי'] },
+        { name: 'רחל המשוררת', phone: '0545554443', dogs: ['ג׳וני'] },
+        { name: 'משה פרץ', phone: '0501112222', dogs: ['בונו'] },
+        { name: 'ליאור נרקיס', phone: '0523334444', dogs: ['סטיץ'] },
+        { name: 'אייל גולן', phone: '0545556666', dogs: ['דיאמונד'] },
+        { name: 'סטטיק', phone: '0507778888', dogs: ['מרשל'] },
+        { name: 'בן אל', phone: '0529990000', dogs: ['סקיי'] },
+        { name: 'עדן בן זקן', phone: '0541112222', dogs: ['שולי'] },
+        { name: 'נסרין קדרי', phone: '0503334444', dogs: ['אלסקה'] },
+        { name: 'חנן בן ארי', phone: '0525556666', dogs: ['ירושלים'] },
+        { name: 'ישי ריבו', phone: '0547778888', dogs: ['לב'] },
+        { name: 'שלמה ארצי', phone: '0509991111', dogs: ['גבר'] },
+        { name: 'צביקה פיק', phone: '0521113333', dogs: ['מרי'] },
+        { name: 'אריק איינשטיין', phone: '0543335555', dogs: ['אולי'] },
+        { name: 'יהודה פוליקר', phone: '0505557777', dogs: ['עיניים'] },
+        { name: 'גידי גוב', phone: '0527779999', dogs: ['עוגל'] },
+        { name: 'גלי עטרי', phone: '0549991111', dogs: ['הללויה'] },
+        { name: 'ריטה', phone: '0501114444', dogs: ['רמי'] },
+        { name: 'שירי מימון', phone: '0523331111', dogs: ['בוגה'] },
+        { name: 'הראל סקעת', phone: '0545552222', dogs: ['אורי'] },
+        { name: 'קרן פלס', phone: '0507773333', dogs: ['נועם'] },
+        { name: 'מירי מסיקה', phone: '0529994444', dogs: ['תיבה'] },
+        { name: 'נינט טייב', phone: '0541115555', dogs: ['זוהר'] },
+        { name: 'רן דנקר', phone: '0503336666', dogs: ['שווים'] },
+        { name: 'אביב גפן', phone: '0525557777', dogs: ['עשור'] }
     ];
 
     const sizes = ['קטן', 'בינוני', 'גדול'];
@@ -2710,94 +2732,101 @@ async function fillWithDemoData() {
     const today = new Date();
     const demoOrders = [];
 
-    // Generate 150 orders
-    for (let i = 0; i < 150; i++) {
-        const ownerIdx = Math.floor(Math.random() * owners.length);
-        const owner = owners[ownerIdx];
-        const dogName = owner.dogs[Math.floor(Math.random() * owner.dogs.length)];
-        const size = sizes[Math.floor(Math.random() * sizes.length)];
-        
-        // Random offset between -90 and +90 days
-        const offsetDays = Math.floor(Math.random() * 180) - 90;
-        const checkIn = new Date(today);
-        checkIn.setDate(today.getDate() + offsetDays);
-        
-        const duration = Math.floor(Math.random() * 10) + 1;
-        const checkOut = new Date(checkIn);
-        checkOut.setDate(checkIn.getDate() + duration);
-        
-        let status;
-        const todayMs = new Date().setHours(0,0,0,0);
-        const checkInMs = new Date(checkIn).setHours(0,0,0,0);
-        const checkOutMs = new Date(checkOut).setHours(0,0,0,0);
+        const updatedClientsData = { ...(window.clientsData || {}) };
 
-        if (checkOutMs < todayMs) {
-            status = Math.random() < 0.15 ? 'בוטל' : 'מאושר';
-        } else {
-            const rnd = Math.random();
-            if (rnd < 0.2) status = 'ממתין';
-            else if (rnd < 0.3) status = 'בוטל';
-            else status = 'מאושר';
-        }
-
-        const isArrived = (status === 'מאושר' && checkInMs <= todayMs && checkOutMs >= todayMs);
-        const isDeparted = (status === 'מאושר' && checkOutMs < todayMs);
+    owners.forEach(owner => {
+        const numOrders = Math.floor(Math.random() * 5) + 1; // 1 to 5 orders
         
-        let adminNotes = [{
-            content: 'מערכת: נתוני דמו',
-            author: 'SYSTEM',
-            type: 'DEMO_DATA',
-            timestamp: new Date().toISOString()
-        }];
+        // Logical price mapping: more orders -> lower price
+        let clientPrice = 130;
+        if (numOrders === 3) clientPrice = 120;
+        else if (numOrders === 4) clientPrice = 110;
+        else if (numOrders === 5) clientPrice = 100;
 
-        if (status === 'בוטל') {
-            adminNotes.push({
-                content: 'ביטול: שינוי בתוכניות',
-                author: 'מערכת',
-                timestamp: checkIn.toISOString()
+        const phoneKey = formatPhoneKey(owner.phone);
+        updatedClientsData[phoneKey] = { default_price: clientPrice };
+
+        for (let j = 0; j < numOrders; j++) {
+            const dogName = owner.dogs[Math.floor(Math.random() * owner.dogs.length)];
+            const size = sizes[Math.floor(Math.random() * sizes.length)];
+            
+            const offsetDays = Math.floor(Math.random() * 180) - 90;
+            const checkIn = new Date(today);
+            checkIn.setDate(today.getDate() + offsetDays);
+            
+            const duration = Math.floor(Math.random() * 10) + 1;
+            const checkOut = new Date(checkIn);
+            checkOut.setDate(checkIn.getDate() + duration);
+            
+            let status;
+            const todayMs = new Date().setHours(0,0,0,0);
+            const checkInMs = new Date(checkIn).setHours(0,0,0,0);
+            const checkOutMs = new Date(checkOut).setHours(0,0,0,0);
+
+            if (checkOutMs < todayMs) {
+                status = Math.random() < 0.15 ? 'בוטל' : 'מאושר';
+            } else {
+                const rnd = Math.random();
+                if (rnd < 0.2) status = 'ממתין';
+                else if (rnd < 0.3) status = 'בוטל';
+                else status = 'מאושר';
+            }
+
+            const isArrived = (status === 'מאושר' && checkInMs <= todayMs && checkOutMs >= todayMs);
+            const isDeparted = (status === 'מאושר' && checkOutMs < todayMs);
+            
+            let adminNotes = [{
+                content: 'מערכת: נתוני דמו',
+                author: 'SYSTEM',
+                type: 'DEMO_DATA',
+                timestamp: new Date().toISOString()
+            }];
+
+            if (status === 'בוטל') {
+                adminNotes.push({
+                    content: 'ביטול: שינוי בתוכניות',
+                    author: 'מערכת',
+                    timestamp: checkIn.toISOString()
+                });
+            }
+            
+            demoOrders.push({
+                user_id: session.user.id,
+                owner_name: owner.name,
+                dog_name: dogName,
+                dog_breed: size,
+                dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
+                phone: owner.phone,
+                check_in: checkIn.toISOString().split('T')[0],
+                check_out: checkOut.toISOString().split('T')[0],
+                status: status,
+                is_arrived: isArrived,
+                is_departed: isDeparted,
+                is_paid: isDeparted || (status === 'מאושר' && Math.random() > 0.6),
+                price_per_day: clientPrice,
+                neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
+                notes: Math.random() > 0.7 ? realNotes[Math.floor(Math.random() * realNotes.length)] : '',
+                admin_note: JSON.stringify(adminNotes),
+                created_at: (() => {
+                    const daysAgo = Math.floor(Math.random() * 10) + 5;
+                    const date = new Date(checkIn);
+                    date.setDate(date.getDate() - daysAgo);
+                    date.setHours(Math.floor(Math.random() * 14) + 8, Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
+                    return date.toISOString();
+                })()
             });
         }
-        
-        demoOrders.push({
-            user_id: session.user.id,
-            owner_name: owner.name,
-            dog_name: dogName,
-            dog_breed: size,
-            dog_age: ['בוגר (4-7)', 'צעיר (1-3)', 'מבוגר (8+)', 'גור (עד שנה)'][Math.floor(Math.random() * 4)],
-            phone: owner.phone,
-            check_in: checkIn.toISOString().split('T')[0],
-            check_out: checkOut.toISOString().split('T')[0],
-            status: status,
-            is_arrived: isArrived,
-            is_departed: isDeparted,
-            is_paid: isDeparted || (status === 'מאושר' && Math.random() > 0.6),
-            price_per_day: owner.price,
-            neutered: Math.random() > 0.5 ? 'מסורס' : 'לא מסורס',
-            notes: Math.random() > 0.7 ? realNotes[Math.floor(Math.random() * realNotes.length)] : '',
-            admin_note: JSON.stringify(adminNotes),
-            created_at: new Date(checkIn.getTime() - (86400000 * 5)).toISOString()
-        });
-    }
-    
-    // Update clients_data with discounted prices
-    const updatedClientsData = { ...(window.clientsData || {}) };
-    owners.forEach(o => {
-        const phoneKey = formatPhoneKey(o.phone);
-        updatedClientsData[phoneKey] = { default_price: o.price };
     });
 
     try {
-      // 1. Insert Orders
       const { error: orderError } = await pensionNetSupabase.from('orders').insert(demoOrders);
       if (orderError) throw orderError;
 
-      // 2. Update Profile with Clients Data
       const { error: profileError } = await pensionNetSupabase
         .from('profiles')
         .update({ clients_data: updatedClientsData })
         .eq('user_id', session.user.id);
       
-      // We don't throw for profileError to be resilient to missing columns
       if (profileError) console.warn('Resiliently ignored profile update error:', profileError);
       else window.clientsData = updatedClientsData;
 
@@ -3166,7 +3195,19 @@ async function updatePricePerDay(orderId, newPrice) {
 // Clients Management
 window.clientsData = window.clientsData || {};
 window.clientsCurrentPage = 1;
+window.clientsSortField = 'lastOrderDate';
+window.clientsSortOrder = 'desc';
 const CLIENTS_PER_PAGE = 20;
+
+function toggleClientsSort(field) {
+    if (window.clientsSortField === field) {
+        window.clientsSortOrder = window.clientsSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        window.clientsSortField = field;
+        window.clientsSortOrder = (field === 'name') ? 'asc' : 'desc';
+    }
+    renderClientsTable();
+}
 
 function formatPhoneKey(phone) {
   if (!phone) return 'unknown';
@@ -3255,8 +3296,41 @@ function renderClientsTable() {
   tbody.innerHTML = "";
   
   const searchInput = document.getElementById('clientsSearchInput');
-  const filtered = filterClientsData(searchInput ? searchInput.value : '');
+  const priceFilter = document.getElementById('clientsPriceFilter')?.value || 'all';
   
+  let filtered = filterClientsData(searchInput ? searchInput.value : '');
+  
+  // Apply Price Filter
+  if (priceFilter === 'discounted') {
+      filtered = filtered.filter(c => c.customPrice !== null && c.customPrice < 130);
+  } else if (priceFilter === 'regular') {
+      filtered = filtered.filter(c => c.customPrice === null || c.customPrice >= 130);
+  }
+
+  // Apply Sorting
+  filtered.sort((a, b) => {
+      let valA = a[window.clientsSortField];
+      let valB = b[window.clientsSortField];
+      
+      // Handle nulls
+      if (window.clientsSortField === 'customPrice') {
+          if (valA === null || valA === undefined) valA = 130;
+          if (valB === null || valB === undefined) valB = 130;
+      } else {
+          if (valA === null || valA === undefined) valA = 0;
+          if (valB === null || valB === undefined) valB = 0;
+      }
+      
+      if (typeof valA === 'string') {
+          valA = valA.toLowerCase();
+          valB = valB.toLowerCase();
+      }
+      
+      if (valA < valB) return window.clientsSortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return window.clientsSortOrder === 'asc' ? 1 : -1;
+      return 0;
+  });
+
   const totalRows = filtered.length;
   const maxPage = Math.max(1, Math.ceil(totalRows / CLIENTS_PER_PAGE));
   if (window.clientsCurrentPage > maxPage) window.clientsCurrentPage = maxPage;

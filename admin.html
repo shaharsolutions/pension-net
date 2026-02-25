@@ -382,23 +382,28 @@
         <div class="container">
           <div class="table-header">
             <h3 class="table-title"><i class="fas fa-user-friends" style="color: var(--primary);"></i> מאגר לקוחות</h3>
-            <div class="table-filters">
+            <div class="table-filters" style="display: flex; gap: 10px; align-items: center;">
               <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="clientsSearchInput" placeholder="חיפוש לפי שם, טלפון, שם כלב...">
+                <input type="text" id="clientsSearchInput" placeholder="חיפוש לפי שם, טלפון, שם כלב..." oninput="renderClientsTable()">
               </div>
+              <select id="clientsPriceFilter" onchange="renderClientsTable()" class="payment-input" style="width: auto; height: 38px; margin: 0;">
+                <option value="all">כל המחירים</option>
+                <option value="discounted">מחיר מוזל בלבד</option>
+                <option value="regular">מחיר רגיל בלבד</option>
+              </select>
             </div>
           </div>
           <table id="clientsTable">
             <thead>
               <tr>
-                <th>שם הלקוח</th>
+                <th onclick="toggleClientsSort('name')" style="cursor:pointer;">שם הלקוח <i class="fas fa-sort"></i></th>
                 <th>טלפון לווטסאפ</th>
                 <th>כלבים משויכים</th>
-                <th>סה"כ הזמנות</th>
-                <th>הזמנה אחרונה</th>
-                <th>הכנסה מהלקוח</th>
-                <th>מחיר ברירת מחדל</th>
+                <th onclick="toggleClientsSort('totalOrders')" style="cursor:pointer;">סה"כ הזמנות <i class="fas fa-sort"></i></th>
+                <th onclick="toggleClientsSort('lastOrderDate')" style="cursor:pointer;">הזמנה אחרונה <i class="fas fa-sort"></i></th>
+                <th onclick="toggleClientsSort('totalRevenue')" style="cursor:pointer;">הכנסה מהלקוח <i class="fas fa-sort"></i></th>
+                <th onclick="toggleClientsSort('customPrice')" style="cursor:pointer;">מחיר ברירת מחדל <i class="fas fa-sort"></i></th>
                 <th>ניהול</th>
               </tr>
             </thead>
