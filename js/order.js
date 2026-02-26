@@ -610,7 +610,8 @@ async function identifyCustomer() {
   const phoneInput = document.getElementById('identificationPhone');
   let phone = phoneInput.value.replace(/[\s\-]/g, ''); // ניקוי מקפים ורווחים
   
-  if (!phone || phone.length < 9) {
+  if (!/^05\d{8}$/.test(phone)) {
+    showToast('חובה להזין מספר טלפון תקין בעל 10 ספרות המתחיל ב-05', 'error');
     return;
   }
 
@@ -619,11 +620,6 @@ async function identifyCustomer() {
   
   document.getElementById('searchingIndicator').style.display = 'block';
   document.getElementById('previousDogsContainer').style.display = 'none';
-  
-  if (/^[1-9]\d{8}$/.test(phone)) {
-    phone = '0' + phone;
-  }
-  
   if (!PENSION_OWNER_ID) {
     console.error('PENSION_OWNER_ID is missing from URL parameters!');
     document.getElementById('searchingIndicator').style.display = 'none';
@@ -807,10 +803,12 @@ async function submitForm() {
   const phone = document.getElementById('identificationPhone').value.replace(/[\s\-]/g, ''); // ניקוי המספר
   let finalPhone = phone;
   
-  if (/^[1-9]\d{8}$/.test(phone)) {
-    finalPhone = '0' + phone;
+  if (!/^05\d{8}$/.test(finalPhone)) {
+    showToast('חובה להזין מספר טלפון תקין בעל 10 ספרות המתחיל ב-05', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'שלח הזמנה ✓';
+    return;
   }
-  
   let phoneKeyForPrice = finalPhone.replace(/[\s\-]/g, "");
   if (phoneKeyForPrice.startsWith('+972')) phoneKeyForPrice = phoneKeyForPrice.substring(1);
   if (phoneKeyForPrice.startsWith('0')) phoneKeyForPrice = '972' + phoneKeyForPrice.substring(1);
