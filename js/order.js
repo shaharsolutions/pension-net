@@ -374,7 +374,7 @@ function updateDaysDisplay() {
     const days = calculateDays(checkIn, checkOut); // Uses utils.js
     if (days >= 1) {
       if (days === 1) {
-        daysText.textContent = `יום אחד בפנסיון 🐾`;
+        daysText.textContent = `יום כיף בגן 🐾`;
       } else {
         daysText.textContent = `${days} ימים בפנסיון 🐾`;
       }
