@@ -467,6 +467,17 @@
             const max_capacity = document.getElementById('max_capacity').value;
             const manager_pin = document.getElementById('manager_pin').value;
             const errorDiv = document.getElementById('errorMessage');
+            
+            if (mode === 'signup') {
+                if (!manager_pin || !/^\d{4}$/.test(manager_pin)) {
+                    errorDiv.textContent = 'יש להזין קוד PIN לניהול המורכב מ-4 ספרות';
+                    errorDiv.style.background = '#fee2e2';
+                    errorDiv.style.color = '#dc2626';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
 
             errorDiv.style.display = 'none';
