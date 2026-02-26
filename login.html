@@ -233,6 +233,60 @@
         .footer-link a:hover {
             text-decoration: underline;
         }
+
+        /* Terms Modal */
+        .terms-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+        }
+        .terms-modal-content {
+            background: #fff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: right;
+        }
+        .terms-close {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .terms-close:hover {
+            color: #334155;
+        }
+        .terms-scrollarea {
+            overflow-y: auto;
+            margin-top: 15px;
+            flex-grow: 1;
+            padding-left: 10px;
+            color: #334155;
+            line-height: 1.6;
+        }
+        .terms-scrollarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terms-scrollarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -301,6 +355,12 @@
                 <input type="checkbox" id="rememberMe" checked>
                 <label for="rememberMe">זכור אותי</label>
             </div>
+            <div id="managerTermsGroup" class="form-group terms-checkbox-group" style="display: none; text-align: right; margin-top: 15px; margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal; font-size: 0.95rem;">
+                    <input type="checkbox" id="managerTermsCheck" style="width: 20px !important; height: 20px !important; margin: 0 !important; cursor: pointer; accent-color: #6366f1;">
+                    <span>אני מאשר שקראתי ואני מסכים ל<a href="#" onclick="openManagerTerms(event)" style="color: #4f46e5; text-decoration: underline; font-weight: 600;">תנאי השימוש</a></span>
+                </label>
+            </div>
             <button type="submit" id="submitBtn" class="btn btn-primary">כניסה</button>
         </form>
 
@@ -342,8 +402,26 @@
             document.getElementById('manager_pin').required = mode === 'signup';
             
             document.getElementById('rememberMeGroup').style.display = mode === 'login' ? 'flex' : 'none';
+            document.getElementById('managerTermsGroup').style.display = mode === 'signup' ? 'block' : 'none';
             
             document.getElementById('submitBtn').textContent = mode === 'login' ? 'כניסה' : 'הרשמה';
+            
+            if (mode === 'signup') {
+                const isChecked = document.getElementById('managerTermsCheck').checked;
+                document.getElementById('submitBtn').disabled = !isChecked;
+                if(!isChecked) {
+                    document.getElementById('submitBtn').style.opacity = '0.5';
+                    document.getElementById('submitBtn').style.cursor = 'not-allowed';
+                } else {
+                    document.getElementById('submitBtn').style.opacity = '1';
+                    document.getElementById('submitBtn').style.cursor = 'pointer';
+                }
+            } else {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').style.opacity = '1';
+                document.getElementById('submitBtn').style.cursor = 'pointer';
+            }
+            
             document.getElementById('toggleLink').innerHTML = mode === 'login' ? 
                 'עוד לא רשומים? <a href="#" onclick="switchMode(\'signup\')">צרו חשבון עכשיו</a>' :
                 'כבר יש לכם חשבון? <a href="#" onclick="switchMode(\'login\')">היכנסו כאן</a>';
@@ -351,8 +429,34 @@
             document.getElementById('errorMessage').style.display = 'none';
         }
 
+        document.getElementById('managerTermsCheck').addEventListener('change', function() {
+            if (mode === 'signup') {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = !this.checked;
+                if(!this.checked) {
+                    submitBtn.style.opacity = '0.5';
+                    submitBtn.style.cursor = 'not-allowed';
+                } else {
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
+        });
+
         async function handleAuth(event) {
             event.preventDefault();
+
+            if (mode === 'signup') {
+                const termsCheck = document.getElementById('managerTermsCheck');
+                if (!termsCheck.checked) {
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.textContent = 'יש לאשר את תנאי השימוש לפני ההרשמה';
+                    errorDiv.style.background = '#fee2e2';
+                    errorDiv.style.color = '#dc2626';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+            }
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const full_name = document.getElementById('full_name').value;
@@ -375,6 +479,7 @@
                 if (mode === 'login') {
                     result = await Auth.login(email, password);
                 } else {
+                    const termsCheck = document.getElementById('managerTermsCheck');
                     result = await Auth.signUp(email, password, { 
                         full_name, 
                         business_name, 
@@ -382,7 +487,8 @@
                         default_price, 
                         phone, 
                         max_capacity, 
-                        manager_pin 
+                        manager_pin,
+                        terms_accepted: termsCheck ? termsCheck.checked : false
                     });
                 }
 
@@ -435,6 +541,58 @@
             if (session) window.location.href = 'admin.html';
         });
         */
+    </script>
+        
+    <!-- /* Terms Modal */ -->
+    <div id="managerTermsModal" class="terms-modal">
+        <div class="terms-modal-content">
+            <span class="terms-close" onclick="closeManagerTerms()">&times;</span>
+            <h2 style="margin-top: 0; color: #1e293b; font-size: 1.5rem;">תנאי שימוש למנהלים</h2>
+            <div class="terms-scrollarea">
+                <p><strong>תנאי שימוש – מערכת פנסיון-נט</strong></p>
+                <p><strong>1. כללי</strong><br>
+                פנסיון-נט היא מערכת לניהול פנסיונים לכלבים, המאפשרת ניהול הזמנות, לקוחות, הכנסות ותפעול שוטף. השימוש במערכת כפוף לתנאים המפורטים להלן.</p>
+                <p><strong>2. הצהרת המשתמש</strong><br>
+                בעת ההרשמה למערכת, המשתמש מצהיר כי:</p>
+                <ul style="margin-top: 5px; margin-bottom: 15px; padding-right: 20px;">
+                    <li>הוא בעל פנסיון פעיל או מורשה לפעול מטעמו</li>
+                    <li>הפרטים שמסר נכונים ומדויקים</li>
+                    <li>הוא נושא באחריות מלאה לכל שימוש שייעשה בחשבונו</li>
+                </ul>
+                <p><strong>3. אחריות לשימוש במערכת</strong><br>
+                המערכת מספקת כלי ניהול בלבד.<br>
+                המשתמש אחראי בלעדית ל:</p>
+                <ul style="margin-top: 5px; margin-bottom: 15px; padding-right: 20px;">
+                    <li>ניהול ההזמנות</li>
+                    <li>קביעת מחירים</li>
+                    <li>ניסוח הסכמים מול לקוחותיו</li>
+                    <li>עמידה בדרישות חוקיות, רישוי וביטוחים</li>
+                </ul>
+                <p>פנסיון-נט אינה צד להסכמים בין הפנסיון ללקוחותיו ואינה אחראית לכל נזק, הפסד, תביעה או טענה הנובעים מהתקשרות בין הצדדים.</p>
+                <p><strong>4. זמינות ושירות</strong><br>
+                המערכת מסופקת כפי שהיא.<br>
+                ייתכנו תקלות, השבתות, שדרוגים או שינויים בפיצ'רים.<br>
+                לא תינתן התחייבות לזמינות רציפה או לאחסון מידע לתקופה בלתי מוגבלת.</p>
+                <p><strong>5. הגבלת אחריות</strong><br>
+                פנסיון-נט לא תישא באחריות לכל נזק ישיר או עקיף, אובדן רווחים, אובדן מידע, תביעות צד ג', או כל נזק עסקי הנובע משימוש במערכת.</p>
+                <p><strong>6. אבטחת מידע</strong><br>
+                המערכת עושה מאמצים סבירים לשמירה על מידע. עם זאת, המשתמש מודע לכך שאין מערכת חסינה לחלוטין מפני פריצות או תקלות.</p>
+                <p><strong>7. שינוי תנאים</strong><br>
+                פנסיון-נט רשאית לעדכן תנאים אלו מעת לעת. המשך שימוש במערכת מהווה הסכמה לתנאים המעודכנים.</p>
+                <p><strong>8. סמכות שיפוט</strong><br>
+                על תנאים אלו יחול הדין הישראלי בלבד. סמכות השיפוט הבלעדית תהא בבתי המשפט בישראל.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openManagerTerms(e) {
+            e.preventDefault();
+            document.getElementById('managerTermsModal').style.display = 'flex';
+        }
+        function closeManagerTerms() {
+            document.getElementById('managerTermsModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

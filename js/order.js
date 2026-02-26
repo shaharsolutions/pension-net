@@ -793,6 +793,12 @@ async function submitForm() {
     return;
   }
   
+  const termsCheck = document.getElementById('clientTermsCheck');
+  if (termsCheck && !termsCheck.checked) {
+    showToast('יש לאשר את תנאי השימוש כדי להמשיך', 'error');
+    return;
+  }
+  
   const submitBtn = document.querySelector('.form-step[data-step="3"] .btn-primary');
   submitBtn.disabled = true;
   submitBtn.textContent = 'שולח...';
@@ -822,7 +828,7 @@ async function submitForm() {
     dog_age: formData.dogAge,
     dog_breed: formData.dogSize || '',
     neutered: formData.neutered || 'לא צוין',
-    notes: formData.notes || '',
+    notes: (formData.notes ? formData.notes + '\n\n' : '') + '✅ הלקוח/ה אישר/ה תנאי שימוש',
     user_id: PENSION_OWNER_ID,
     price_per_day: priceToSave
   };
