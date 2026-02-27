@@ -183,7 +183,7 @@ function showLoadingState() {
     ['usersTableBody', 'ordersTableBody', 'sessionsTableBody'].forEach(id => {
         const tbody = document.getElementById(id);
         if (tbody) {
-            const cols = id === 'sessionsTableBody' ? 4 : (id === 'ordersTableBody' ? 8 : 6);
+            const cols = id === 'sessionsTableBody' ? 4 : (id === 'ordersTableBody' ? 9 : 6);
             tbody.innerHTML = `
                 <tr>
                     <td colspan="${cols}" style="text-align: center; padding: 40px;">
@@ -460,7 +460,7 @@ function renderOrdersTable(orders, profiles) {
     if (filteredOrders.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                <td colspan="9" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
                     <i class="fas fa-clipboard-list" style="font-size: 32px; color: var(--admin-border); display: block; margin-bottom: 12px;"></i>
                     אין הזמנות${adminSelectedUserEmail ? ' למשתמש זה' : ''}
                 </td>
@@ -476,6 +476,7 @@ function renderOrdersTable(orders, profiles) {
         const owner = userMap[order.user_id] || '---';
         const days = calculateOrderDays(order);
         const total = days * (order.price_per_day || 0);
+        const orderDate = order.created_at ? formatAdminDate(order.created_at) : '---';
         const checkIn = order.check_in ? formatAdminDateShort(order.check_in) : '---';
         const checkOut = order.check_out ? formatAdminDateShort(order.check_out) : '---';
 
@@ -488,6 +489,7 @@ function renderOrdersTable(orders, profiles) {
                 <td style="font-weight: 600;">${owner}</td>
                 <td>${order.owner_name || '---'}</td>
                 <td>${order.dog_name || '---'}</td>
+                <td style="font-size: 12px; color: var(--admin-text-muted);">${orderDate}</td>
                 <td>${checkIn}</td>
                 <td>${checkOut}</td>
                 <td><strong>${days}</strong> ימים</td>
