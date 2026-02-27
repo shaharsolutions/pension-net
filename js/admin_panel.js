@@ -208,7 +208,8 @@ async function loadAllSessions() {
         console.error('Error loading sessions:', error);
         return [];
     }
-    return data || [];
+    // Exclude admin sessions from display
+    return (data || []).filter(s => s.user_email !== ADMIN_EMAIL);
 }
 
 async function loadAllOrders() {
@@ -233,7 +234,8 @@ async function loadAllProfiles() {
         console.error('Error loading profiles:', error);
         return [];
     }
-    return data || [];
+    // Exclude admin profile from display
+    return (data || []).filter(p => p.email !== ADMIN_EMAIL);
 }
 
 // ============================================
