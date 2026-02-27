@@ -169,9 +169,13 @@ async function loadAdminPanelData() {
         ]);
 
         renderSummaryCards(sessions, orders, profiles);
+        renderSessionHistory(sessions);
+
+        // Cache data for re-renders (filtering)
+        window._cachedAdminData = { sessions, orders, profiles };
+
         renderUsersTable(sessions, orders, profiles);
         renderOrdersTable(orders, profiles);
-        renderSessionHistory(sessions);
     } catch (err) {
         console.error('Admin panel data load error:', err);
         showToast('שגיאה בטעינת נתוני פאנל ניהול', 'error');
@@ -287,7 +291,7 @@ function calculateOrderDays(order) {
 // Users Table
 // ============================================
 
-let adminSelectedUserEmail = null;
+let adminSelectedUserId = null;
 
 function renderUsersTable(sessions, orders, profiles) {
     const usersMap = {};
@@ -366,12 +370,11 @@ function renderUsersTable(sessions, orders, profiles) {
         const hours = (user.totalMinutes / 60).toFixed(1);
         const lastLoginFormatted = user.lastLogin ? formatAdminDate(user.lastLogin) : '---';
         const isActive = user.lastLogin && (new Date(user.lastLogin) > new Date(Date.now() - 24 * 60 * 60 * 1000));
-        const isSelected = adminSelectedUserEmail === (user.email || user.user_id);
+        const isSelected = adminSelectedUserId === user.user_id;
         const displayEmail = user.email || user.businessName || user.fullName || 'ללא אימייל';
-        const filterKey = user.email || user.user_id;
 
         return `
-            <tr class="clickable-row ${isSelected ? 'active-row' : ''}" onclick="filterByUser('${filterKey}')">
+            <tr class="clickable-row ${isSelected ? 'active-row' : ''}" onclick="filterByUser('${user.user_id}')">
                 <td class="email-cell">${displayEmail}</td>
                 <td>${user.businessName || user.fullName || '---'}</td>
                 <td><strong>${user.totalOrders}</strong></td>
@@ -386,21 +389,30 @@ function renderUsersTable(sessions, orders, profiles) {
     }).join('');
 }
 
-function filterByUser(email) {
-    if (adminSelectedUserEmail === email) {
-        adminSelectedUserEmail = null; // Toggle off
+function filterByUser(userId) {
+    if (adminSelectedUserId === userId) {
+        adminSelectedUserId = null; // Toggle off
     } else {
-        adminSelectedUserEmail = email;
+        adminSelectedUserId = userId;
     }
 
     // Update filter dropdown
     const filterSelect = document.getElementById('ordersUserFilter');
     if (filterSelect) {
-        filterSelect.value = adminSelectedUserEmail || '';
+        filterSelect.value = adminSelectedUserId || '';
     }
 
-    // Reload with current data
-    loadAdminPanelData();
+    // Switch to orders tab so the user sees the filtered result
+    if (adminSelectedUserId) {
+        switchAdminTab('orders');
+    }
+
+    // Re-render with cached data (no need to reload from DB)
+    if (window._cachedAdminData) {
+        const { sessions, orders, profiles } = window._cachedAdminData;
+        renderUsersTable(sessions, orders, profiles);
+        renderOrdersTable(orders, profiles);
+    }
 }
 
 // ============================================
@@ -430,12 +442,8 @@ function renderOrdersTable(orders, profiles) {
         });
 
         // Restore filter
-        if (adminSelectedUserEmail) {
-            // Find user_id from email
-            const matchingSession = window._adminSessions?.find(s => s.user_email === adminSelectedUserEmail);
-            if (matchingSession) {
-                filterSelect.value = matchingSession.user_id;
-            }
+        if (adminSelectedUserId) {
+            filterSelect.value = adminSelectedUserId;
         } else if (currentVal) {
             filterSelect.value = currentVal;
         }
@@ -443,16 +451,12 @@ function renderOrdersTable(orders, profiles) {
 
     // Apply filter
     let filteredOrders = orders;
-    const filterValue = filterSelect?.value;
-    if (filterValue) {
-        filteredOrders = orders.filter(o => o.user_id === filterValue);
-    }
-    if (adminSelectedUserEmail && !filterValue) {
-        // Map email to user_id
-        const sessionsForUser = window._adminSessions?.filter(s => s.user_email === adminSelectedUserEmail) || [];
-        const userIds = new Set(sessionsForUser.map(s => s.user_id));
-        if (userIds.size > 0) {
-            filteredOrders = orders.filter(o => userIds.has(o.user_id));
+    if (adminSelectedUserId) {
+        filteredOrders = orders.filter(o => o.user_id === adminSelectedUserId);
+    } else {
+        const filterValue = filterSelect?.value;
+        if (filterValue) {
+            filteredOrders = orders.filter(o => o.user_id === filterValue);
         }
     }
 
@@ -464,7 +468,7 @@ function renderOrdersTable(orders, profiles) {
             <tr>
                 <td colspan="9" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
                     <i class="fas fa-clipboard-list" style="font-size: 32px; color: var(--admin-border); display: block; margin-bottom: 12px;"></i>
-                    אין הזמנות${adminSelectedUserEmail ? ' למשתמש זה' : ''}
+                    אין הזמנות${adminSelectedUserId ? ' למשתמש זה' : ''}
                 </td>
             </tr>
         `;
@@ -503,9 +507,13 @@ function renderOrdersTable(orders, profiles) {
 }
 
 function filterOrdersTable() {
-    // Re-render with filter
-    adminSelectedUserEmail = null;
-    loadAdminPanelData();
+    adminSelectedUserId = null;
+    // Re-render with cached data
+    if (window._cachedAdminData) {
+        const { sessions, orders, profiles } = window._cachedAdminData;
+        renderUsersTable(sessions, orders, profiles);
+        renderOrdersTable(orders, profiles);
+    }
 }
 
 // ============================================
