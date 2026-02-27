@@ -41,7 +41,7 @@ const Auth = {
     const session = await this.getSession();
     if (!session) {
       // If we are on a protected page and not logged in, redirect to login
-      const protectedPages = ["admin.html", "growth.html", "insights.html"];
+      const protectedPages = ["admin.html", "admin_panel.html", "growth.html", "insights.html"];
       const currentPage = window.location.pathname.split("/").pop();
       if (protectedPages.includes(currentPage)) {
         window.location.href = "login.html";

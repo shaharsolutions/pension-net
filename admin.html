@@ -149,6 +149,7 @@
           </div>
         </div>
         <div class="header-actions">
+          <a href="admin_panel.html" id="adminPanelLink" class="header-btn" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;"><i class="fas fa-shield-alt"></i> פאנל ניהול</a>
           <a href="insights.html" class="header-btn only-manager"><i class="fas fa-lightbulb"></i> מדריך תובנות</a>
           <a href="growth.html" class="header-btn only-manager"><i class="fas fa-chart-line"></i> דוחות</a>
         </div>
@@ -683,5 +684,52 @@
     <script src="js/auth.js?v=50"></script>
     <script src="js/utils.js?v=50"></script>
     <script src="js/admin.js?v=50" defer></script>
+    <script>
+      // Admin panel link visibility + session tracking
+      const ADMIN_EMAIL = 'shaharsolutions@gmail.com';
+      const SESSION_UPDATE_INTERVAL = 5 * 60 * 1000;
+      let _sessionId = null;
+      let _sessionStart = null;
+      let _sessionTimer = null;
+
+      async function _initAdminFeatures() {
+        const session = await Auth.getSession();
+        if (!session || !session.user) return;
+
+        // Show admin panel link if admin
+        if (session.user.email === ADMIN_EMAIL) {
+          const link = document.getElementById('adminPanelLink');
+          if (link) link.style.display = 'inline-flex';
+        }
+
+        // Create user session
+        try {
+          const { data, error } = await supabaseClient
+            .from('user_sessions')
+            .insert([{ user_id: session.user.id, user_email: session.user.email, login_time: new Date().toISOString(), last_active: new Date().toISOString(), duration_minutes: 0 }])
+            .select().single();
+          if (!error && data) {
+            _sessionId = data.id;
+            _sessionStart = new Date();
+            _sessionTimer = setInterval(_updateSession, SESSION_UPDATE_INTERVAL);
+            window.addEventListener('beforeunload', _updateSession);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _updateSession(); });
+          }
+        } catch(e) { console.warn('Session tracking unavailable:', e.message); }
+      }
+
+      async function _updateSession() {
+        if (!_sessionId || !_sessionStart) return;
+        try {
+          const mins = Math.round((new Date() - _sessionStart) / 60000);
+          await supabaseClient.from('user_sessions').update({ last_active: new Date().toISOString(), duration_minutes: mins }).eq('id', _sessionId);
+        } catch(e) {}
+      }
+
+      // Run after DOMContentLoaded + auth check
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(_initAdminFeatures, 1500);
+      });
+    </script>
   </body>
 </html>

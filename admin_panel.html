@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <title>פאנל ניהול | פנסיון-נט</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="פאנל ניהול מערכת פנסיון-נט — מעקב אחרי משתמשים, כניסות ונתוני המערכת" />
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet" crossorigin>
+    <link rel="stylesheet" href="css/common.css?v=50">
+    <link rel="stylesheet" href="css/admin_panel.css?v=50">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+
+    <!-- Access Denied Screen -->
+    <div id="accessDenied" class="admin-access-denied" style="display: none;">
+        <div class="denied-icon">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h2>הגישה נדחתה</h2>
+        <p>דף זה זמין למנהל מערכת בלבד. אם אתה מאמין שזו טעות, פנה למנהל המערכת.</p>
+        <a href="admin.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i> חזרה למערכת
+        </a>
+    </div>
+
+    <!-- Main Admin Panel Content -->
+    <div id="adminContent" style="display: none;">
+
+        <!-- Navbar -->
+        <nav class="admin-navbar">
+            <div class="admin-navbar-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h1>פאנל <span>ניהול</span></h1>
+            </div>
+            <div class="admin-navbar-actions">
+                <a href="admin.html" class="admin-nav-btn">
+                    <i class="fas fa-arrow-right"></i>
+                    <span class="btn-label">חזרה למערכת</span>
+                </a>
+                <button type="button" class="admin-nav-btn" onclick="loadAdminPanelData()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="btn-label">רענון</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="admin-content">
+
+            <!-- Page Header -->
+            <div class="admin-page-header">
+                <h2><i class="fas fa-chart-bar" style="color: var(--admin-primary);"></i> סקירה כללית</h2>
+                <p>מעקב אחרי משתמשים, כניסות והזמנות במערכת</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="admin-summary-grid">
+                <div class="admin-summary-card card-users">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="summary-card-value" id="summaryActiveUsers">—</div>
+                    <div class="summary-card-label">משתמשים פעילים (24 שעות)</div>
+                </div>
+
+                <div class="admin-summary-card card-logins">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                    </div>
+                    <div class="summary-card-value" id="summaryTotalLogins">—</div>
+                    <div class="summary-card-label">כניסות כולל</div>
+                </div>
+
+                <div class="admin-summary-card card-hours">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="summary-card-value" id="summaryTotalHours">—</div>
+                    <div class="summary-card-label">שעות שימוש כולל</div>
+                </div>
+
+                <div class="admin-summary-card card-orders">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+                    <div class="summary-card-value" id="summaryTotalOrders">—</div>
+                    <div class="summary-card-label">סה"כ הזמנות</div>
+                </div>
+
+                <div class="admin-summary-card card-revenue">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon">
+                            <i class="fas fa-shekel-sign"></i>
+                        </div>
+                    </div>
+                    <div class="summary-card-value" id="summaryTotalRevenue">—</div>
+                    <div class="summary-card-label">הכנסה כוללת</div>
+                </div>
+            </div>
+
+            <!-- Section Tabs -->
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="users">
+                    <i class="fas fa-users"></i>
+                    משתמשים
+                </button>
+                <button class="admin-tab-btn" data-tab="orders">
+                    <i class="fas fa-clipboard-list"></i>
+                    הזמנות
+                </button>
+                <button class="admin-tab-btn" data-tab="sessions">
+                    <i class="fas fa-history"></i>
+                    היסטוריית כניסות
+                </button>
+            </div>
+
+            <!-- Tab: Users -->
+            <div id="adminTab-users" class="admin-tab-content active">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fas fa-user-friends"></i> טבלת משתמשים</h3>
+                        <span style="color: var(--admin-text-muted); font-size: 13px;">
+                            לחץ על שורה כדי לסנן את ההזמנות
+                        </span>
+                    </div>
+                    <div class="admin-card-body" style="padding: 0;">
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>אימייל</th>
+                                        <th>שם עסק / משתמש</th>
+                                        <th>הזמנות</th>
+                                        <th>כניסות</th>
+                                        <th>זמן שימוש</th>
+                                        <th>כניסה אחרונה</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="6" class="admin-loading">
+                                            <div class="spinner"></div>
+                                            <span>טוען...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Orders -->
+            <div id="adminTab-orders" class="admin-tab-content">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fas fa-clipboard-list"></i> כל ההזמנות במערכת</h3>
+                        <div class="admin-filter-bar">
+                            <select id="ordersUserFilter" onchange="filterOrdersTable()">
+                                <option value="">כל המשתמשים</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="admin-card-body" style="padding: 0;">
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>בעלים (משתמש)</th>
+                                        <th>שם הלקוח</th>
+                                        <th>שם הכלב</th>
+                                        <th>כניסה</th>
+                                        <th>יציאה</th>
+                                        <th>ימים</th>
+                                        <th>סטטוס</th>
+                                        <th>סה"כ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody">
+                                    <tr>
+                                        <td colspan="8" class="admin-loading">
+                                            <div class="spinner"></div>
+                                            <span>טוען...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Session History -->
+            <div id="adminTab-sessions" class="admin-tab-content">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fas fa-history"></i> 30 כניסות אחרונות</h3>
+                    </div>
+                    <div class="admin-card-body" style="padding: 0;">
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>משתמש</th>
+                                        <th>זמן כניסה</th>
+                                        <th>משך (דקות)</th>
+                                        <th>פעילות אחרונה</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sessionsTableBody">
+                                    <tr>
+                                        <td colspan="4" class="admin-loading">
+                                            <div class="spinner"></div>
+                                            <span>טוען...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/config.js?v=50"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js?v=50"></script>
+    <script src="js/utils.js?v=50"></script>
+    <script src="js/admin_panel.js?v=50"></script>
+</body>
+</html>
