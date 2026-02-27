@@ -689,7 +689,7 @@ async function identifyCustomer() {
           if (radio) radio.checked = true;
           // --------------------------------
           
-          document.querySelector('textarea[name="notes"]').value = selectedDog.notes || '';
+          document.querySelector('textarea[name="notes"]').value = '';
           
           currentStep = 3;
           updateStepIndicator();

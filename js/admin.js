@@ -2503,33 +2503,65 @@ window.onclick = function(event) {
 }
 
 function loadOrderNotes(orderId) {
-  const order = (window.allOrdersCache || []).find(o => String(o.id) === String(orderId)) || (window.pastOrdersCache || []).find(o => String(o.id) === String(orderId));
+  const allOrders = [...(window.allOrdersCache || []), ...(window.pastOrdersCache || [])];
+  const order = allOrders.find(o => String(o.id) === String(orderId));
   const historyDiv = document.getElementById('notesHistory');
   historyDiv.innerHTML = '';
   
   if (!order) return;
   
-  let notes = safeParseNotes(order.admin_note);
+  // Aggregate ALL notes for this customer
+  const customerOrders = allOrders.filter(o => o.phone && o.phone === order.phone);
+  let allClientNotes = [];
   
-  if (notes.length === 0) {
+  customerOrders.forEach(o => {
+    let orderNotes = safeParseNotes(o.admin_note);
+    // Sort individually to match the old logic's indexing expectations for delete
+    orderNotes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    orderNotes.forEach((n, originalIndex) => {
+      allClientNotes.push({
+        ...n,
+        originalIndex,
+        isCurrentOrder: String(o.id) === String(orderId),
+        dogName: o.dog_name,
+        orderDate: o.order_date || o.created_at
+      });
+    });
+  });
+  
+  if (allClientNotes.length === 0) {
     historyDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">אין הערות עדיין</div>';
     return;
   }
   
   // Sort by date descending
-  notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  allClientNotes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
   
-  notes.forEach((note, index) => {
+  allClientNotes.forEach((note) => {
     const item = document.createElement('div');
-    item.className = 'note-item';
+    item.className = 'note-item' + (note.isCurrentOrder ? '' : ' other-order-note');
+    if (!note.isCurrentOrder) {
+      item.style.opacity = '0.85';
+      item.style.borderRight = '4px solid #cbd5e1';
+      item.style.background = '#f8fafc';
+    }
     
-    // Add delete button only for manager
-    const deleteBtn = window.isAdminMode ? 
-      `<button class="delete-note-btn" onclick="deleteOrderNote(${index})" title="מחק הערה"><i class="fas fa-trash"></i></button>` : '';
+    // Add delete button only for manager AND for current order notes
+    const deleteBtn = (window.isAdminMode && note.isCurrentOrder) ? 
+      `<button class="delete-note-btn" onclick="deleteOrderNote(${note.originalIndex})" title="מחק הערה"><i class="fas fa-trash"></i></button>` : '';
+
+    const orderRef = !note.isCurrentOrder ? 
+      `<span style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; margin-right: 8px; color: #475569;">
+        הזמנה אחרת: ${note.dogName}
+      </span>` : '';
 
     item.innerHTML = `
       <div class="note-header">
-        <span class="note-author"><i class="fas fa-user-edit"></i> ${note.author}</span>
+        <div>
+          <span class="note-author"><i class="fas fa-user-edit"></i> ${note.author}</span>
+          ${orderRef}
+        </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <span class="note-time">${formatDateTime(note.timestamp)}</span>
           ${deleteBtn}
@@ -2543,37 +2575,37 @@ function loadOrderNotes(orderId) {
 
 async function deleteOrderNote(indexInSorted) {
   if (!window.isAdminMode) return;
-  
-  if (!confirm('האם אתה בטוח שברצונך למחוק הערה זו?')) return;
 
-  const orderId = window.currentlyEditingOrderId;
-  const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
-  if (!order) return;
+  showConfirm('מחיקת הערה', 'האם אתה בטוח שברצונך למחוק הערה זו?', async () => {
+    const orderId = window.currentlyEditingOrderId;
+    const order = (window.allOrdersCache || []).find(o => String(o.id) === String(orderId)) || (window.pastOrdersCache || []).find(o => String(o.id) === String(orderId));
+    if (!order) return;
 
-  let notes = safeParseNotes(order.admin_note);
+    let notes = safeParseNotes(order.admin_note);
 
-  // Need to find the actual index in original array (sorted is decending)
-  notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-  notes.splice(indexInSorted, 1);
+    // Need to find the actual index in original array (sorted is decending)
+    notes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    notes.splice(indexInSorted, 1);
 
-  try {
-    const { error } = await pensionNetSupabase
-      .from('orders')
-      .update({ admin_note: JSON.stringify(notes) })
-      .eq('id', orderId);
+    try {
+      const { error } = await pensionNetSupabase
+        .from('orders')
+        .update({ admin_note: JSON.stringify(notes) })
+        .eq('id', orderId);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    order.admin_note = JSON.stringify(notes);
-    loadOrderNotes(orderId);
-    
-    // Update table button
-    const btn = document.querySelector(`button[onclick*="openNotesModal('${orderId}'"]`);
-    if (btn) btn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
+      order.admin_note = JSON.stringify(notes);
+      loadOrderNotes(orderId);
+      
+      // Update table button
+      const btn = document.querySelector(`button[onclick*="openNotesModal('${orderId}'"]`);
+      if (btn) btn.innerHTML = `<i class="fas fa-comments"></i> הערות (${notes.length})`;
 
-  } catch (err) {
-    showToast('שגיאה במחיקת הערה: ' + err.message, 'error');
-  }
+    } catch (err) {
+      showToast('שגיאה במחיקת הערה: ' + err.message, 'error');
+    }
+  });
 }
 
 document.getElementById('saveNoteBtn')?.addEventListener('click', async function() {
@@ -3361,12 +3393,25 @@ function processClientsData() {
         dogs: new Set(),
         totalOrders: 0,
         totalRevenue: 0,
-        lastOrderDate: new Date('1970-01-01')
+        lastOrderDate: new Date('1970-01-01'),
+        orderAdminNotes: []
       };
     }
     
     const c = clientsMap[phoneKey];
     if (order.dog_name) c.dogs.add(order.dog_name);
+    
+    // Add admin notes to orderAdminNotes history if they exist
+    const adminNotesArr = safeParseNotes(order.admin_note);
+    if (adminNotesArr && adminNotesArr.length > 0) {
+      adminNotesArr.forEach(an => {
+        c.orderAdminNotes.push({
+          ...an,
+          dog: order.dog_name,
+          orderId: order.id
+        });
+      });
+    }
     
     // Status should be anything that brought revenue? Or maybe just status !== canceled
     if (order.status !== 'בוטל') {
@@ -3390,6 +3435,7 @@ function processClientsData() {
     // Custom price
     c.customPrice = window.clientsData[c.phoneKey]?.default_price || null;
     c.city = window.clientsData[c.phoneKey]?.city || '';
+    c.orderAdminNotes = c.orderAdminNotes || [];
     return c;
   });
   
@@ -3624,6 +3670,28 @@ function openEditClientModal(phoneKey) {
       `).join('');
     } else {
       dogsList.innerHTML = '<span style="color: #94a3b8; font-size: 13px;">אין כלבים משויכים</span>';
+    }
+  }
+
+  // Render order notes history (aggregated admin notes from all orders)
+  const orderNotesHistory = document.getElementById('editClientOrderNotesHistory');
+  if (orderNotesHistory) {
+    if (client.orderAdminNotes && client.orderAdminNotes.length > 0) {
+      // Sort by date descending
+      const sortedNotes = [...client.orderAdminNotes].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      orderNotesHistory.innerHTML = sortedNotes.map(note => {
+        return `
+          <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #fde68a; font-size: 13px; line-height: 1.4;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #d97706; font-weight: 700; font-size: 11px;">
+              <span><i class="fas fa-user-edit"></i> ${note.author || 'מערכת'} (${note.dog})</span>
+              <span>${formatDateOnly(note.timestamp)}</span>
+            </div>
+            <div style="color: #1e293b;">${(note.content || '').replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      orderNotesHistory.innerHTML = '<span style="color: #94a3b8; font-size: 13px;">אין הערות מנהל מהזמנות קודמות</span>';
     }
   }
 
