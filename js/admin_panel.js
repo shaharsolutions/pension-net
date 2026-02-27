@@ -162,10 +162,11 @@ async function loadAdminPanelData() {
     showLoadingState();
 
     try {
-        const [sessions, orders, profiles] = await Promise.all([
+        const [sessions, orders, profiles, activityLogs] = await Promise.all([
             loadAllSessions(),
             loadAllOrders(),
-            loadAllProfiles()
+            loadAllProfiles(),
+            loadAllActivityLogs()
         ]);
 
         renderSummaryCards(sessions, orders, profiles);
@@ -176,6 +177,7 @@ async function loadAdminPanelData() {
 
         renderUsersTable(sessions, orders, profiles);
         renderOrdersTable(orders, profiles);
+        renderActivityFeed(activityLogs, profiles);
     } catch (err) {
         console.error('Admin panel data load error:', err);
         showToast('שגיאה בטעינת נתוני פאנל ניהול', 'error');
@@ -212,8 +214,7 @@ async function loadAllSessions() {
         console.error('Error loading sessions:', error);
         return [];
     }
-    // Exclude admin sessions from display
-    return (data || []).filter(s => s.user_email !== ADMIN_EMAIL);
+    return data || [];
 }
 
 async function loadAllOrders() {
@@ -238,8 +239,7 @@ async function loadAllProfiles() {
         console.error('Error loading profiles:', error);
         return [];
     }
-    // Exclude admin profile from display
-    return (data || []).filter(p => p.email !== ADMIN_EMAIL);
+    return data || [];
 }
 
 // ============================================
@@ -247,20 +247,23 @@ async function loadAllProfiles() {
 // ============================================
 
 function renderSummaryCards(sessions, orders, profiles) {
+    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
+    const filteredProfiles = (profiles || []).filter(p => p.email !== ADMIN_EMAIL);
+
     // Unique users
-    const uniqueUsers = new Set(sessions.map(s => s.user_email)).size || profiles.length;
+    const uniqueUsers = new Set(filteredSessions.map(s => s.user_email)).size || filteredProfiles.length;
 
     // Active users (active in last 24 hours)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const activeUsers = new Set(
-        sessions.filter(s => new Date(s.last_active) > oneDayAgo).map(s => s.user_email)
+        filteredSessions.filter(s => new Date(s.last_active) > oneDayAgo).map(s => s.user_email)
     ).size;
 
     // Total logins
-    const totalLogins = sessions.length;
+    const totalLogins = filteredSessions.length;
 
     // Total usage hours
-    const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+    const totalMinutes = filteredSessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
     const totalHours = (totalMinutes / 60).toFixed(1);
 
     // Total orders
@@ -348,8 +351,8 @@ function renderUsersTable(sessions, orders, profiles) {
         }
     });
 
-    // Show all users — use user_id as display fallback if email is unavailable
-    const usersArray = Object.values(usersMap);
+    // Show all users — exclude system admin from stats/users list
+    const usersArray = Object.values(usersMap).filter(u => u.email !== ADMIN_EMAIL);
 
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
@@ -357,7 +360,7 @@ function renderUsersTable(sessions, orders, profiles) {
     if (usersArray.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
                     <i class="fas fa-users" style="font-size: 32px; color: var(--admin-border); display: block; margin-bottom: 12px;"></i>
                     אין משתמשים רשומים עדיין
                 </td>
@@ -376,13 +379,18 @@ function renderUsersTable(sessions, orders, profiles) {
         return `
             <tr class="clickable-row ${isSelected ? 'active-row' : ''}" onclick="filterByUser('${user.user_id}')">
                 <td class="email-cell">${displayEmail}</td>
-                <td>${user.businessName || user.fullName || '---'}</td>
+                <td>${user.email === ADMIN_EMAIL ? '<span style="color: #6366f1; font-weight: 700;"><i class="fas fa-user-shield"></i> מנהל מערכת</span>' : (user.businessName || user.fullName || '---')}</td>
                 <td><strong>${user.totalOrders}</strong></td>
                 <td><strong>${user.loginCount}</strong></td>
                 <td>${hours} שעות</td>
                 <td>
                     ${lastLoginFormatted}
                     ${isActive ? '<span class="admin-badge badge-active" style="margin-right: 8px;"><i class="fas fa-circle" style="font-size: 6px;"></i> פעיל</span>' : ''}
+                </td>
+                <td style="text-align: center;" onclick="event.stopPropagation()">
+                    <button class="impersonate-btn" onclick="startImpersonation('${user.user_id}', '${(user.businessName || user.fullName || user.email || '').replace(/'/g, "\\'")}')" title="צפה כמשתמש זה">
+                        <i class="fas fa-eye"></i> צפה
+                    </button>
                 </td>
             </tr>
         `;
@@ -526,8 +534,11 @@ function renderSessionHistory(sessions) {
     const tbody = document.getElementById('sessionsTableBody');
     if (!tbody) return;
 
+    // Filter out admin sessions from the history display
+    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
+
     // Show last 30 sessions
-    const recentSessions = sessions.slice(0, 30);
+    const recentSessions = filteredSessions.slice(0, 30);
 
     if (recentSessions.length === 0) {
         tbody.innerHTML = `
@@ -558,6 +569,238 @@ function renderSessionHistory(sessions) {
 }
 
 // ============================================
+// Activity Feed (Audit Logs)
+// ============================================
+
+const ACTIVITY_PER_PAGE = 50;
+window._activityCurrentPage = 1;
+window._cachedActivityLogs = [];
+
+async function loadAllActivityLogs() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('audit_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        if (error) {
+            console.error('Error loading audit logs:', error);
+            return [];
+        }
+        return data || [];
+    } catch (err) {
+        console.error('Activity logs load error:', err);
+        return [];
+    }
+}
+
+function renderActivityFeed(logs, profiles) {
+    window._cachedActivityLogs = logs;
+
+    // Build user lookup
+    const userMap = {};
+    (profiles || []).forEach(p => {
+        userMap[p.user_id] = {
+            email: p.email || '',
+            name: p.business_name || p.full_name || ''
+        };
+    });
+
+    // Populate user filter dropdown
+    const userFilter = document.getElementById('activityUserFilter');
+    if (userFilter) {
+        const currentVal = userFilter.value;
+        userFilter.innerHTML = '<option value="">כל המשתמשים</option>';
+        const uniqueUsers = new Set();
+        logs.forEach(log => {
+            if (log.user_id && !uniqueUsers.has(log.user_id)) {
+                uniqueUsers.add(log.user_id);
+                let label = userMap[log.user_id]?.name || userMap[log.user_id]?.email || log.user_id.slice(0, 8) + '...';
+                if (userMap[log.user_id]?.email === ADMIN_EMAIL) label = '🛡️ מנהל מערכת';
+                userFilter.innerHTML += `<option value="${log.user_id}">${label}</option>`;
+            }
+        });
+        if (currentVal) userFilter.value = currentVal;
+    }
+
+    // Store for filtering
+    window._activityUserMap = userMap;
+    filterActivityFeed();
+}
+
+function filterActivityFeed() {
+    const logs = window._cachedActivityLogs || [];
+    const userMap = window._activityUserMap || {};
+    const userFilterVal = document.getElementById('activityUserFilter')?.value || '';
+    const typeFilterVal = document.getElementById('activityTypeFilter')?.value || '';
+    const searchTerm = (document.getElementById('activitySearchInput')?.value || '').toLowerCase().trim();
+
+    let filtered = logs;
+
+    if (userFilterVal) {
+        filtered = filtered.filter(l => l.user_id === userFilterVal);
+    }
+
+    if (typeFilterVal) {
+        filtered = filtered.filter(l => l.action_type === typeFilterVal);
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(l =>
+            (l.description || '').toLowerCase().includes(searchTerm) ||
+            (l.staff_name || '').toLowerCase().includes(searchTerm) ||
+            (l.action_type || '').toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // Pagination
+    const totalLogs = filtered.length;
+    const maxPage = Math.max(1, Math.ceil(totalLogs / ACTIVITY_PER_PAGE));
+    if (window._activityCurrentPage > maxPage) window._activityCurrentPage = maxPage;
+
+    const startIdx = (window._activityCurrentPage - 1) * ACTIVITY_PER_PAGE;
+    const pageLogs = filtered.slice(startIdx, startIdx + ACTIVITY_PER_PAGE);
+
+    const container = document.getElementById('activityFeedContainer');
+    if (!container) return;
+
+    if (pageLogs.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: var(--admin-text-muted);">
+                <i class="fas fa-stream" style="font-size: 40px; color: var(--admin-border); display: block; margin-bottom: 16px;"></i>
+                ${searchTerm || userFilterVal || typeFilterVal ? 'לא נמצאו פעולות התואמות לסינון' : 'אין פעילות מתועדת עדיין'}
+            </div>
+        `;
+        renderActivityPagination(0, 1, 1);
+        return;
+    }
+
+    // Group logs by date
+    const groupedByDate = {};
+    pageLogs.forEach(log => {
+        const dateKey = new Date(log.created_at).toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+        groupedByDate[dateKey].push(log);
+    });
+
+    let html = '';
+    for (const [dateLabel, dateLogs] of Object.entries(groupedByDate)) {
+        html += `<div class="activity-date-group">
+            <div class="activity-date-header">
+                <i class="fas fa-calendar-day"></i> ${dateLabel}
+                <span class="activity-date-count">${dateLogs.length} פעולות</span>
+            </div>`;
+
+        dateLogs.forEach(log => {
+            let userName = userMap[log.user_id]?.name || userMap[log.user_id]?.email || 'משתמש לא ידוע';
+            
+            // Special case for system admin
+            if (log.user_id && userMap[log.user_id]?.email === ADMIN_EMAIL) {
+                userName = 'מנהל מערכת (שלך)';
+            } else if (!log.user_id) {
+                userName = 'מערכת';
+            }
+            const userInitial = userName.charAt(0).toUpperCase();
+            const timeStr = new Date(log.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            const relativeTime = getRelativeTime(log.created_at);
+
+            let iconClass, iconBg, iconColor, actionLabel;
+            switch (log.action_type) {
+                case 'INSERT':
+                    iconClass = 'fa-plus-circle';
+                    iconBg = '#ecfdf5';
+                    iconColor = '#047857';
+                    actionLabel = 'הוספה';
+                    break;
+                case 'DELETE':
+                    iconClass = 'fa-trash-alt';
+                    iconBg = '#fef2f2';
+                    iconColor = '#dc2626';
+                    actionLabel = 'מחיקה';
+                    break;
+                default: // UPDATE
+                    iconClass = 'fa-edit';
+                    iconBg = '#eef2ff';
+                    iconColor = '#4f46e5';
+                    actionLabel = 'עדכון';
+                    break;
+            }
+
+            // Color for user avatar based on user_id hash
+            const avatarColors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6'];
+            const colorIdx = log.user_id ? log.user_id.charCodeAt(0) % avatarColors.length : 0;
+            const avatarColor = avatarColors[colorIdx];
+
+            html += `
+                <div class="activity-item">
+                    <div class="activity-item-avatar" style="background: ${avatarColor};">
+                        ${userInitial}
+                    </div>
+                    <div class="activity-item-content">
+                        <div class="activity-item-header">
+                            <span class="activity-item-user">${userName}</span>
+                            ${log.staff_name ? `<span class="activity-item-staff"><i class="fas fa-user-tag"></i> ${log.staff_name}</span>` : ''}
+                            <span class="activity-item-badge" style="background: ${iconBg}; color: ${iconColor};">
+                                <i class="fas ${iconClass}"></i> ${actionLabel}
+                            </span>
+                        </div>
+                        <div class="activity-item-desc">${log.description || 'ללא תיאור'}</div>
+                        <div class="activity-item-time">
+                            <i class="fas fa-clock"></i> ${timeStr}
+                            <span class="activity-item-relative">${relativeTime}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
+    renderActivityPagination(totalLogs, window._activityCurrentPage, maxPage);
+}
+
+function renderActivityPagination(totalLogs, currentPage, maxPage) {
+    const container = document.getElementById('activityPagination');
+    if (!container) return;
+
+    if (totalLogs <= ACTIVITY_PER_PAGE) {
+        container.innerHTML = `<span class="activity-pagination-info">${totalLogs} פעולות</span>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <button class="admin-nav-btn" onclick="window._activityCurrentPage--; filterActivityFeed()" ${currentPage <= 1 ? 'disabled' : ''} style="padding: 8px 16px; font-size: 13px;">
+            <i class="fas fa-chevron-right"></i> הקודם
+        </button>
+        <span class="activity-pagination-info">עמוד ${currentPage} מתוך ${maxPage} (${totalLogs} פעולות)</span>
+        <button class="admin-nav-btn" onclick="window._activityCurrentPage++; filterActivityFeed()" ${currentPage >= maxPage ? 'disabled' : ''} style="padding: 8px 16px; font-size: 13px;">
+            הבא <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
+}
+
+function getRelativeTime(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffSec < 60) return 'הרגע';
+    if (diffMin < 60) return `לפני ${diffMin} דקות`;
+    if (diffHour < 24) return `לפני ${diffHour} שעות`;
+    if (diffDay === 1) return 'אתמול';
+    if (diffDay < 7) return `לפני ${diffDay} ימים`;
+    if (diffDay < 30) return `לפני ${Math.floor(diffDay / 7)} שבועות`;
+    return `לפני ${Math.floor(diffDay / 30)} חודשים`;
+}
+
+// ============================================
 // Date Formatting
 // ============================================
 
@@ -585,6 +828,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const session = await checkAdminAccess();
     if (!session) return;
 
+    // Clear any active impersonation when returning to the main dashboard
+    sessionStorage.removeItem('pensionet_impersonate_user_id');
+    sessionStorage.removeItem('pensionet_impersonate_user_name');
+
     document.getElementById('adminContent').style.display = 'block';
 
     // Create session for tracking
@@ -603,3 +850,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('Admin panel initialized successfully');
 });
+
+// ============================================
+// User Impersonation
+// ============================================
+
+function startImpersonation(userId, userName) {
+    if (!userId) return;
+    
+    const displayName = userName || userId.slice(0, 8) + '...';
+    
+    showConfirmModal(
+        'אישור מעבר למצב צפייה',
+        `האם ברצונך לצפות במערכת כמשתמש <strong>"${displayName}"</strong>?<br><br>תועבר לעמוד הניהול ותראה את כל הנתונים של המשתמש הזה.<br>לחץ "סיום צפייה" בבאנר העליון כדי לחזור.`,
+        () => {
+            // Confirm callback
+            sessionStorage.setItem('pensionet_impersonate_user_id', userId);
+            sessionStorage.setItem('pensionet_impersonate_user_name', displayName);
+            window.location.href = 'admin.html';
+        }
+    );
+}
+
+function stopImpersonation() {
+    sessionStorage.removeItem('pensionet_impersonate_user_id');
+    sessionStorage.removeItem('pensionet_impersonate_user_name');
+    window.location.href = 'admin_panel.html';
+}
+
+// ============================================
+// Modal Helpers
+// ============================================
+
+function showConfirmModal(title, text, onConfirm) {
+    const modal = document.getElementById('confirmModal');
+    const titleEl = document.getElementById('confirmModalTitle');
+    const textEl = document.getElementById('confirmModalText');
+    const okBtn = document.getElementById('confirmOkBtn');
+
+    if (!modal || !titleEl || !textEl || !okBtn) return;
+
+    titleEl.innerText = title;
+    textEl.innerHTML = text; // Use innerHTML as requested
+
+    // Clone button to remove old event listeners
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+    newOkBtn.onclick = () => {
+        closeConfirmModal();
+        if (onConfirm) onConfirm();
+    };
+
+    modal.classList.add('show');
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmModal');
+    if (modal) modal.classList.remove('show');
+}

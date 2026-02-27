@@ -2409,3 +2409,17 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+/* Impersonation Mode Banner Animation */
+@keyframes impersonateBannerSlide {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* In impersonation mode, disable save/edit actions */
+body.impersonation-mode .save-settings-btn,
+body.impersonation-mode .header-btn.logout-btn,
+body.impersonation-mode #deleteAllBtn {
+  pointer-events: none;
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}

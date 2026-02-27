@@ -103,6 +103,108 @@ document.addEventListener("DOMContentLoaded", async function () {
   const session = await checkAuthStatus();
   if (session) {
     window.currentUserSession = session; // Cache session
+    
+    // --- Impersonation Mode ---
+    const impersonateUserId = sessionStorage.getItem('pensionet_impersonate_user_id');
+    const impersonateUserName = sessionStorage.getItem('pensionet_impersonate_user_name');
+    const ADMIN_EMAIL_CHECK = 'shaharsolutions@gmail.com';
+    
+    if (impersonateUserId && session.user.email === ADMIN_EMAIL_CHECK) {
+      // Override the user.id in the session to load impersonated user's data
+      window.isImpersonating = true;
+      window.impersonateOriginalSession = { ...session, user: { ...session.user } };
+      
+      // Bypass PIN/Overlay for impersonation
+      window.isAdminMode = true; 
+      window.lastPinVerificationTime = Date.now();
+      window.overlayManuallyClosed = true;
+
+      // Create a proxy session with the impersonated user's id
+      window.currentUserSession = {
+        ...session,
+        user: {
+          ...session.user,
+          id: impersonateUserId,
+          // Keep the admin's email for auth checks but override ID for data
+        }
+      };
+      
+      // Inject impersonation banner
+      const banner = document.createElement('div');
+      banner.id = 'impersonation-banner';
+      banner.innerHTML = `
+        <div style="
+          position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white; padding: 10px 20px;
+          display: flex; align-items: center; justify-content: center; gap: 15px;
+          font-weight: 700; font-size: 14px;
+          box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+          direction: rtl; font-family: 'Heebo', sans-serif;
+          animation: impersonateBannerSlide 0.3s ease;
+        ">
+          <i class="fas fa-user-secret" style="font-size: 18px;"></i>
+          <span>מצב צפייה כמשתמש: <strong>${impersonateUserName || 'משתמש'}</strong></span>
+          <span style="opacity: 0.7; font-size: 12px; font-weight: 400;">
+            (הנתונים מוצגים בקריאה בלבד)
+          </span>
+          <button onclick="stopImpersonationFromAdmin()" style="
+            background: rgba(255,255,255,0.25); color: white; border: 2px solid rgba(255,255,255,0.5);
+            padding: 6px 18px; border-radius: 8px; cursor: pointer;
+            font-family: inherit; font-weight: 700; font-size: 13px;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+          " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+             onmouseout="this.style.background='rgba(255,255,255,0.25)'">
+            <i class="fas fa-arrow-right"></i> סיום צפייה
+          </button>
+        </div>
+      `;
+      document.body.prepend(banner);
+      
+      // Push content down to make room for the banner
+      document.body.style.paddingTop = '48px';
+      document.body.classList.add('impersonation-mode');
+      
+      // Hide settings tab and save button in impersonation mode (read-only)
+      const settingsTab = document.querySelector('.tab-btn.manager-only[onclick*=\"settings\"]');
+      if (settingsTab) settingsTab.style.display = 'none';
+      const saveBtn = document.getElementById('saveButtonContainer');
+      if (saveBtn) saveBtn.style.display = 'none';
+      
+      // Close the login overlay if open
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) overlay.style.display = 'none';
+
+      // Add a CSS rule to help make it read-only
+      const style = document.createElement('style');
+      style.innerHTML = `
+        body.impersonation-mode .movement-action-btn,
+        body.impersonation-mode .view-notes-btn,
+        body.impersonation-mode .save-note-btn,
+        body.impersonation-mode .edit-booking-btn,
+        body.impersonation-mode .status-select,
+        body.impersonation-mode button[onclick*=\"openEditClientModal\"],
+        body.impersonation-mode button[onclick*=\"saveEditClient\"],
+        body.impersonation-mode .header-btn:not([onclick*=\"stopImpersonation\"]),
+        body.impersonation-mode .delete-btn,
+        body.impersonation-mode #deleteAllBtn,
+        body.impersonation-mode .admin-action-btn {
+          pointer-events: none !important;
+          opacity: 0.6 !important;
+          filter: grayscale(0.6) !important;
+          cursor: not-allowed !important;
+        }
+
+        @keyframes impersonateBannerSlide {
+          from { transform: translateY(-100%); }
+          to { transform: translateY(0); }
+        }
+      `;
+      document.head.appendChild(style);
+
+      console.log(`🕵️ Impersonating user: ${impersonateUserName} (${impersonateUserId})`);
+    }
+    
     document.getElementById("mainContent").style.display = "block";
     loadData();
     loadSettings(); // Load profile settings
@@ -186,6 +288,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 const pensionNetSupabase = supabaseClient;
+
+// Stop impersonation and go back to admin panel
+function stopImpersonationFromAdmin() {
+  sessionStorage.removeItem('pensionet_impersonate_user_id');
+  sessionStorage.removeItem('pensionet_impersonate_user_name');
+  window.location.href = 'admin_panel.html';
+}
 
 
 const HISTORY_ROWS_PER_PAGE = 10;
@@ -1290,7 +1399,7 @@ function renderMovementStats(data) {
 }
 
 async function loadData() {
-  const session = await Auth.getSession();
+  const session = window.currentUserSession || await Auth.getSession();
   if (!session) return;
 
   try {
@@ -2143,7 +2252,12 @@ function updateModeUI() {
   const activeStaffName = document.getElementById('activeStaffSelect')?.value || 'צוות';
   let allowSave = false;
 
-  if (window.isAdminMode) {
+  if (window.isImpersonating) {
+    allowSave = false;
+    badge.innerHTML = '<i class="fas fa-user-secret"></i> מצב צפייה';
+    badge.className = 'mode-badge manager'; // Using manager style for gold feel
+    document.body.classList.remove('staff-mode', 'no-identity');
+  } else if (window.isAdminMode) {
     allowSave = true;
     badge.innerHTML = '<i class="fas fa-unlock"></i> מצב מנהל';
     badge.className = 'mode-badge manager';
@@ -3343,34 +3457,28 @@ function renderClientsTable() {
   pageRows.forEach(c => {
     const tr = document.createElement("tr");
     
-    // Create an input for the default price
-    const currentPriceStr = c.customPrice ? c.customPrice : '';
+    const currentPriceDisplay = c.customPrice ? `₪${c.customPrice}` : '<span style="color:#94a3b8;">רגיל</span>';
     const lastDateDisplay = c.lastOrderDate.getFullYear() > 1970 ? formatDateTime(c.lastOrderDate.toISOString()) : '-';
+    const clientNotes = window.clientsData[c.phoneKey]?.notes || '';
+    const hasNotes = clientNotes.length > 0;
     
     tr.innerHTML = `
       <td data-label="שם">${c.name}</td>
       <td data-label="טלפון">${createWhatsAppLink(c.originalPhone)}</td>
-      <td data-label="עיר מגורים" style="text-align:center;">
-        <input type="text" class="client-city-input payment-input" 
-               placeholder="-" value="${c.city}" 
-               style="width:100px; padding:6px; text-align:center; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:auto;" />
-      </td>
+      <td data-label="עיר מגורים" style="text-align:center;">${c.city || '<span style="color:#94a3b8;">-</span>'}</td>
       <td data-label="כלבים">${c.dogsArray.join(', ')}</td>
       <td data-label="סהכ הזמנות">${c.totalOrders}</td>
       <td data-label="הזמנה אחרונה">${lastDateDisplay}</td>
       <td data-label="הכנסה">₪${c.totalRevenue.toLocaleString()}</td>
-      <td data-label="מחיר ברירת מחדל" class="price-cell" style="text-align:center;">
-        <div class="price-input-container" style="display:inline-block; margin:auto;">
-          <input type="number" class="price-input client-price-input" 
-                 data-phonekey="${c.phoneKey}" 
-                 value="${currentPriceStr}" min="0" step="10" placeholder="רגיל" style="width:70px;" />
-        </div>
-      </td>
-      <td data-label="פעולות">
-        <button class="header-btn manager-only" style="background:#10b981; color:white; border:none; padding:6px 12px;" 
-                onclick="saveClientData('${c.phoneKey}', this.closest('tr').querySelector('.client-price-input').value, this.closest('tr').querySelector('.client-city-input').value)">
-          <i class="fas fa-save"></i> שמור
+      <td data-label="מחיר ברירת מחדל" style="text-align:center;">${currentPriceDisplay}</td>
+      <td data-label="עריכה">
+        <button class="header-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; border:none; padding:6px 14px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" 
+                onclick="openEditClientModal('${c.phoneKey}')"
+                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,0.4)'" 
+                onmouseout="this.style.transform='';this.style.boxShadow='0 2px 6px rgba(99,102,241,0.3)'">
+          <i class="fas fa-pen"></i> עריכה
         </button>
+        ${hasNotes ? '<i class="fas fa-sticky-note" style="color: #f59e0b; margin-right: 6px;" title="יש הערות"></i>' : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -3456,6 +3564,258 @@ async function saveClientData(phoneKey, priceValue, cityValue) {
     showToast('שגיאה בשמירת נתוני לקוח', 'error');
   }
 }
+
+// --- Edit Client Modal ---
+function openEditClientModal(phoneKey) {
+  const client = window.processedClients?.find(c => c.phoneKey === phoneKey);
+  if (!client) {
+    showToast('לא נמצאו נתוני לקוח', 'error');
+    return;
+  }
+
+  const clientData = window.clientsData[phoneKey] || {};
+
+  document.getElementById('editClientPhoneKey').value = phoneKey;
+  document.getElementById('editClientOriginalPhone').value = client.originalPhone;
+  document.getElementById('editClientName').value = client.name || '';
+  document.getElementById('editClientPhone').value = client.originalPhone || '';
+  document.getElementById('editClientCity').value = clientData.city || client.city || '';
+  document.getElementById('editClientPrice').value = clientData.default_price || '';
+  document.getElementById('editClientNotes').value = clientData.notes || '';
+  document.getElementById('editClientSubtitle').textContent = client.name || 'עדכון נתונים';
+
+  // Render dog tags with edit/delete inputs
+  const dogsList = document.getElementById('editClientDogsList');
+  if (dogsList) {
+    if (client.dogsArray && client.dogsArray.length > 0) {
+      dogsList.innerHTML = client.dogsArray.map((dog, index) => `
+        <div class="edit-dog-row" style="display: flex; align-items: center; gap: 8px;">
+          <div style="position: relative; flex: 1;">
+            <i class="fas fa-dog" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #f59e0b; font-size: 12px;"></i>
+            <input type="text" class="edit-dog-name-input" data-original-name="${dog}" value="${dog}" 
+                   style="width: 100%; padding: 8px 30px 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none;"
+                   onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+          <button type="button" onclick="this.parentElement.remove()" 
+                  style="background: #fee2e2; color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                  onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"
+                  title="מחק כלב">
+            <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+          </button>
+        </div>
+      `).join('');
+    } else {
+      dogsList.innerHTML = '<span style="color: #94a3b8; font-size: 13px;">אין כלבים משויכים</span>';
+    }
+  }
+
+  document.getElementById('editClientModal').style.display = 'block';
+}
+
+function closeEditClientModal() {
+  document.getElementById('editClientModal').style.display = 'none';
+}
+
+async function saveEditClient() {
+  const saveBtn = document.getElementById('saveEditClientBtn');
+  const originalBtnHTML = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+
+  try {
+    const phoneKey = document.getElementById('editClientPhoneKey').value;
+    const originalPhone = document.getElementById('editClientOriginalPhone').value;
+    const newName = document.getElementById('editClientName').value.trim();
+    const newPhone = document.getElementById('editClientPhone').value.trim();
+    const newCity = document.getElementById('editClientCity').value.trim();
+    const newPrice = document.getElementById('editClientPrice').value;
+    const newNotes = document.getElementById('editClientNotes').value.trim();
+
+    if (!newName) {
+      showToast('חובה למלא שם לקוח', 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalBtnHTML;
+      return;
+    }
+
+    if (!newPhone) {
+      showToast('חובה למלא מספר טלפון', 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalBtnHTML;
+      return;
+    }
+
+    const session = window.currentUserSession;
+    if (!session) {
+      showToast('נא להתחבר תחילה', 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalBtnHTML;
+      return;
+    }
+
+    // 1. Update client metadata (city, price, notes) in profiles.clients_data
+    if (!window.clientsData) window.clientsData = {};
+    const currentData = window.clientsData[phoneKey] || {};
+    const newData = { ...currentData };
+
+    if (newCity) newData.city = newCity;
+    else delete newData.city;
+
+    if (newPrice && newPrice !== '') newData.default_price = parseInt(newPrice);
+    else delete newData.default_price;
+
+    if (newNotes) newData.notes = newNotes;
+    else delete newData.notes;
+
+    // Calculate new phone key
+    const newPhoneKey = formatPhoneKey(newPhone);
+    
+    // If phone changed, migrate client data to new key
+    if (newPhoneKey !== phoneKey) {
+      delete window.clientsData[phoneKey];
+      if (Object.keys(newData).length > 0) {
+        window.clientsData[newPhoneKey] = newData;
+      }
+    } else {
+      if (Object.keys(newData).length === 0) {
+        delete window.clientsData[phoneKey];
+      } else {
+        window.clientsData[phoneKey] = newData;
+      }
+    }
+
+    // 2. Save clients_data to profiles
+    const { error: profileError } = await pensionNetSupabase
+      .from('profiles')
+      .update({ clients_data: window.clientsData })
+      .eq('user_id', session.user.id);
+
+    if (profileError) {
+      if (profileError.code === 'PGRST204' || String(profileError.message).includes('clients_data')) {
+        localStorage.setItem('pensionNet_clientsData_fallback_' + session.user.id, JSON.stringify(window.clientsData));
+      } else {
+        throw profileError;
+      }
+    }
+
+    // 3. Update related orders (Name, Phone, and Dogs)
+    const client = window.processedClients?.find(c => c.phoneKey === phoneKey);
+    const hasNameChanged = client && newName !== client.name;
+    const hasPhoneChanged = newPhone !== originalPhone;
+
+    // Get dog changes
+    const dogInputs = document.querySelectorAll('.edit-dog-name-input');
+    const dogChanges = []; // { original, current, type: 'rename' | 'delete' }
+    
+    // Find renames
+    dogInputs.forEach(input => {
+      const original = input.dataset.originalName;
+      const current = input.value.trim();
+      if (current && original !== current) {
+        dogChanges.push({ original, current, type: 'rename' });
+      }
+    });
+
+    // Find deletions
+    if (client && client.dogsArray) {
+      client.dogsArray.forEach(original => {
+        const stillExists = Array.from(dogInputs).some(input => input.dataset.originalName === original);
+        if (!stillExists) {
+          dogChanges.push({ original, type: 'delete' });
+        }
+      });
+    }
+
+    if (hasNameChanged || hasPhoneChanged || dogChanges.length > 0) {
+      // Find all orders matching the original phone
+      const matchingOrders = (window.allOrdersCache || []).filter(o => {
+        const oKey = formatPhoneKey(o.phone);
+        return oKey === phoneKey;
+      });
+
+      if (matchingOrders.length > 0) {
+        // Prepare bulk update or individual updates for dogs
+        // For performance and reliability, we'll iterate through changes
+        for (const change of dogChanges) {
+          const matchingDogOrders = matchingOrders.filter(o => o.dog_name === change.original);
+          if (matchingDogOrders.length > 0) {
+            const dogOrderIds = matchingDogOrders.map(o => o.id);
+            const newDogName = change.type === 'rename' ? change.current : '[נמחק]';
+            
+            await pensionNetSupabase
+              .from('orders')
+              .update({ dog_name: newDogName })
+              .in('id', dogOrderIds);
+            
+            // Update local cache
+            matchingDogOrders.forEach(o => o.dog_name = newDogName);
+          }
+        }
+
+        // Handle Name/Phone changes for ALL orders of this client
+        if (hasNameChanged || hasPhoneChanged) {
+          const orderUpdateData = {};
+          if (hasNameChanged) orderUpdateData.owner_name = newName;
+          if (hasPhoneChanged) orderUpdateData.phone = newPhone;
+
+          const orderIds = matchingOrders.map(o => o.id);
+          await pensionNetSupabase
+            .from('orders')
+            .update(orderUpdateData)
+            .in('id', orderIds);
+
+          // Update local cache
+          matchingOrders.forEach(o => {
+            if (hasNameChanged) o.owner_name = newName;
+            if (hasPhoneChanged) o.phone = newPhone;
+          });
+        }
+      }
+
+      // Create audit log
+      const changes = [];
+      if (hasNameChanged) changes.push(`שם: ${client.name} → ${newName}`);
+      if (hasPhoneChanged) changes.push(`טלפון: ${originalPhone} → ${newPhone}`);
+      if (newCity !== (client?.city || '')) changes.push(`עיר: ${newCity || 'ריק'}`);
+      dogChanges.forEach(dc => {
+        if (dc.type === 'rename') changes.push(`שינוי שם כלב: ${dc.original} → ${dc.current}`);
+        if (dc.type === 'delete') changes.push(`מחיקת כלב: ${dc.original}`);
+      });
+      if (newPrice !== String(client?.customPrice || '')) changes.push(`מחיר: ${newPrice || 'רגיל'}`);
+      
+      await createAuditLog('UPDATE', `עדכון פרטי לקוח "${newName}": ${changes.join(', ')}`);
+    } else {
+      await createAuditLog('UPDATE', `עדכון נתוני לקוח "${newName}"`);
+    }
+
+    showToast('פרטי הלקוח עודכנו בהצלחה!', 'success');
+    closeEditClientModal();
+    
+    // Re-process and re-render clients
+    processClientsData();
+    
+    // Also refresh the main tables if name/phone changed
+    if (hasNameChanged || hasPhoneChanged) {
+      renderFutureOrdersTable();
+      renderPastOrdersTable();
+    }
+
+  } catch (err) {
+    console.error('Error saving client edit:', err);
+    showToast('שגיאה בשמירת נתוני הלקוח: ' + err.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalBtnHTML;
+  }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+  const editModal = document.getElementById('editClientModal');
+  if (e.target === editModal) {
+    closeEditClientModal();
+  }
+});
 
 // Custom Calendar Events Management
 function selectEventColor(el) {
