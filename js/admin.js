@@ -647,6 +647,24 @@ function safeParseNotes(noteStr) {
   }
 }
 
+function formatOrderNotes(notes) {
+  if (!notes) return '<span style="color:#999;">-</span>';
+  
+  const termsText = '✅ הלקוח/ה אישר/ה תנאי שימוש';
+  if (notes.includes(termsText)) {
+    const cleanNotes = notes.replace(termsText, '').trim();
+    return `
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        ${cleanNotes ? `<div style="color: #1e293b; line-height: 1.4;">${cleanNotes}</div>` : ''}
+        <div style="font-size: 11px; background: #f0fdf4; color: #166534; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #bbf7d0; width: fit-content; font-weight: 600; white-space: nowrap;">
+           <i class="fas fa-check-circle" style="font-size: 10px; color: #22c55e;"></i> תנאי שימוש אושרו
+        </div>
+      </div>
+    `;
+  }
+  return notes;
+}
+
 window.jewishHolidaysCache = {};
 
 async function getJewishHolidays(year, month) {
@@ -1090,8 +1108,8 @@ function renderPastOrdersTable() {
         </div>
       ` : ''}
     </td>
-    <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
-      ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+    <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
+      ${formatOrderNotes(row.notes)}
     </td>
     <td data-label="מחיר" class="price-cell">
       <div class="price-wrapper">
@@ -1565,8 +1583,8 @@ function renderFutureOrdersTable() {
           </div>
         ` : ''}
       </td>
-      <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
-        ${row.notes ? row.notes : '<span style="color:#999;">-</span>'}
+      <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
+        ${formatOrderNotes(row.notes)}
       </td>
       <td data-label="מחיר" class="price-cell">
         <div class="price-wrapper">
