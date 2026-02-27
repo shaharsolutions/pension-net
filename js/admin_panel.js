@@ -909,3 +909,111 @@ function closeConfirmModal() {
     const modal = document.getElementById('confirmModal');
     if (modal) modal.classList.remove('show');
 }
+
+// ============================================
+// Data Management (Export / Reset)
+// ============================================
+
+async function exportAllUsageToExcel() {
+    try {
+        showToast('מפיק דו"ח שימוש...', 'info');
+        
+        // Fetch sessions and activity logs
+        const [sessions, logs] = await Promise.all([
+            loadAllSessions(),
+            loadAllActivityLogs()
+        ]);
+
+        if (!sessions.length && !logs.length) {
+            showToast('אין נתונים לייצוא', 'info');
+            return;
+        }
+
+        // Build user map for names
+        const profiles = window._cachedAdminData?.profiles || [];
+        const userMap = {};
+        profiles.forEach(p => {
+            userMap[p.user_id] = p.business_name || p.full_name || p.email;
+        });
+
+        // Create CSV content (Excel-friendly with BOM for Hebrew)
+        let csv = '\uFEFF';
+        
+        // Sessions Section
+        csv += 'דו"ח כניסות ושימוש במערכת\n';
+        csv += 'אימייל,שם משתמש,זמן כניסה,זמן פעילות אחרון,משך שימוש (דקות)\n';
+        sessions.forEach(s => {
+            const userName = userMap[s.user_id] || 'לא ידוע';
+            csv += `${s.user_email},${userName},${s.login_time},${s.last_active},${s.duration_minutes || 0}\n`;
+        });
+
+        csv += '\n\n';
+        
+        // Activity Logs Section
+        csv += 'יומן פעילות מלא\n';
+        csv += 'זמן,אימייל/מבצע,סוג פעולה,תיאור,שם איש צוות\n';
+        logs.forEach(l => {
+            const userName = userMap[l.user_id] || (l.user_id === null ? 'מערכת' : l.user_id);
+            const desc = (l.description || '').replace(/"/g, '""'); // Escape quotes
+            csv += `${l.created_at},${userName},${l.action_type},"${desc}",${l.staff_name || ''}\n`;
+        });
+
+        // Download Procedure
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const fileName = `pension_net_usage_${new Date().toISOString().split('T')[0]}.csv`;
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('הקובץ יוצא בהצלחה כקובץ CSV', 'success');
+    } catch (err) {
+        console.error('Export error:', err);
+        showToast('שגיאה בתהליך הייצוא', 'error');
+    }
+}
+
+function confirmResetUsageData() {
+    showConfirmModal(
+        'איפוס נתוני שימוש במערכת',
+        'האם אתה בטוח שברצונך למחוק את כל נתוני השימוש (כניסות ופעילות)?<br><br><span style="color: var(--admin-danger); font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> שים לב:</span> פעולה זו תמחק לצמיתות את כל היסטוריית הכניסות ויומן הפעולות מכל הזמנים. לא ניתן לשחזר נתונים אלו.',
+        resetUsageData
+    );
+}
+
+async function resetUsageData() {
+    try {
+        showToast('מנקה נתוני מערכת...', 'info');
+        
+        // 1. Delete sessions (all rows where login_time exists)
+        const { error: sessionError } = await supabaseClient
+            .from('user_sessions')
+            .delete()
+            .gte('login_time', '1970-01-01'); 
+
+        // 2. Delete audit logs (all rows where created_at exists)
+        const { error: logError } = await supabaseClient
+            .from('audit_logs')
+            .delete()
+            .gte('created_at', '1970-01-01');
+
+        if (sessionError || logError) {
+            console.error('Reset error:', sessionError || logError);
+            showToast('שגיאה במחיקת הנתונים. ייתכן שאין הרשאות מתאימות.', 'error');
+            return;
+        }
+
+        showToast('כל נתוני השימוש אופסו בהצלחה', 'success');
+        
+        // Refresh the whole panel
+        await loadAdminPanelData();
+    } catch (err) {
+        console.error('Reset crash:', err);
+        showToast('שגיאה קריטית באיפוס הנתונים', 'error');
+    }
+}

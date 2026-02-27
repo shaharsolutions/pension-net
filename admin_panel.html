@@ -114,6 +114,16 @@
                     <div class="summary-card-label">הכנסה כוללת</div>
                 </div>
             </div>
+            
+            <!-- Global Tools Bar -->
+            <div class="admin-tools-bar" style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <button onclick="exportAllUsageToExcel()" class="admin-nav-btn" style="background: white;">
+                    <i class="fas fa-file-excel" style="color: #107c41;"></i> ייצא נתוני שימוש (Excel)
+                </button>
+                <button onclick="confirmResetUsageData()" class="admin-nav-btn danger" style="background: white;">
+                    <i class="fas fa-trash-alt" style="color: var(--admin-danger);"></i> איפוס נתוני שימוש
+                </button>
+            </div>
 
             <!-- Section Tabs -->
             <div class="admin-tabs">
