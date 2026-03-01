@@ -480,8 +480,8 @@
             document.getElementById('priceGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('default_price').required = mode === 'signup';
             
-            document.getElementById('pinGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('manager_pin').required = mode === 'signup';
+            document.getElementById('pinGroup').style.display = 'none';
+            document.getElementById('manager_pin').required = false;
             
             document.getElementById('rememberMeGroup').style.display = mode === 'login' ? 'flex' : 'none';
             document.getElementById('managerTermsGroup').style.display = mode === 'signup' ? 'block' : 'none';
@@ -550,15 +550,7 @@
             const manager_pin = document.getElementById('manager_pin').value;
             const errorDiv = document.getElementById('errorMessage');
             
-            if (mode === 'signup') {
-                if (!manager_pin || !/^\d{4}$/.test(manager_pin)) {
-                    errorDiv.textContent = 'יש להזין קוד PIN לניהול המורכב מ-4 ספרות';
-                    errorDiv.style.background = '#fee2e2';
-                    errorDiv.style.color = '#dc2626';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-            }
+
             
             const submitBtn = document.getElementById('submitBtn');
 

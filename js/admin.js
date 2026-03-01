@@ -2146,14 +2146,23 @@ function updateStaffSelectors() {
 }
 
 window.isVerifyingManager = false;
-async function verifyManagerAccess(targetName = null) {
+async function verifyManagerAccess(targetName = null, force = false) {
   // If targetName is provided, we verify that specific person (manager or staff)
   // If no targetName, we verify manager
   
   const isVerifyingStaff = targetName && targetName !== window.managerName;
   const staffObj = isVerifyingStaff ? window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === targetName) : null;
   
-  // Check for 5-minute cooldown
+  // NEW: Cancel PIN in the entire system, unless forced (e.g. for adding employees)
+  if (!force) {
+    window.isAdminMode = !isVerifyingStaff;
+    window.isSessionVerified = true;
+    localStorage.setItem('pensionet_last_pin_verified', Date.now().toString());
+    window.lastPinVerificationTime = Date.now();
+    return true;
+  }
+
+  // Check for 5-minute cooldown (only relevant if forced or staff verify)
   const now = Date.now();
   if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < PIN_EXPIRATION_MS)) {
     if (targetName) {
@@ -2243,7 +2252,7 @@ async function verifyManagerAccess(targetName = null) {
 }
 
 async function addStaffMember() {
-  if (!(await verifyManagerAccess())) return;
+  if (!(await verifyManagerAccess(null, true))) return;
   
   const nameInput = document.getElementById('new-staff-name');
   const pinInput = document.getElementById('new-staff-pin');
