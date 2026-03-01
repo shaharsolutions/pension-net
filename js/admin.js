@@ -2264,7 +2264,8 @@ async function verifyManagerAccess(targetName = null, force = false) {
 }
 
 async function addStaffMember() {
-  if (!(await verifyManagerAccess(null, true))) return;
+  const needsPin = window.currentPlanId === 'pro_plus';
+  if (!(await verifyManagerAccess(null, needsPin))) return;
   
   const nameInput = document.getElementById('new-staff-name');
   const pinInput = document.getElementById('new-staff-pin');
@@ -2736,9 +2737,38 @@ async function loadSettings() {
     return;
   }
 
-  // Set initial manager name from metadata immediately to populate login overlay
   window.managerName = session.user.user_metadata?.full_name || 'מנהל';
   updateStaffSelectors();
+
+  // Ensure user has a plan assigned (Default to Starter for new users)
+  try {
+    const { data: planData } = await pensionNetSupabase
+      .from('user_plan')
+      .select('plan_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (!planData) {
+      console.log('No plan found, assigning Starter plan...');
+      window.currentPlanId = 'starter';
+      const { error: planError } = await pensionNetSupabase
+        .from('user_plan')
+        .insert([{
+          user_id: session.user.id,
+          plan_id: 'starter',
+          updated_at: new Date().toISOString()
+        }]);
+      
+      if (!planError && typeof Features !== 'undefined') {
+        console.log('Starter plan assigned, re-initializing features...');
+        await Features.init();
+      }
+    } else {
+      window.currentPlanId = planData.plan_id;
+    }
+  } catch (planErr) {
+    console.warn('Plan assignment check failed:', planErr);
+  }
 
   try {
     let { data: profile, error } = await pensionNetSupabase
