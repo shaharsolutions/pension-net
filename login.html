@@ -436,7 +436,7 @@
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-              redirectTo: `${window.location.origin}/pension-net/admin.html`,
+              redirectTo: `${window.location.origin}/pension-net/setup.html`,
             },
           });
           if (error) throw error;
@@ -596,8 +596,8 @@
                     errorDiv.style.display = 'block';
                     submitBtn.textContent = (mode === 'login' ? 'כניסה' : 'הרשמה');
                 } else {
-                    // Success
-                    window.location.href = 'admin.html';
+                    // Success - Redirect to setup which will forward to admin if metadata exists
+                    window.location.href = 'setup.html';
                 }
 
             } catch (error) {

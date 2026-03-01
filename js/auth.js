@@ -41,13 +41,23 @@ const Auth = {
     const session = await this.getSession();
     if (!session) {
       // If we are on a protected page and not logged in, redirect to login
-      const protectedPages = ["admin.html", "admin_panel.html", "growth.html", "insights.html"];
+      const protectedPages = ["admin.html", "admin_panel.html", "growth.html", "insights.html", "features_guide.html"];
       const currentPage = window.location.pathname.split("/").pop();
       if (protectedPages.includes(currentPage)) {
         window.location.href = "login.html";
       }
       return null;
     }
+
+    // New check: if logged in but metadata (setup) missing
+    const user = session.user;
+    if (user && (!user.user_metadata || !user.user_metadata.business_name)) {
+        const currentPage = window.location.pathname.split("/").pop();
+        if (currentPage !== "setup.html") {
+            window.location.href = "setup.html";
+        }
+    }
+
     return session;
   },
 
