@@ -2806,6 +2806,11 @@ async function loadSettings() {
       window.currentPlanId = planData.plan_id;
       window.isFounder = !!planData.founder_price_locked;
     }
+    
+    // Proactively sync UI once plan info is available
+    if (typeof Features !== 'undefined') {
+      Features.syncUI();
+    }
   } catch (planErr) {
     console.warn('Plan assignment check failed:', planErr);
   }

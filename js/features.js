@@ -58,6 +58,17 @@ const Features = {
     },
 
     isEnabled(featureKey) {
+        // Strict client-side override for Staff Management
+        if (featureKey === 'staff_management') {
+            const planId = window.currentPlanId;
+            const isFounder = window.isFounder;
+            let effectivePlan = planId;
+            if (isFounder) {
+                if (planId === 'starter') effectivePlan = 'pro';
+                else if (planId === 'pro') effectivePlan = 'pro_plus';
+            }
+            return effectivePlan === 'pro_plus';
+        }
         return this._features[featureKey] !== false;
     },
 
