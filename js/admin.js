@@ -1098,7 +1098,18 @@ function renderPastOrdersTable() {
       row.check_out
     )}</div>
     </td>
-    <td data-label="כלב">${row.dog_name}</td>
+    <td data-label="כלב">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        ${row.dog_photo ? `
+          <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
+        ` : `
+          <div class="dog-thumbnail-placeholder" title="אין תמונה">
+            <i class="fas fa-camera"></i>
+          </div>
+        `}
+        <span style="font-weight: 600;">${row.dog_name || ""}</span>
+      </div>
+    </td>
     <td data-label="גיל">${row.dog_age}</td>
     <td data-label="גודל">${row.dog_breed}</td>
     <td data-label="סירס/עיקור">
@@ -1573,7 +1584,18 @@ function renderFutureOrdersTable() {
         row.check_out
       )}</div>
       </td>
-      <td data-label="כלב">${row.dog_name || ""}</td>
+      <td data-label="כלב">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${row.dog_photo ? `
+            <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
+          ` : `
+            <div class="dog-thumbnail-placeholder" title="אין תמונה">
+              <i class="fas fa-camera"></i>
+            </div>
+          `}
+          <span style="font-weight: 600;">${row.dog_name || ""}</span>
+        </div>
+      </td>
       <td data-label="גיל">${row.dog_age || ""}</td>
       <td data-label="גודל">${row.dog_breed || ""}</td>
       <td data-label="סירס/עיקור">
@@ -3412,7 +3434,19 @@ function processClientsData() {
     }
     
     const c = clientsMap[phoneKey];
-    if (order.dog_name) c.dogs.add(order.dog_name);
+    if (order.dog_name) {
+      c.dogs.add(order.dog_name);
+      if (order.dog_photo) {
+        if (!c.dogPhotos) c.dogPhotos = {};
+        const currentPhoto = c.dogPhotos[order.dog_name];
+        if (!currentPhoto || new Date(order.created_at) > new Date(currentPhoto.timestamp)) {
+          c.dogPhotos[order.dog_name] = {
+            url: order.dog_photo,
+            timestamp: order.order_date || order.created_at
+          };
+        }
+      }
+    }
     
     // Add admin notes to orderAdminNotes history if they exist
     const adminNotesArr = safeParseNotes(order.admin_note);
@@ -3665,22 +3699,39 @@ function openEditClientModal(phoneKey) {
   const dogsList = document.getElementById('editClientDogsList');
   if (dogsList) {
     if (client.dogsArray && client.dogsArray.length > 0) {
-      dogsList.innerHTML = client.dogsArray.map((dog, index) => `
-        <div class="edit-dog-row" style="display: flex; align-items: center; gap: 8px;">
+      dogsList.innerHTML = client.dogsArray.map((dog, index) => {
+        const photo = client.dogPhotos?.[dog]?.url;
+        return `
+        <div class="edit-dog-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <div style="flex-shrink: 0;">
+            ${photo ? `
+              <img src="${photo}" class="dog-thumbnail" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}')" />
+            ` : `
+              <div class="dog-thumbnail-placeholder" onclick="document.getElementById('adminDogPhotoInput-${index}').click()">
+                <i class="fas fa-camera"></i>
+              </div>
+            `}
+          </div>
           <div style="position: relative; flex: 1;">
             <i class="fas fa-dog" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #f59e0b; font-size: 12px;"></i>
             <input type="text" class="edit-dog-name-input" data-original-name="${dog}" value="${dog}" 
                    style="width: 100%; padding: 8px 30px 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none;"
                    onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
           </div>
-          <button type="button" onclick="this.parentElement.remove()" 
-                  style="background: #fee2e2; color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                  onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"
-                  title="מחק כלב">
-            <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
-          </button>
+          <div class="edit-dog-actions" style="display: flex; gap: 4px;">
+            <button type="button" class="edit-dog-photo-btn" onclick="document.getElementById('adminDogPhotoInput-${index}').click()" title="העלה תמונה">
+              <i class="fas fa-image"></i>
+              <input type="file" id="adminDogPhotoInput-${index}" style="display: none;" accept="image/*" onchange="handleAdminDogPhotoUpload(event, '${dog.replace(/'/g, "\\'")}', '${phoneKey}')">
+            </button>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                    style="background: #fee2e2; color: #ef4444; border: none; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                    onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"
+                    title="מחק כלב">
+              <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+            </button>
+          </div>
         </div>
-      `).join('');
+      `}).join('');
     } else {
       dogsList.innerHTML = '<span style="color: #94a3b8; font-size: 13px;">אין כלבים משויכים</span>';
     }
@@ -4112,3 +4163,97 @@ function promptDeleteCustomEvent(eventId) {
         }
     );
 }
+// --- Photo Upload Handling ---
+async function uploadDogPhoto(file, userId) {
+  if (!file) return null;
+  
+  const client = pensionNetSupabase;
+  if (!client) return null;
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `${userId}/${fileName}`;
+
+  try {
+    const { data, error } = await client.storage
+      .from('dog-photos')
+      .upload(filePath, file);
+
+    if (error) {
+      console.error('Photo upload error:', error);
+      return null;
+    }
+
+    const { data: { publicUrl } } = client.storage
+      .from('dog-photos')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (err) {
+    console.error('Photo upload exception:', err);
+    return null;
+  }
+}
+
+async function handleAdminDogPhotoUpload(event, dogName, phoneKey) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const btn = event.target.parentElement;
+  if (!btn) return;
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  try {
+    const session = window.currentUserSession;
+    if (!session) throw new Error('No session');
+
+    const photoUrl = await uploadDogPhoto(file, session.user.id);
+    if (!photoUrl) throw new Error('העלאת התמונה נכשלה. אנא וודאו שקיים Bucket בשם dog-photos ב-Supabase.');
+
+    // Update ALL orders for this dog and client to have this photo
+    const originalPhone = document.getElementById('editClientOriginalPhone').value;
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ dog_photo: photoUrl })
+      .eq('phone', originalPhone)
+      .eq('dog_name', dogName)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
+
+    showToast('התמונה עודכנה בהצלחה!', 'success');
+    
+    // Refresh all data to update cache
+    await loadData();
+    // Re-open modal to show updated image
+    openEditClientModal(phoneKey);
+  } catch (err) {
+    console.error('Admin photo upload error:', err);
+    showToast('שגיאה בהעלאת תמונה: ' + err.message, 'error');
+  } finally {
+    btn.innerHTML = originalHTML;
+    btn.disabled = false;
+  }
+}
+
+// --- Image Preview Logic ---
+function openImagePreview(url, title) {
+  const modal = document.getElementById('imagePreviewModal');
+  const img = document.getElementById('previewModalImg');
+  const titleEl = document.getElementById('previewModalTitle');
+  if (modal && img) {
+    img.src = url;
+    if (titleEl) titleEl.textContent = title || 'תצוגת תמונה';
+    modal.style.display = 'flex';
+  }
+}
+
+function closeImagePreview() {
+  const modal = document.getElementById('imagePreviewModal');
+  if (modal) modal.style.display = 'none';
+}
+
+window.openImagePreview = openImagePreview;
+window.closeImagePreview = closeImagePreview;

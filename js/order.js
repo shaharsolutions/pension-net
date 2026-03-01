@@ -816,6 +816,13 @@ async function submitForm() {
   const customPriceDay = window.pensionProfile?.clients_data?.[phoneKeyForPrice]?.default_price;
   const defaultPensionPriceDay = window.pensionProfile?.default_price || 130;
   const priceToSave = customPriceDay || defaultPensionPriceDay;
+  
+  // Upload Photo if exists
+  let photoUrl = null;
+  if (selectedDogPhotoFile) {
+    submitBtn.textContent = 'מעלה תמונה...';
+    photoUrl = await uploadDogPhoto(selectedDogPhotoFile, PENSION_OWNER_ID);
+  }
 
   const orderData = {
     owner_name: formData.ownerName,
@@ -828,7 +835,8 @@ async function submitForm() {
     neutered: formData.neutered || 'לא צוין',
     notes: (formData.notes ? formData.notes + '\n\n' : '') + '✅ הלקוח/ה אישר/ה תנאי שימוש',
     user_id: PENSION_OWNER_ID,
-    price_per_day: priceToSave
+    price_per_day: priceToSave,
+    dog_photo: photoUrl
   };
   
   const client = getSupabase();
@@ -957,6 +965,15 @@ function resetForm() {
   document.getElementById('finalSummary').innerHTML = '';
   document.getElementById('daysDisplay').classList.remove('show');
   
+  // Reset photo
+  selectedDogPhotoFile = null;
+  const photoPreview = document.getElementById('photoPreviewContainer');
+  if (photoPreview) photoPreview.innerHTML = `<i class="fas fa-camera" style="font-size: 40px; color: #cbd5e0;"></i>`;
+  const photoStatus = document.getElementById('photoUploadStatus');
+  if (photoStatus) photoStatus.textContent = 'לחצו לבחירת תמונה';
+  const photoInput = document.getElementById('dogPhotoInput');
+  if (photoInput) photoInput.value = '';
+  
   currentStep = 0;
   lastSearchedPhone = '';
   updateStepIndicator();
@@ -1033,3 +1050,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
+
+// --- Photo Upload Handling ---
+let selectedDogPhotoFile = null;
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file size (e.g., 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('הקובץ גדול מדי (מקסימום 5MB)', 'error');
+    event.target.value = '';
+    return;
+  }
+
+  selectedDogPhotoFile = file;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const previewContainer = document.getElementById('photoPreviewContainer');
+    previewContainer.innerHTML = `<img src="${e.target.result}" alt="Dog Preview" />`;
+    document.getElementById('photoUploadStatus').textContent = 'תמונה נבחרה! לחצו לשינוי';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadDogPhoto(file, userId) {
+  if (!file) return null;
+  
+  const client = getSupabase();
+  if (!client) return null;
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `${userId}/${fileName}`;
+
+  try {
+    const { data, error } = await client.storage
+      .from('dog-photos')
+      .upload(filePath, file);
+
+    if (error) {
+      console.error('Photo upload error:', error);
+      // If bucket doesn't exist, this might fail. We'll try to handle it gracefully.
+      return null;
+    }
+
+    const { data: { publicUrl } } = client.storage
+      .from('dog-photos')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (err) {
+    console.error('Photo upload exception:', err);
+    return null;
+  }
+}
