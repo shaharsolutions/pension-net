@@ -141,18 +141,21 @@ document.addEventListener("DOMContentLoaded", async function () {
       banner.id = 'impersonation-banner';
       banner.innerHTML = `
         <div style="
-          position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+          position: sticky; top: 0; left: 0; right: 0; z-index: 99999;
           background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          color: white; padding: 10px 20px;
+          color: white; padding: 12px 20px;
           display: flex; align-items: center; justify-content: center; gap: 15px;
           font-weight: 700; font-size: 14px;
           box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
           direction: rtl; font-family: 'Heebo', sans-serif;
           animation: impersonateBannerSlide 0.3s ease;
+          flex-wrap: wrap; text-align: center;
         ">
-          <i class="fas fa-user-secret" style="font-size: 18px;"></i>
-          <span>מצב צפייה כמשתמש: <strong>${impersonateUserName || 'משתמש'}</strong></span>
-          <span style="opacity: 0.7; font-size: 12px; font-weight: 400;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-user-secret" style="font-size: 18px;"></i>
+            <span>מצב צפייה כמשתמש: <strong>${impersonateUserName || 'משתמש'}</strong></span>
+          </div>
+          <span style="opacity: 0.8; font-size: 12px; font-weight: 400;">
             (הנתונים מוצגים בקריאה בלבד)
           </span>
           <button onclick="stopImpersonationFromAdmin()" style="
@@ -160,6 +163,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             padding: 6px 18px; border-radius: 8px; cursor: pointer;
             font-family: inherit; font-weight: 700; font-size: 13px;
             transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            margin-right: auto;
           " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
              onmouseout="this.style.background='rgba(255,255,255,0.25)'">
             <i class="fas fa-arrow-right"></i> סיום צפייה
@@ -168,17 +172,33 @@ document.addEventListener("DOMContentLoaded", async function () {
       `;
       document.body.prepend(banner);
       
-      // Push content down to make room for the banner
-      document.body.style.paddingTop = '48px';
+      // Since it's sticky, we don't need body padding-top, 
+      // but we should reset body default padding if it's too high
+      document.body.style.paddingTop = '0';
       document.body.classList.add('impersonation-mode');
       
       // Close the login overlay if open
       const overlay = document.getElementById('login-overlay');
       if (overlay) overlay.style.display = 'none';
 
-      // Add a CSS rule to help make it read-only
+      // Add a CSS rule to help make it read-only and handle banner layout
       const style = document.createElement('style');
       style.innerHTML = `
+        body.impersonation-mode {
+          padding-top: 0 !important;
+        }
+        
+        #impersonation-banner > div {
+          margin-left: -20px;
+          margin-right: -20px;
+          min-height: 48px;
+        }
+
+        /* Offset toast notifications to be below the sticky banner */
+        body.impersonation-mode #toast-container {
+          top: 70px !important;
+        }
+
         body.impersonation-mode .movement-action-btn,
         body.impersonation-mode .view-notes-btn,
         body.impersonation-mode .save-note-btn,
