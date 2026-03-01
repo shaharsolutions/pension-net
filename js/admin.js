@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       banner.id = 'impersonation-banner';
       banner.innerHTML = `
         <div style="
-          position: sticky; top: 0; left: 0; right: 0; z-index: 99999;
+          position: relative; z-index: 99999;
           background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
           color: white; padding: 12px 20px;
           display: flex; align-items: center; justify-content: center; gap: 15px;
@@ -150,6 +150,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           direction: rtl; font-family: 'Heebo', sans-serif;
           animation: impersonateBannerSlide 0.3s ease;
           flex-wrap: wrap; text-align: center;
+          margin: -20px -20px 20px -20px;
         ">
           <div style="display: flex; align-items: center; gap: 10px;">
             <i class="fas fa-user-secret" style="font-size: 18px;"></i>
@@ -171,10 +172,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         </div>
       `;
       document.body.prepend(banner);
-      
-      // Since it's sticky, we don't need body padding-top, 
-      // but we should reset body default padding if it's too high
-      document.body.style.paddingTop = '0';
       document.body.classList.add('impersonation-mode');
       
       // Close the login overlay if open
@@ -185,18 +182,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       const style = document.createElement('style');
       style.innerHTML = `
         body.impersonation-mode {
-          padding-top: 0 !important;
-        }
-        
-        #impersonation-banner > div {
-          margin-left: -20px;
-          margin-right: -20px;
-          min-height: 48px;
+          /* Keep the body padding to ensure flow works */
         }
 
-        /* Offset toast notifications to be below the sticky banner */
+        #impersonation-banner {
+            margin-bottom: 25px;
+        }
+
+        /* Offset toast notifications since banner is now in flow */
         body.impersonation-mode #toast-container {
-          top: 70px !important;
+          top: 100px !important;
         }
 
         body.impersonation-mode .movement-action-btn,
