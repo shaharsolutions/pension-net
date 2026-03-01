@@ -900,6 +900,12 @@ async function submitForm() {
         <span class="summary-label">שם הכלב:</span>
         <span class="summary-value">${formData.dogName}</span>
       </div>
+      ${photoUrl ? `
+      <div class="summary-item" style="flex-direction: column; align-items: center; gap: 10px; padding: 20px 0;">
+        <span class="summary-label" style="width: 100%; text-align: center;">תמונת הכלב:</span>
+        <img src="${photoUrl}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      </div>
+      ` : ''}
       <div class="summary-item">
         <span class="summary-label">גיל:</span>
         <span class="summary-value">${formData.dogAge}</span>
@@ -910,7 +916,12 @@ async function submitForm() {
       </div>
       <div class="summary-item">
         <span class="summary-label">מין וסטטוס:</span>
-        <span class="summary-value">${formData.neutered}</span>
+        <span class="summary-value">
+          ${formData.neutered === 'מעוקרת' ? 'מעוקרת (נקבה)' : 
+            formData.neutered === 'לא מעוקרת' ? 'לא מעוקרת (נקבה)' :
+            formData.neutered === 'מסורס' ? 'מסורס (זכר)' :
+            formData.neutered === 'לא מסורס' ? 'לא מסורס (זכר)' : formData.neutered}
+        </span>
       </div>
       <div class="summary-item">
         <span class="summary-label">כניסה:</span>
@@ -1081,30 +1092,91 @@ async function uploadDogPhoto(file, userId) {
   if (!file) return null;
   
   const client = getSupabase();
-  if (!client) return null;
+  if (!client) {
+    console.error('Supabase client not found in uploadDogPhoto');
+    return null;
+  }
 
-  const fileExt = file.name.split('.').pop();
+  // --- Client Side Compression (Optional but recommended) ---
+  let fileToUpload = file;
+  try {
+    const compressed = await compressImage(file, 1200, 0.7); // 1200px max width, 70% quality
+    if (compressed) fileToUpload = compressed;
+    console.log(`Original size: ${(file.size / 1024).toFixed(2)}KB, Compressed: ${(fileToUpload.size / 1024).toFixed(2)}KB`);
+  } catch (err) {
+    console.warn('Compression failed, trying original file:', err);
+  }
+
+  const fileExt = 'jpeg'; // We'll convert compressed image to jpeg
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
+  
+  const folder = userId || 'anonymous';
+  const filePath = `${folder}/${fileName}`;
+  
+  console.log(`Starting upload for ${file.name} to path: ${filePath}`);
 
   try {
     const { data, error } = await client.storage
       .from('dog-photos')
-      .upload(filePath, file);
+      .upload(filePath, fileToUpload, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: 'image/jpeg'
+      });
 
     if (error) {
-      console.error('Photo upload error:', error);
-      // If bucket doesn't exist, this might fail. We'll try to handle it gracefully.
+      console.error('Photo upload failed. Detailed error:', error);
+      if (error.message.includes('size exceeded') || error.message.includes('maximum allowed size')) {
+         showToast('התמונה גדולה מדי. המערכת מנסה לדחוס אותה אוטומטית, אנא נסו להקטין או לבחור תמונה אחרת.', 'error');
+      } else if (error.message.includes('not found')) {
+        showToast('שגיאה: ה-Bucket "dog-photos" לא נמצא.', 'error');
+      }
       return null;
     }
 
+    console.log('Upload successful, getting public URL...');
     const { data: { publicUrl } } = client.storage
       .from('dog-photos')
       .getPublicUrl(filePath);
 
+    console.log('Generated Public URL:', publicUrl);
     return publicUrl;
   } catch (err) {
     console.error('Photo upload exception:', err);
     return null;
   }
+}
+
+// Utility for client-side image compression
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error('Canvas toBlob failed'));
+          resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpeg", { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
 }

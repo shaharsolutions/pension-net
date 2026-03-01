@@ -1103,7 +1103,7 @@ function renderPastOrdersTable() {
         ${row.dog_photo ? `
           <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
         ` : `
-          <div class="dog-thumbnail-placeholder" title="אין תמונה">
+          <div class="dog-thumbnail-placeholder" title="לחצו להעלאת תמונה" onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')">
             <i class="fas fa-camera"></i>
           </div>
         `}
@@ -1589,7 +1589,7 @@ function renderFutureOrdersTable() {
           ${row.dog_photo ? `
             <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
           ` : `
-            <div class="dog-thumbnail-placeholder" title="אין תמונה">
+            <div class="dog-thumbnail-placeholder" title="לחצו להעלאת תמונה" onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')">
               <i class="fas fa-camera"></i>
             </div>
           `}
@@ -4236,6 +4236,55 @@ async function handleAdminDogPhotoUpload(event, dogName, phoneKey) {
     btn.innerHTML = originalHTML;
     btn.disabled = false;
   }
+}
+
+async function triggerDogPhotoUploadFromTable(orderId, dogName, phone) {
+  // Create a hidden file input if it doesn't exist
+  let input = document.getElementById('tableDogPhotoInput');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'file';
+    input.id = 'tableDogPhotoInput';
+    input.style.display = 'none';
+    input.accept = 'image/*';
+    document.body.appendChild(input);
+  }
+  
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    showToast('מעלה תמונה...', 'info');
+    
+    try {
+      const session = window.currentUserSession;
+      if (!session) throw new Error('No session');
+      
+      const photoUrl = await uploadDogPhoto(file, session.user.id);
+      if (!photoUrl) throw new Error('העלאת תמונה נכשלה. אנא וודאו שקיים Bucket בשם dog-photos ב-Supabase.');
+      
+      // Update ALL orders for this dog and client (using the clean phone from createAuditLog/processClients style)
+      // Actually, order table has the original phone string
+      const { error } = await pensionNetSupabase
+        .from('orders')
+        .update({ dog_photo: photoUrl })
+        .eq('phone', phone)
+        .eq('dog_name', dogName)
+        .eq('user_id', session.user.id);
+        
+      if (error) throw error;
+      
+      showToast('תמונה הועלתה והתעדכנה בהצלחה!', 'success');
+      await loadData(); // Refresh tables
+    } catch(err) {
+      console.error(err);
+      showToast('שגיאה בהעלאה: ' + err.message, 'error');
+    } finally {
+      input.value = ''; // Reset for next use
+    }
+  };
+  
+  input.click();
 }
 
 // --- Image Preview Logic ---
