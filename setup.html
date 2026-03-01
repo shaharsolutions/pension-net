@@ -326,11 +326,30 @@
             submitBtn.textContent = 'מעדכן פרופיל...';
 
             try {
-                const { data, error } = await supabaseClient.auth.updateUser({
+                // 1. Update Auth metadata
+                const { data: authData, error: authError } = await supabaseClient.auth.updateUser({
                     data: formData
                 });
+                if (authError) throw authError;
 
-                if (error) throw error;
+                // 2. Upsert into profiles table to ensure persistence
+                const { error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .upsert({
+                        user_id: authData.user.id,
+                        full_name: formData.full_name,
+                        business_name: formData.business_name,
+                        location: formData.location,
+                        phone: formData.phone,
+                        max_capacity: parseInt(formData.max_capacity) || 10,
+                        default_price: parseInt(formData.default_price) || 130,
+                        manager_pin: formData.manager_pin || '1234',
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+
+                if (profileError) {
+                    console.warn('Profile sync failed, but metadata updated:', profileError);
+                }
 
                 window.location.href = 'admin.html';
             } catch (error) {

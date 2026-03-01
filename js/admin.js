@@ -2317,6 +2317,44 @@ async function executeRemoveStaff(index) {
   renderStaffList();
 }
 
+function updatePlanUI() {
+  const containers = [
+    document.getElementById('userPlanBadgeContainer'),
+    document.getElementById('settingsPlanBadgeContainer')
+  ];
+  
+  const planId = window.currentPlanId;
+  if (!planId) return;
+
+  const isFounder = window.isFounder;
+
+  // Logic consistent with admin_panel.js: Founders get +1 feature tier
+  let displayPlanId = planId;
+  if (isFounder) {
+    if (planId === 'starter') displayPlanId = 'pro';
+    else if (planId === 'pro') displayPlanId = 'pro_plus';
+  }
+
+  let badgeHtml = '';
+  const badgeStyle = 'padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase; border: 1px solid transparent;';
+
+  if (displayPlanId === 'starter') {
+    badgeHtml = `<span style="${badgeStyle} background: #ecfdf5; color: #059669; border-color: #10b981;">Starter</span>`;
+  } else if (displayPlanId === 'pro') {
+    badgeHtml = `<span style="${badgeStyle} background: #eff6ff; color: #2563eb; border-color: #3b82f6;">Pro</span>`;
+  } else if (displayPlanId === 'pro_plus') {
+    badgeHtml = `<span style="${badgeStyle} background: #faf5ff; color: #7c3aed; border-color: #8b5cf6;">Pro Plus</span>`;
+  }
+
+  if (isFounder) {
+    badgeHtml += `<span style="${badgeStyle} background: #7c3aed; color: white; border: none; margin-right: 6px;" title="מחיר מופחת לצמיתות"><i class="fas fa-medal"></i> Founder</span>`;
+  }
+
+  containers.forEach(container => {
+    if (container) container.innerHTML = badgeHtml;
+  });
+}
+
 function getStaffNames() {
   const staffNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
   if (window.managerName && !staffNames.includes(window.managerName)) {
@@ -2744,13 +2782,14 @@ async function loadSettings() {
   try {
     const { data: planData } = await pensionNetSupabase
       .from('user_plan')
-      .select('plan_id')
+      .select('plan_id, founder_price_locked')
       .eq('user_id', session.user.id)
       .maybeSingle();
 
     if (!planData) {
       console.log('No plan found, assigning Starter plan...');
       window.currentPlanId = 'starter';
+      window.isFounder = false;
       const { error: planError } = await pensionNetSupabase
         .from('user_plan')
         .insert([{
@@ -2765,6 +2804,7 @@ async function loadSettings() {
       }
     } else {
       window.currentPlanId = planData.plan_id;
+      window.isFounder = !!planData.founder_price_locked;
     }
   } catch (planErr) {
     console.warn('Plan assignment check failed:', planErr);
@@ -2803,18 +2843,22 @@ async function loadSettings() {
 
     if (profile) {
       console.log('Setting field values from profile:', profile);
+      
+      // Fallback logic: Use profile value if exists, otherwise fallback to session metadata
+      const meta = session.user.user_metadata || {};
+      
       const fieldMapping = {
-        'settings-capacity': profile.max_capacity,
-        'settings-phone': profile.phone,
-        'settings-full-name': profile.full_name,
-        'settings-business-name': profile.business_name,
-        'settings-location': profile.location,
-        'settings-default-price': profile.default_price,
-        'settings-admin-pin': profile.manager_pin
+        'settings-capacity': profile.max_capacity || meta.max_capacity,
+        'settings-phone': profile.phone || meta.phone,
+        'settings-full-name': profile.full_name || meta.full_name,
+        'settings-business-name': profile.business_name || meta.business_name,
+        'settings-location': profile.location || meta.location,
+        'settings-default-price': profile.default_price || meta.default_price,
+        'settings-admin-pin': profile.manager_pin || meta.manager_pin
       };
       
-      window.managerName = profile.full_name || window.managerName || 'מנהל';
-      window.businessName = profile.business_name || session.user.user_metadata?.business_name || '';
+      window.managerName = profile.full_name || meta.full_name || window.managerName || 'מנהל';
+      window.businessName = profile.business_name || meta.business_name || '';
 
       // Apply field values to inputs
       Object.keys(fieldMapping).forEach(id => {
@@ -2871,10 +2915,11 @@ async function loadSettings() {
 
       // Update Header Subtitle
       const headerSubtitle = document.getElementById('header-business-name');
-      if (headerSubtitle && profile.business_name) {
-        headerSubtitle.textContent = profile.business_name;
+      if (headerSubtitle && window.businessName) {
+        headerSubtitle.textContent = window.businessName;
       }
       console.log('Settings fields populated successfully');
+      updatePlanUI();
       updateModeUI();
       initializeProfile();
     }
