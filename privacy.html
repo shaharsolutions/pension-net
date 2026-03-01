@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תנאי שימוש ומדיניות פרטיות | פנסיון-נט</title>
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .navbar {
+            background: var(--white);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .pensionet-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .back-link:hover {
+            transform: translateX(5px);
+        }
+
+        .header-section {
+            padding: 60px 0 40px;
+            text-align: center;
+            background: var(--white);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .content-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            margin: -30px auto 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-right: 25px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .content-card { padding: 25px; border-radius: 16px; margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="index.html" class="logo">
+                <div class="pensionet-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;">
+                        <path d="M12 18C14.2091 18 16 16.2091 16 14C16 11.7909 14.2091 10 12 10C9.79086 10 8 11.7909 8 14C8 16.2091 9.79086 18 12 18Z" />
+                        <circle cx="7.5" cy="7" r="2" />
+                        <circle cx="12" cy="5" r="2" />
+                        <circle cx="16.5" cy="7" r="2" />
+                    </svg>
+                </div>
+                <span>פנסיון-נט</span>
+            </a>
+            <a href="login.html" class="back-link">
+                <i class="fas fa-arrow-right"></i>
+                חזרה להרשמה
+            </a>
+        </div>
+    </nav>
+
+    <header class="header-section">
+        <div class="container">
+            <h1>תנאי שימוש ומדיניות פרטיות</h1>
+            <p class="last-updated">עודכן לאחרונה: 1 במרץ 2026</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="content-card">
+            <section>
+                <h2>תנאי שימוש – מערכת פנסיון-נט</h2>
+                <p><strong>1. כללי</strong><br>
+                פנסיון-נט היא מערכת לניהול פנסיונים לכלבים, המאפשרת ניהול הזמנות, לקוחות, הכנסות ותפעול שוטף. השימוש במערכת כפוף לתנאים המפורטים להלן.</p>
+                
+                <p><strong>2. הצהרת המשתמש</strong><br>
+                בעת ההרשמה למערכת, המשתמש מצהיר כי:</p>
+                <ul>
+                    <li>הוא בעל פנסיון פעיל או מורשה לפעול מטעמו</li>
+                    <li>הפרטים שמסר נכונים ומדויקים</li>
+                    <li>הוא נושא באחריות מלאה לכל שימוש שייעשה בחשבונו</li>
+                </ul>
+
+                <p><strong>3. אחריות לשימוש במערכת</strong><br>
+                המערכת מספקת כלי ניהול בלבד.<br>
+                המשתמש אחראי בלעדית ל:</p>
+                <ul>
+                    <li>ניהול ההזמנות</li>
+                    <li>קביעת מחירים</li>
+                    <li>ניסוח הסכמים מול לקוחותיו</li>
+                    <li>עמידה בדרישות חוקיות, רישוי וביטוחים</li>
+                </ul>
+                <p>פנסיון-נט אינה צד להסכמים בין הפנסיון ללקוחותיו ואינה אחראית לכל נזק, הפסד, תביעה או טענה הנובעים מהתקשרות בין הצדדים.</p>
+
+                <p><strong>4. זמינות ושירות</strong><br>
+                המערכת מסופקת כפי שהיא (As Is).<br>
+                ייתכנו תקלות, השבתות, שדרוגים או שינויים בפיצ'רים.<br>
+                לא תינתן התחייבות לזמינות רציפה או לאחסון מידע לתקופה בלתי מוגבלת.</p>
+
+                <p><strong>5. הגבלת אחריות</strong><br>
+                פנסיון-נט לא תישא באחריות לכל נזק ישיר או עקיף, אובדן רווחים, אובדן מידע, תביעות צד ג', או כל נזק עסקי הנובע משימוש במערכת.</p>
+            </section>
+
+            <section>
+                <h2>מדיניות פרטיות והגנת מידע</h2>
+                <p><strong>6. אבטחת מידע</strong><br>
+                המערכת עושה מאמצים סבירים ומקובלים לשמירה על אבטחת המידע המאוחסן בה. עם זאת, המשתמש מודע לכך שאין מערכת חסינה לחלוטין מפני פריצות, תקלות או גישה בלתי מורשית.</p>
+
+                <p><strong>7. איסוף ושימוש במידע</strong><br>
+                המערכת אוספת מידע שנמסר על ידי המשתמש לצורך תפעול השירות, כולל פרטי התקשרות, נתוני פנסיון ונתוני לקוחות. המידע משמש לשיפור השירות, למתן תמיכה טכנית ולצרכים סטטיסטיים אנונימיים.</p>
+
+                <p><strong>8. שינוי תנאים</strong><br>
+                פנסיון-נט רשאית לעדכן תנאים אלו מעת לעת. המשך שימוש במערכת מהווה הסכמה לתנאים המעודכנים.</p>
+
+                <p><strong>9. סמכות שיפוט</strong><br>
+                על תנאים אלו יחול הדין הישראלי בלבד. סמכות השיפוט הבלעדית תהא בבתי המשפט המוסמכים בישראל.</p>
+            </section>
+
+            <section style="background: #f1f5f9; padding: 20px; border-radius: 12px; font-size: 0.95rem;">
+                <p style="margin: 0;"><strong>צריכים עזרה?</strong><br>
+                לכל שאלה בנושא תנאי השימוש או הפרטיות, ניתן ליצור קשר במייל: <a href="mailto:shaharsolutions@gmail.com" style="color: var(--primary); font-weight: 600;">shaharsolutions@gmail.com</a></p>
+            </section>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 פנסיון-נט. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
