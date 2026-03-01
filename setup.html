@@ -99,6 +99,31 @@
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: #4f46e5;
+        }
+
+        input[type="password"], input[type="text"].pin-input {
+            padding-left: 45px;
+        }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -218,7 +243,10 @@
 
             <div class="form-group">
                 <label for="manager_pin">קוד PIN לניהול (4 ספרות)</label>
-                <input type="password" id="manager_pin" placeholder="1234" maxlength="4" pattern="[0-9]{4}" required title="יש להזין 4 ספרות">
+                <div class="password-wrapper">
+                    <input type="password" id="manager_pin" class="pin-input" placeholder="1234" maxlength="4" pattern="[0-9]{4}" required title="יש להזין 4 ספרות">
+                    <i class="far fa-eye password-toggle" id="togglePin" onclick="togglePinVisibility()"></i>
+                </div>
             </div>
 
             <div class="form-group" style="margin-top: 25px;">
@@ -311,6 +339,21 @@
                 errorDiv.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'סיום הגדרה וכניסה למערכת';
+            }
+        }
+
+        function togglePinVisibility() {
+            const pinInput = document.getElementById('manager_pin');
+            const toggleIcon = document.getElementById('togglePin');
+            
+            if (pinInput.type === 'password') {
+                pinInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                pinInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
             }
         }
     </script>
