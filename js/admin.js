@@ -1889,9 +1889,8 @@ document
 
 // Removed redundant loadData() call
 // Auto-restore saved profile if PIN is still valid
-(async function initializeProfile() {
-  // Small delay to ensure loadSettings has started setting managerName
-  await new Promise(r => setTimeout(r, 500));
+async function initializeProfile() {
+  // Check if session and manager metadata exist
   
   const savedProfile = localStorage.getItem('pensionNet_activeStaff');
   const now = Date.now();
@@ -1912,14 +1911,27 @@ document
     const overlay = document.getElementById('login-overlay');
     if (overlay) overlay.style.setProperty('display', 'none', 'important');
   } else if (!pinValid) {
-    // PIN expired or no session, ensure staff is 'צוות'
-    localStorage.setItem('pensionNet_activeStaff', 'צוות');
-    const activeSelect = document.getElementById('activeStaffSelect');
-    if (activeSelect) activeSelect.value = 'צוות';
-    window.isAdminMode = false;
-    updateModeUI();
+    // NEW logic: if only manager profile exists, auto-select it and skip overlay
+    const staffNames = (window.currentStaffMembers || []).map(s => typeof s === 'string' ? s : s.name);
+    if (staffNames.length === 0 && window.managerName) {
+      localStorage.setItem('pensionNet_activeStaff', window.managerName);
+      window.isAdminMode = true;
+      window.isSessionVerified = true;
+      window.lastPinVerificationTime = Date.now();
+      localStorage.setItem('pensionet_last_pin_verified', window.lastPinVerificationTime.toString());
+      updateModeUI();
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) overlay.style.setProperty('display', 'none', 'important');
+    } else {
+      // PIN expired or no session, ensure staff is 'צוות'
+      localStorage.setItem('pensionNet_activeStaff', 'צוות');
+      const activeSelect = document.getElementById('activeStaffSelect');
+      if (activeSelect) activeSelect.value = 'צוות';
+      window.isAdminMode = false;
+      updateModeUI();
+    }
   }
-})();
+}
 
 
 async function switchTab(tabName) {
@@ -2421,7 +2433,8 @@ function updateModeUI() {
 
   // LOCK: If no valid profile selected OR PIN expired, show login overlay (FOR BOTH MODES)
   if (overlay) {
-    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed) {
+    const hasOnlyManager = (window.currentStaffMembers || []).length === 0 && window.managerName;
+    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager) {
        overlay.style.setProperty('display', 'flex', 'important');
     } else {
        overlay.style.setProperty('display', 'none', 'important');
@@ -2833,6 +2846,7 @@ async function loadSettings() {
       }
       console.log('Settings fields populated successfully');
       updateModeUI();
+      initializeProfile();
     }
   } catch (err) {
     console.error('Critical error in loadSettings:', err);
