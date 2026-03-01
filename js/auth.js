@@ -60,6 +60,11 @@ const Auth = {
       password: newPassword
     });
     return { data, error };
+  },
+
+  isAdmin(session) {
+    const ADMIN_EMAIL = 'shaharsolutions@gmail.com';
+    return session && session.user && session.user.email === ADMIN_EMAIL;
   }
 };
 

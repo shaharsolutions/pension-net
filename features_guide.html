@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>השוואת חבילות ופיצ'רים | פנסיון-נט</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --starter: #10b981;
+            --pro: #3b82f6;
+            --pro-plus: #8b5cf6;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            table-layout: fixed;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--text-main);
+            font-weight: 800;
+            text-align: center;
+            padding: 24px 15px;
+            font-size: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        th.feature-col {
+            text-align: right;
+            width: 35%;
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            font-size: 15px;
+            vertical-align: middle;
+        }
+
+        td.feature-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .plan-header {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .plan-price {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .starter-text { color: var(--starter); }
+        .pro-text { color: var(--pro); }
+        .pro-plus-text { color: var(--pro-plus); }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8faff;
+        }
+
+        .check-icon {
+            color: var(--success);
+            font-size: 20px;
+        }
+
+        .dash-icon {
+            color: #d1d5db;
+            font-size: 18px;
+        }
+
+        .icon-box {
+            width: 32px;
+            height: 32px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 12px;
+            font-size: 14px;
+        }
+
+        .feature-key {
+            display: block;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        .footer-note {
+            background: #eff6ff;
+            border-right: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--primary);
+        }
+
+        .founder-logic-box {
+            background: #faf5ff;
+            border: 1px solid #e9d5ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .founder-icon {
+            font-size: 30px;
+            color: #7c3aed;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            th, td { padding: 12px 8px; font-size: 12px; }
+            .plan-price { display: none; }
+            .feature-key { display: none; }
+            th.feature-col { width: 45%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>חבילות ומחירים</h1>
+        <p>בחרו את המסלול המתאים ביותר לצמיחת הפנסיון שלכם</p>
+    </header>
+
+    <div class="founder-logic-box">
+        <i class="fas fa-rocket founder-icon"></i>
+        <div>
+            <strong style="color: #7c3aed; font-size: 18px;">הטבת הצטרפות מוקדמת:</strong>
+            <p style="font-size: 14px; color: #6b21a8; margin-top: 5px;">הצטרפו לנבחרת המייסדים וקבלו שדרוג אוטומטי של חבילת הפיצ'רים שלכם בדרגה אחת מעלה – ללא עלות נוספת ולתמיד!</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th class="feature-col">יכולת / פיצ'ר</th>
+                    <th>
+                        <span class="plan-header starter-text">Starter</span>
+                        <span class="plan-price">89₪ / חודש</span>
+                    </th>
+                    <th>
+                        <span class="plan-header pro-text">Pro</span>
+                        <span class="plan-price">129₪ / חודש</span>
+                    </th>
+                    <th>
+                        <span class="plan-header pro-plus-text">Pro Plus</span>
+                        <span class="plan-price">179₪ / חודש</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- תשתית בסיסית -->
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-tasks icon-box"></i>
+                        ניהול תנועות יומי
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-calendar-alt icon-box"></i>
+                        יומן חודשי ויזואלי
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-fingerprint icon-box"></i>
+                        יומן פעולות (Audit)
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-history icon-box"></i>
+                        היסטוריית הזמנות
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-users icon-box"></i>
+                        ניהול לקוחות וכלבים
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-chart-pie icon-box"></i>
+                        ניתוח תפוסת פנסיון
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr>
+                    <td class="feature-cell">
+                        <i class="fas fa-umbrella-beach icon-box"></i>
+                        תצוגת חגי ישראל
+                    </td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+
+                <!-- חבילת Pro -->
+                <tr style="background: #f0f7ff;">
+                    <td class="feature-cell">
+                        <i class="fas fa-chart-line icon-box" style="background: #dbeafe;"></i>
+                        דוחות צמיחה מתקדמים
+                    </td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr style="background: #f0f7ff;">
+                    <td class="feature-cell">
+                        <i class="fas fa-tags icon-box" style="background: #dbeafe;"></i>
+                        תמחור מותאם אישית ללקוח
+                    </td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+
+                <!-- חבילת Pro Plus -->
+                <tr style="background: #f5f3ff;">
+                    <td class="feature-cell">
+                        <i class="fas fa-users-cog icon-box" style="background: #ede9fe;"></i>
+                        ניהול צוות עובדים
+                    </td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr style="background: #f5f3ff;">
+                    <td class="feature-cell">
+                        <i class="fab fa-whatsapp icon-box" style="background: #ede9fe;"></i>
+                        הודעות WhatsApp מהירות
+                    </td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+                <tr style="background: #f5f3ff;">
+                    <td class="feature-cell">
+                        <i class="fas fa-vial icon-box" style="background: #ede9fe;"></i>
+                        גישה לפיצ'רים בבטא
+                    </td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-minus dash-icon"></i></td>
+                    <td><i class="fas fa-check check-icon"></i></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 40px; background: white; border-radius: 20px; box-shadow: var(--shadow);">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 28px; margin-bottom: 25px;">מוכנים להזניק את הפנסיון שלכם?</h2>
+        <a href="https://wa.me/972528366744" class="btn-back" style="background: var(--primary); color: white; padding: 15px 40px; border-radius: 50px; font-size: 18px; margin-bottom: 0; text-decoration: none;">
+            <i class="fab fa-whatsapp"></i> דברו איתנו בוואטסאפ
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

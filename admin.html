@@ -150,16 +150,16 @@
         </div>
         <div class="header-actions">
           <a href="admin_panel.html" id="adminPanelLink" class="header-btn" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;"><i class="fas fa-shield-alt"></i> פאנל ניהול</a>
-          <a href="insights.html" class="header-btn only-manager"><i class="fas fa-lightbulb"></i> מדריך תובנות</a>
-          <a href="growth.html" class="header-btn only-manager"><i class="fas fa-chart-line"></i> דוחות</a>
+          <a href="insights.html" class="header-btn only-manager" data-feature="beta_access"><i class="fas fa-lightbulb"></i> מדריך תובנות</a>
+          <a href="growth.html" class="header-btn only-manager" data-feature="advanced_reports"><i class="fas fa-chart-line"></i> דוחות</a>
         </div>
       </header>
 
       <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('ongoing')">ניהול שוטף</button>
-        <button class="tab-btn" onclick="switchTab('history')">היסטוריית הזמנות</button>
-        <button class="tab-btn manager-only" onclick="switchTab('audit')">יומן פעולות</button>
-        <button class="tab-btn manager-only" onclick="switchTab('clients')"><i class="fas fa-users"></i> לקוחות</button>
+        <button class="tab-btn active" onclick="switchTab('ongoing')" data-feature="ongoing_management">ניהול שוטף</button>
+        <button class="tab-btn" onclick="switchTab('history')" data-feature="history_tab">היסטוריית הזמנות</button>
+        <button class="tab-btn manager-only" onclick="switchTab('audit')" data-feature="audit_log">יומן פעולות</button>
+        <button class="tab-btn manager-only" onclick="switchTab('clients')" data-feature="clients_basic"><i class="fas fa-users"></i> לקוחות</button>
         <button class="tab-btn manager-only" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i> הגדרות</button>
       </div>
 
@@ -185,7 +185,7 @@
           </div>
         </div>
 
-        <div id="monthlyCalendarContainer" class="container">
+        <div id="monthlyCalendarContainer" class="container" data-feature="calendar_view">
           <div class="container-header-row">
             <h3 id="viewTitle">לוח זמנים חודשי (נוכחות כלבים)</h3>
             <div id="calendarViewControls">
@@ -193,6 +193,7 @@
                 id="toggleCalendarViewBtn"
                 class="calendar-toggle-btn"
                 onclick="toggleCalendarView(this)"
+                data-feature="occupancy_view"
               >
                 הצג כלבים שכרגע בפנסיון <i class="fas fa-paw"></i>
               </button>
@@ -481,7 +482,7 @@
                   </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 15px;">
+                <div class="form-group" style="margin-top: 15px;" data-feature="holidays_visible">
                   <label class="toggle-label" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                     <span><i class="fas fa-calendar-star" style="color: #f59e0b;"></i> הצג חגי ומועדי ישראל בלוח השנה</span>
                     <div class="switch">
@@ -491,7 +492,7 @@
                   </label>
                 </div>
 
-                <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;" data-feature="staff_management">
                   <label><i class="fas fa-users-cog"></i> ניהול צוות עובדים:</label>
                   <div class="staff-manager">
                     <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
@@ -655,7 +656,7 @@
                      style="width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border-color 0.2s; outline: none; box-sizing: border-box;"
                      onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1;" data-feature="default_price_per_client">
               <label for="editClientPrice" style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;"><i class="fas fa-shekel-sign" style="width: 16px; color: #6366f1;"></i> מחיר ברירת מחדל</label>
               <input type="number" id="editClientPrice" placeholder="רגיל" min="0" step="10"
                      style="width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border-color 0.2s; outline: none; box-sizing: border-box;"
@@ -775,6 +776,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/auth.js?v=50"></script>
     <script src="js/utils.js?v=50"></script>
+    <script src="js/features.js?v=50"></script>
     <script src="js/admin.js?v=50" defer></script>
     <script>
       // Admin panel link visibility + session tracking
@@ -788,24 +790,33 @@
         const session = await Auth.getSession();
         if (!session || !session.user) return;
 
-        // Show admin panel link if admin
-        if (session.user.email === ADMIN_EMAIL) {
-          const link = document.getElementById('adminPanelLink');
-          if (link) link.style.display = 'inline-flex';
+        // Show admin panel link if and ONLY if master admin
+        const link = document.getElementById('adminPanelLink');
+        if (link) {
+          link.style.display = Auth.isAdmin(session) ? 'inline-flex' : 'none';
         }
 
-        // Create user session
+        // Create user session for tracking
         try {
           const { data, error } = await supabaseClient
             .from('user_sessions')
-            .insert([{ user_id: session.user.id, user_email: session.user.email, login_time: new Date().toISOString(), last_active: new Date().toISOString(), duration_minutes: 0 }])
+            .insert([{ 
+                user_id: session.user.id, 
+                user_email: session.user.email, 
+                login_time: new Date().toISOString(), 
+                last_active: new Date().toISOString(), 
+                duration_minutes: 0 
+            }])
             .select().single();
+
           if (!error && data) {
             _sessionId = data.id;
             _sessionStart = new Date();
             _sessionTimer = setInterval(_updateSession, SESSION_UPDATE_INTERVAL);
             window.addEventListener('beforeunload', _updateSession);
-            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _updateSession(); });
+            document.addEventListener('visibilitychange', () => { 
+                if (document.visibilityState === 'hidden') _updateSession(); 
+            });
           }
         } catch(e) { console.warn('Session tracking unavailable:', e.message); }
       }
@@ -814,14 +825,14 @@
         if (!_sessionId || !_sessionStart) return;
         try {
           const mins = Math.round((new Date() - _sessionStart) / 60000);
-          await supabaseClient.from('user_sessions').update({ last_active: new Date().toISOString(), duration_minutes: mins }).eq('id', _sessionId);
+          await supabaseClient.from('user_sessions')
+            .update({ last_active: new Date().toISOString(), duration_minutes: mins })
+            .eq('id', _sessionId);
         } catch(e) {}
       }
 
-      // Run after DOMContentLoaded + auth check
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(_initAdminFeatures, 1500);
-      });
+      // Run as soon as DOM is ready to prevent UI flicker
+      document.addEventListener('DOMContentLoaded', _initAdminFeatures);
     </script>
   </body>
 </html>

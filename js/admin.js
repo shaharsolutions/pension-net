@@ -103,9 +103,16 @@ document.addEventListener("DOMContentLoaded", async function () {
   const session = await checkAuthStatus();
   if (session) {
     window.currentUserSession = session; // Cache session
+
+    // --- Feature Gating Initialization ---
+    const impersonateUserId = sessionStorage.getItem('pensionet_impersonate_user_id');
+    const targetUserId = impersonateUserId || session.user.id;
+
+    if (typeof Features !== 'undefined') {
+      await Features.init(targetUserId);
+    }
     
     // --- Impersonation Mode ---
-    const impersonateUserId = sessionStorage.getItem('pensionet_impersonate_user_id');
     const impersonateUserName = sessionStorage.getItem('pensionet_impersonate_user_name');
     const ADMIN_EMAIL_CHECK = 'shaharsolutions@gmail.com';
     
@@ -164,12 +171,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       // Push content down to make room for the banner
       document.body.style.paddingTop = '48px';
       document.body.classList.add('impersonation-mode');
-      
-      // Hide settings tab and save button in impersonation mode (read-only)
-      const settingsTab = document.querySelector('.tab-btn.manager-only[onclick*=\"settings\"]');
-      if (settingsTab) settingsTab.style.display = 'none';
-      const saveBtn = document.getElementById('saveButtonContainer');
-      if (saveBtn) saveBtn.style.display = 'none';
       
       // Close the login overlay if open
       const overlay = document.getElementById('login-overlay');
@@ -507,7 +508,7 @@ function generateWhatsAppConfirmationLink(row) {
     </div>`;
   }
   
-  return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}">
+  return `<div class="whatsapp-confirm-container" id="confirm-container-${row.id}" data-feature="whatsapp_automation">
     <a href="${finalUrl}" target="_blank" class="whatsapp-confirm-btn" data-order-id="${row.id}"><span class="icon"><i class="fab fa-whatsapp"></i></span> שלח אישור</a>
   </div>`;
 }
@@ -1885,6 +1886,18 @@ document
 
 
 async function switchTab(tabName) {
+  // --- Feature Gating Check ---
+  if (typeof Features !== 'undefined') {
+    const tabFeatureMap = {
+      'audit': 'audit_log'
+    };
+    const requiredFeature = tabFeatureMap[tabName];
+    if (requiredFeature && !Features.isEnabled(requiredFeature)) {
+      showToast("פיצ'ר זה אינו זמין בחבילה שלך", "error");
+      return;
+    }
+  }
+
   // If moving to settings or audit, verify PIN first
   if (tabName === 'settings' || tabName === 'audit') {
     if (!(await verifyManagerAccess())) return;

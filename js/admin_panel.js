@@ -162,20 +162,21 @@ async function loadAdminPanelData() {
     showLoadingState();
 
     try {
-        const [sessions, orders, profiles, activityLogs] = await Promise.all([
+        const [sessions, orders, profiles, activityLogs, userPlans] = await Promise.all([
             loadAllSessions(),
             loadAllOrders(),
             loadAllProfiles(),
-            loadAllActivityLogs()
+            loadAllActivityLogs(),
+            loadAllUserPlans()
         ]);
 
         renderSummaryCards(sessions, orders, profiles);
         renderSessionHistory(sessions);
 
         // Cache data for re-renders (filtering)
-        window._cachedAdminData = { sessions, orders, profiles };
+        window._cachedAdminData = { sessions, orders, profiles, userPlans };
 
-        renderUsersTable(sessions, orders, profiles);
+        renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
         renderActivityFeed(activityLogs, profiles);
     } catch (err) {
@@ -242,6 +243,18 @@ async function loadAllProfiles() {
     return data || [];
 }
 
+async function loadAllUserPlans() {
+    const { data, error } = await supabaseClient
+        .from('user_plan')
+        .select('*');
+
+    if (error) {
+        console.error('Error loading user plans:', error);
+        return [];
+    }
+    return data || [];
+}
+
 // ============================================
 // Summary Cards
 // ============================================
@@ -296,8 +309,44 @@ function calculateOrderDays(order) {
 
 let adminSelectedUserId = null;
 
-function renderUsersTable(sessions, orders, profiles) {
+function renderUsersTable(sessions, orders, profiles, userPlans = []) {
     const usersMap = {};
+    const plansMap = (userPlans || []).reduce((acc, p) => {
+        acc[p.user_id] = { id: p.plan_id, founder: p.founder_price_locked };
+        return acc;
+    }, {});
+
+    const renderPlanBadge = (planData) => {
+        let planId = planData?.id;
+        const isFounder = planData?.founder;
+        
+        // Sliding scale for Founders: Display the FEATURE tier, not the PAYMENT tier
+        let displayPlanId = planId;
+        if (isFounder) {
+            if (planId === 'starter') displayPlanId = 'pro';
+            else if (planId === 'pro') displayPlanId = 'pro_plus';
+        }
+
+        let badgeHtml = '';
+
+        if (!displayPlanId) {
+            badgeHtml = `<span class="admin-badge" style="background: #f1f5f9; color: #64748b;">ללא חבילה</span>`;
+        } else if (displayPlanId === 'starter') {
+            badgeHtml = `<span class="admin-badge" style="background: #ecfdf5; color: #059669; border: 1px solid #10b981;">Starter</span>`;
+        } else if (displayPlanId === 'pro') {
+            badgeHtml = `<span class="admin-badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">Pro</span>`;
+        } else if (displayPlanId === 'pro_plus') {
+            badgeHtml = `<span class="admin-badge" style="background: #faf5ff; color: #7c3aed; border: 1px solid #8b5cf6;">Pro Plus</span>`;
+        } else {
+            badgeHtml = `<span class="admin-badge">${displayPlanId}</span>`;
+        }
+
+        if (isFounder) {
+            badgeHtml += `<span class="admin-badge" style="background: #7c3aed; color: white; border: none; margin-right: 4px;" title="מחיר מופחת לצמיתות"><i class="fas fa-medal"></i> Founder</span>`;
+        }
+        
+        return badgeHtml;
+    };
 
     // Build email lookup from sessions (user_id -> email) as secondary source
     const emailLookup = {};
@@ -387,14 +436,220 @@ function renderUsersTable(sessions, orders, profiles) {
                     ${lastLoginFormatted}
                     ${isActive ? '<span class="admin-badge badge-active" style="margin-right: 8px;"><i class="fas fa-circle" style="font-size: 6px;"></i> פעיל</span>' : ''}
                 </td>
+                <td onclick="event.stopPropagation()">
+                    ${renderPlanBadge(plansMap[user.user_id])}
+                </td>
                 <td style="text-align: center;" onclick="event.stopPropagation()">
                     <button class="impersonate-btn" onclick="startImpersonation('${user.user_id}', '${(user.businessName || user.fullName || user.email || '').replace(/'/g, "\\'")}')" title="צפה כמשתמש זה">
                         <i class="fas fa-eye"></i> צפה
+                    </button>
+                    <button class="impersonate-btn" onclick="openPlanModal('${user.user_id}', '${displayEmail.replace(/'/g, "\\'")}', '${plansMap[user.user_id]?.id || ''}', ${plansMap[user.user_id]?.founder || false})" style="background: #faf5ff; color: #7c3aed; border-color: #d8b4fe; margin-right: 4px;" title="שינוי חבילה">
+                        <i class="fas fa-crown"></i> חבילה
+                    </button>
+                    <button class="impersonate-btn" onclick="openFeatureOverrides('${user.user_id}', '${displayEmail.replace(/'/g, "\\'")}')" style="background:#f1f5f9; color:#475569; border-color:#e2e8f0; margin-right:4px;" title="ניהול החרגות">
+                        <i class="fas fa-toggle-on"></i> החרגות
                     </button>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+/**
+ * Updates a user's pricing plan in the database.
+ * Restricted by RLS to master admin only.
+ */
+function closePlanModal() {
+    const modal = document.getElementById('planManagementModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function openPlanModal(userId, userEmail, currentPlan, isFounder) {
+    document.getElementById('planModalUserEmail').textContent = userEmail;
+    document.getElementById('planModalSelect').value = currentPlan;
+    document.getElementById('founderLockCheck').checked = isFounder;
+    
+    // Set save button action
+    const saveBtn = document.getElementById('savePlanBtn');
+    saveBtn.onclick = () => {
+        const newPlan = document.getElementById('planModalSelect').value;
+        const isFounderLocked = document.getElementById('founderLockCheck').checked;
+        updateUserPlan(userId, newPlan, isFounderLocked);
+        closePlanModal();
+    };
+
+    const modal = document.getElementById('planManagementModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+async function updateUserPlan(userId, planId, isFounderLocked = false) {
+    try {
+        if (!planId) {
+            // Remove plan assignment if none selected
+            const { error } = await supabaseClient
+                .from('user_plan')
+                .delete()
+                .eq('user_id', userId);
+            
+            if (error) throw error;
+        } else {
+            // Upsert the user/plan mapping
+            const { error } = await supabaseClient
+                .from('user_plan')
+                .upsert({ 
+                    user_id: userId, 
+                    plan_id: planId,
+                    founder_price_locked: isFounderLocked,
+                    updated_at: new Date().toISOString()
+                });
+            
+            if (error) throw error;
+        }
+        
+        if (typeof showToast === 'function') showToast('החבילה עודכנה בהצלחה', 'success');
+        
+        // Refresh full data to sync local cache and UI
+        await loadAdminPanelData();
+        
+    } catch (err) {
+        console.error('Plan update failed:', err);
+        if (typeof showToast === 'function') showToast('שגיאה בעדכון החבילה', 'error');
+    }
+}
+
+// ---------------------------------------------
+// Feature Overrides Management
+// ---------------------------------------------
+
+async function openFeatureOverrides(userId, userEmail) {
+    document.getElementById('overrideUserEmail').textContent = userEmail;
+    const container = document.getElementById('featuresListContainer');
+    container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner"></div></div>';
+    
+    const modal = document.getElementById('featureOverridesModal');
+    if (modal) modal.style.display = 'flex';
+
+    try {
+        // 1) Fetch user's plan_id
+        const { data: userPlanData } = await supabaseClient
+            .from('user_plan')
+            .select('plan_id')
+            .eq('user_id', userId)
+            .maybeSingle();
+        
+        const userPlanId = userPlanData?.plan_id || 'starter';
+
+        // 2) Fetch ALL possible features and their defaults for this plan
+        // This ensures we show every feature from the mapping
+        const { data: planFeatures } = await supabaseClient
+            .from('plan_features')
+            .select('*')
+            .eq('plan_id', userPlanId)
+            .order('feature_key');
+
+        // 3) Fetch existing overrides
+        const { data: userOverrides } = await supabaseClient
+            .from('feature_flags')
+            .select('*')
+            .eq('user_id', userId);
+
+        const overridesMap = (userOverrides || []).reduce((acc, o) => {
+            acc[o.feature_key] = o.is_enabled;
+            return acc;
+        }, {});
+
+        // 4) Build UI Table
+        let html = `
+            <div style="display: flex; padding: 8px 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-weight: 700; font-size: 13px; color: #475569; border-radius: 8px 8px 0 0;">
+                <div style="flex: 2;">פיצ'ר / תכונה</div>
+                <div style="flex: 1; text-align: center;">חבילה</div>
+                <div style="flex: 1.2; text-align: center;">החרגה ידנית</div>
+            </div>
+        `;
+
+        if (!planFeatures || planFeatures.length === 0) {
+            html += '<div style="padding: 20px; text-align: center; color: #64748b;">לא נמצאו תכונות מוגדרות במערכת</div>';
+        } else {
+            html += planFeatures.map(pf => {
+                const key = pf.feature_key;
+                const planDefault = pf.is_enabled;
+                const override = overridesMap[key];
+                const isOverrideActive = override !== undefined;
+                
+                return `
+                    <div style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; background: ${isOverrideActive ? '#f0f9ff' : 'white'};">
+                        <div style="flex: 2; display: flex; flex-direction: column;">
+                            <span style="font-weight: 700; font-size: 14px; color: #1e293b; direction: ltr; text-align: right;">${key}</span>
+                            ${isOverrideActive ? '<span style="font-size: 10px; color: #3b82f6; font-weight: 600;">החרגה פעילה (Override)</span>' : '<span style="font-size: 10px; color: #94a3b8;">לפי ברירת מחדל</span>'}
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <span class="admin-badge" style="background: ${planDefault ? '#ecfdf5' : '#fff1f2'}; color: ${planDefault ? '#059669' : '#e11d48'}; padding: 2px 8px; font-size: 11px; border: none;">
+                                ${planDefault ? 'פעיל' : 'כבוי'}
+                            </span>
+                        </div>
+                        <div style="flex: 1.2; text-align: center;">
+                            <select onchange="updateFeatureOverride('${userId}', '${key}', this.value, ${planDefault})" 
+                                    style="width: 100%; padding: 4px; border-radius: 6px; border: 1px solid ${isOverrideActive ? '#3b82f6' : '#cbd5e1'}; font-size: 11px; outline: none; background: white; cursor: pointer;">
+                                <option value="default" ${!isOverrideActive ? 'selected' : ''}>כמו בחבילה</option>
+                                <option value="true" ${isOverrideActive && override === true ? 'selected' : ''}>תמיד פעיל</option>
+                                <option value="false" ${isOverrideActive && override === false ? 'selected' : ''}>תמיד כבוי</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error('Failed to load overrides:', err);
+        container.innerHTML = '<div style="color:red; text-align:center; padding: 20px;">שגיאה בטעינ ה: ' + err.message + '</div>';
+    }
+}
+
+async function updateFeatureOverride(userId, featureKey, value, planDefault) {
+    try {
+        const isDefaultSelected = value === 'default';
+        const isValueSameAsPlan = (value === 'true' && planDefault === true) || (value === 'false' && planDefault === false);
+
+        if (isDefaultSelected || isValueSameAsPlan) {
+            // Delete override if selecting default OR selecting state that matches plan anyway
+            const { error } = await supabaseClient
+                .from('feature_flags')
+                .delete()
+                .eq('user_id', userId)
+                .eq('feature_key', featureKey);
+            if (error) throw error;
+        } else {
+            // Upsert the override
+            const isEnabled = value === 'true';
+            const { error } = await supabaseClient
+                .from('feature_flags')
+                .upsert({ 
+                    user_id: userId, 
+                    feature_key: featureKey, 
+                    is_enabled: isEnabled,
+                    created_at: new Date().toISOString()
+                });
+            if (error) throw error;
+        }
+        
+        showToast('ההחרגה עודכנה', 'success');
+        
+        // Refresh UI only for this modal
+        const currentEmail = document.getElementById('overrideUserEmail').textContent;
+        openFeatureOverrides(userId, currentEmail);
+        
+    } catch (err) {
+        console.error('Update override error:', err);
+        showToast('שגיאה בעדכון ההחרגה', 'error');
+    }
+}
+
+function closeFeatureOverridesModal() {
+    const modal = document.getElementById('featureOverridesModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function filterByUser(userId) {
@@ -417,8 +672,8 @@ function filterByUser(userId) {
 
     // Re-render with cached data (no need to reload from DB)
     if (window._cachedAdminData) {
-        const { sessions, orders, profiles } = window._cachedAdminData;
-        renderUsersTable(sessions, orders, profiles);
+        const { sessions, orders, profiles, userPlans } = window._cachedAdminData;
+        renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
     }
 }
@@ -518,8 +773,8 @@ function filterOrdersTable() {
     adminSelectedUserId = null;
     // Re-render with cached data
     if (window._cachedAdminData) {
-        const { sessions, orders, profiles } = window._cachedAdminData;
-        renderUsersTable(sessions, orders, profiles);
+        const { sessions, orders, profiles, userPlans } = window._cachedAdminData;
+        renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
     }
 }
