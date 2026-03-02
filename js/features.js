@@ -88,12 +88,12 @@ const Features = {
             'audit_log': 1,
 
             // TIER 2: Pro
-            'advanced_reports': 2,
+            'whatsapp_automation': 2,
             'default_price_per_client': 2,
 
             // TIER 3: Pro Plus
             'staff_management': 3,
-            'whatsapp_automation': 3,
+            'advanced_reports': 3,
             'beta_access': 3
         };
 
