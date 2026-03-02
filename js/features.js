@@ -58,6 +58,11 @@ const Features = {
     },
 
     isEnabled(featureKey) {
+        // System admin has everything unlocked
+        const userEmail = window.currentUserSession?.user?.email || 
+                          window.currentUserSession?.email;
+        if (userEmail === 'shaharsolutions@gmail.com') return true;
+
         // Strict client-side override for Staff Management
         if (featureKey === 'staff_management') {
             const planId = window.currentPlanId;
