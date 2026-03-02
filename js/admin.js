@@ -222,8 +222,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     
     document.getElementById("mainContent").style.display = "block";
-    loadData();
-    loadSettings(); // Load profile settings
+    await loadSettings(); // Load profile settings & plan first
+    loadData(); // Then load data (which will use the resolved plan)
 
     // Toggle PIN visibility
     document.getElementById('togglePinVisibility')?.addEventListener('click', function() {

@@ -64,7 +64,8 @@ const Features = {
         if (userEmail === 'shaharsolutions@gmail.com') return true;
 
         // 2. Resolve the effective plan (accounting for the Founder שדרוג)
-        const planId = window.currentPlanId || 'starter';
+        const rawPlanId = window.currentPlanId || 'starter';
+        const planId = rawPlanId.toLowerCase().trim();
         const isFounder = window.isFounder;
         
         let effectiveTier = 1; // 1 = Starter, 2 = Pro, 3 = Pro Plus
@@ -75,6 +76,8 @@ const Features = {
         if (isFounder) {
             effectiveTier = Math.min(3, effectiveTier + 1);
         }
+
+        console.log(`[Features] Checking: ${featureKey} | Plan: ${planId} | Effective Tier: ${effectiveTier}`);
 
         // 3. Strict Tier Mapping
         const tierMapping = {
@@ -99,12 +102,11 @@ const Features = {
 
         const requiredTier = tierMapping[featureKey] || 1;
         
-        // If the user's tier is lower than required, it's disabled
-        if (effectiveTier < requiredTier) return false;
+        // 4. Primary Logic: If the user's tier meets or exceeds the required tier, it's ENABLED
+        if (effectiveTier >= requiredTier) return true;
 
-        // 4. Finally, check for specific database overrides if they exist
-        // (Defaults to enabled if not explicitly blocked in DB and tier is met)
-        return this._features[featureKey] !== false;
+        // 5. Fallback: Check for specific database overrides (e.g. manual beta access given to a specific user)
+        return this._features[featureKey] === true;
     },
 
     /**
