@@ -102,11 +102,16 @@ const Features = {
 
         const requiredTier = tierMapping[featureKey] || 1;
         
-        // 4. Primary Logic: If the user's tier meets or exceeds the required tier, it's ENABLED
-        if (effectiveTier >= requiredTier) return true;
+        // 4. STRICT ENFORCEMENT: If tier is lower than required, it is FORBIDDEN.
+        // No database override can grant a higher-tier feature to a lower-tier user.
+        if (effectiveTier < requiredTier) {
+            console.log(`[Features] ❌ BLOCKED: ${featureKey} | Plan: ${planId} (Needs Tier ${requiredTier}, has ${effectiveTier})`);
+            return false;
+        }
 
-        // 5. Fallback: Check for specific database overrides (e.g. manual beta access given to a specific user)
-        return this._features[featureKey] === true;
+        // 5. ALLOWED BY TIER: User meets or exceeds the plan requirement.
+        console.log(`[Features] ✅ ALLOWED BY TIER: ${featureKey} | Plan: ${planId}`);
+        return true;
     },
 
     /**
