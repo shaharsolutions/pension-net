@@ -316,7 +316,12 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
         return acc;
     }, {});
 
-    const renderPlanBadge = (planData) => {
+    const renderPlanBadge = (planData, userEmail = null) => {
+        const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com';
+        if (isSystemAdmin) {
+            return `<span class="admin-badge" style="background: #fefce8; color: #854d0e; border: 1px solid #facc15;"><i class="fas fa-shield-alt"></i> Admin</span>`;
+        }
+
         let planId = planData?.id;
         const isFounder = planData?.founder;
         
@@ -437,7 +442,7 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
                     ${isActive ? '<span class="admin-badge badge-active" style="margin-right: 8px;"><i class="fas fa-circle" style="font-size: 6px;"></i> פעיל</span>' : ''}
                 </td>
                 <td onclick="event.stopPropagation()">
-                    ${renderPlanBadge(plansMap[user.user_id])}
+                    ${renderPlanBadge(plansMap[user.user_id], user.email)}
                 </td>
                 <td style="text-align: center;" onclick="event.stopPropagation()">
                     <button class="impersonate-btn" onclick="startImpersonation('${user.user_id}', '${(user.businessName || user.fullName || user.email || '').replace(/'/g, "\\'")}')" title="צפה כמשתמש זה">

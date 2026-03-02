@@ -2324,7 +2324,12 @@ function updatePlanUI() {
   ];
   
   const planId = window.currentPlanId;
-  if (!planId) return;
+  const userEmail = window.currentUserSession?.user?.email || 
+                    window.currentUserSession?.email || 
+                    (typeof Auth !== 'undefined' && Auth.getSession()?.user?.email);
+  const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com';
+  
+  if (!planId && !isSystemAdmin) return;
 
   const isFounder = window.isFounder;
 
@@ -2338,7 +2343,9 @@ function updatePlanUI() {
   let badgeHtml = '';
   const badgeStyle = 'padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase; border: 1px solid transparent;';
 
-  if (displayPlanId === 'starter') {
+  if (isSystemAdmin) {
+    badgeHtml = `<span style="${badgeStyle} background: #fefce8; color: #854d0e; border-color: #facc15;"><i class="fas fa-shield-alt"></i> Admin</span>`;
+  } else if (displayPlanId === 'starter') {
     badgeHtml = `<span style="${badgeStyle} background: #ecfdf5; color: #059669; border-color: #10b981;">Starter</span>`;
   } else if (displayPlanId === 'pro') {
     badgeHtml = `<span style="${badgeStyle} background: #eff6ff; color: #2563eb; border-color: #3b82f6;">Pro</span>`;
@@ -2346,7 +2353,7 @@ function updatePlanUI() {
     badgeHtml = `<span style="${badgeStyle} background: #faf5ff; color: #7c3aed; border-color: #8b5cf6;">Pro Plus</span>`;
   }
 
-  if (isFounder) {
+  if (isFounder && !isSystemAdmin) {
     badgeHtml += `<span style="${badgeStyle} background: #7c3aed; color: white; border: none; margin-right: 6px;" title="מחיר מופחת לצמיתות"><i class="fas fa-medal"></i> Founder</span>`;
   }
 
