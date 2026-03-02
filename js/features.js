@@ -77,7 +77,8 @@ const Features = {
             effectiveTier = Math.min(3, effectiveTier + 1);
         }
 
-        console.log(`[Features] Checking: ${featureKey} | Plan: ${planId} | Effective Tier: ${effectiveTier}`);
+        const VERSION = "1.0.55";
+        console.log(`[Features v${VERSION}] Checking: ${featureKey} | Plan: ${planId} | Effective Tier: ${effectiveTier}`);
 
         // 3. Strict Tier Mapping
         const tierMapping = {
@@ -105,12 +106,12 @@ const Features = {
         // 4. STRICT ENFORCEMENT: If tier is lower than required, it is FORBIDDEN.
         // No database override can grant a higher-tier feature to a lower-tier user.
         if (effectiveTier < requiredTier) {
-            console.log(`[Features] ❌ BLOCKED: ${featureKey} | Plan: ${planId} (Needs Tier ${requiredTier}, has ${effectiveTier})`);
+            console.log(`[Features v${VERSION}] ❌ BLOCKED: ${featureKey} | Plan: ${planId} (Needs Tier ${requiredTier}, has ${effectiveTier})`);
             return false;
         }
 
         // 5. ALLOWED BY TIER: User meets or exceeds the plan requirement.
-        console.log(`[Features] ✅ ALLOWED BY TIER: ${featureKey} | Plan: ${planId}`);
+        console.log(`[Features v${VERSION}] ✅ ALLOWED BY TIER: ${featureKey} | Plan: ${planId}`);
         return true;
     },
 
