@@ -1092,7 +1092,7 @@ function renderPastOrdersTable() {
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
     <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
-    <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
+    <td data-label="אישור" data-feature="whatsapp_automation">${generateWhatsAppConfirmationLink(row)}</td>
     <td data-label="כניסה" class="wide-date-column">
       <input type="text" class="date-input" ${detailsDisabled} data-id="${
         row.id
@@ -1239,6 +1239,8 @@ function renderPastOrdersTable() {
         if (this.value === 'בוטל') this.classList.add('status-cancelled');
       });
     });
+
+    if (typeof Features !== 'undefined') Features.syncUI();
 }
 
 function renderPastOrdersPagination(totalRows, currentPage, maxPage) {
@@ -1578,7 +1580,7 @@ function renderFutureOrdersTable() {
       <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
       <td data-label="בעלים">${row.owner_name || ""}</td>
       <td data-label="טלפון">${createWhatsAppLink(row.phone)}</td>
-      <td data-label="אישור">${generateWhatsAppConfirmationLink(row)}</td>
+      <td data-label="אישור" data-feature="whatsapp_automation">${generateWhatsAppConfirmationLink(row)}</td>
       <td data-label="כניסה" class="wide-date-column">
         <input type="text" class="date-input" ${detailsDisabled} data-id="${
           row.id
@@ -1759,6 +1761,7 @@ function renderFutureOrdersTable() {
     });
 
     initFlatpickr();
+    if (typeof Features !== 'undefined') Features.syncUI();
 }
 
 // Event Listeners for Future Orders Filtering
