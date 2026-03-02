@@ -2327,7 +2327,7 @@ function updatePlanUI() {
   const userEmail = window.currentUserSession?.user?.email || 
                     window.currentUserSession?.email || 
                     (typeof Auth !== 'undefined' && Auth.getSession()?.user?.email);
-  const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com';
+  const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com' && !window.isImpersonating;
   
   if (!planId && !isSystemAdmin) return;
 
