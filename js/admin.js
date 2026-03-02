@@ -458,6 +458,11 @@ function createWhatsAppLink(phone) {
 }
 
 function generateWhatsAppConfirmationLink(row) {
+  // Feature Check: Prevent rendering if not enabled for user
+  if (typeof Features !== 'undefined' && !Features.isEnabled('whatsapp_automation')) {
+    return '';
+  }
+  
   if (!row.phone) return '';
   
   // Calculate total price

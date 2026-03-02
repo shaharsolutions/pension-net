@@ -148,7 +148,7 @@ const Features = {
                     }
                     el.style.display = 'none';
                 } else {
-                    el.style.display = 'none';
+                    el.style.setProperty('display', 'none', 'important');
                 }
             } else {
                 // Feature is ENABLED: Show element & remove restricted message if exists
