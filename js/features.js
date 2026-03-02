@@ -58,22 +58,52 @@ const Features = {
     },
 
     isEnabled(featureKey) {
-        // System admin has everything unlocked
+        // 1. System administrators have full access
         const userEmail = window.currentUserSession?.user?.email || 
                           window.currentUserSession?.email;
         if (userEmail === 'shaharsolutions@gmail.com') return true;
 
-        // Strict client-side override for Staff Management
-        if (featureKey === 'staff_management') {
-            const planId = window.currentPlanId;
-            const isFounder = window.isFounder;
-            let effectivePlan = planId;
-            if (isFounder) {
-                if (planId === 'starter') effectivePlan = 'pro';
-                else if (planId === 'pro') effectivePlan = 'pro_plus';
-            }
-            return effectivePlan === 'pro_plus';
+        // 2. Resolve the effective plan (accounting for the Founder שדרוג)
+        const planId = window.currentPlanId || 'starter';
+        const isFounder = window.isFounder;
+        
+        let effectiveTier = 1; // 1 = Starter, 2 = Pro, 3 = Pro Plus
+        if (planId === 'pro') effectiveTier = 2;
+        if (planId === 'pro_plus') effectiveTier = 3;
+
+        // Founder Bonus: +1 Tier
+        if (isFounder) {
+            effectiveTier = Math.min(3, effectiveTier + 1);
         }
+
+        // 3. Strict Tier Mapping
+        const tierMapping = {
+            // TIER 1: Starter
+            'ongoing_management': 1,
+            'history_tab': 1,
+            'calendar_view': 1,
+            'occupancy_view': 1,
+            'holidays_visible': 1,
+            'clients_basic': 1,
+            'audit_log': 1,
+
+            // TIER 2: Pro
+            'advanced_reports': 2,
+            'default_price_per_client': 2,
+
+            // TIER 3: Pro Plus
+            'staff_management': 3,
+            'whatsapp_automation': 3,
+            'beta_access': 3
+        };
+
+        const requiredTier = tierMapping[featureKey] || 1;
+        
+        // If the user's tier is lower than required, it's disabled
+        if (effectiveTier < requiredTier) return false;
+
+        // 4. Finally, check for specific database overrides if they exist
+        // (Defaults to enabled if not explicitly blocked in DB and tier is met)
         return this._features[featureKey] !== false;
     },
 

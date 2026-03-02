@@ -1890,7 +1890,15 @@ document
 // Removed redundant loadData() call
 // Auto-restore saved profile if PIN is still valid
 async function initializeProfile() {
-  // Check if session and manager metadata exist
+  // Check if we just logged in (from login.html or google)
+  if (localStorage.getItem('pensionet_just_logged_in') === 'true') {
+    localStorage.removeItem('pensionet_just_logged_in');
+    localStorage.setItem('pensionet_last_pin_verified', Date.now().toString());
+    window.lastPinVerificationTime = Date.now();
+    if (window.managerName) {
+      localStorage.setItem('pensionNet_activeStaff', window.managerName);
+    }
+  }
   
   const savedProfile = localStorage.getItem('pensionNet_activeStaff');
   const now = Date.now();

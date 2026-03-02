@@ -439,6 +439,7 @@
               redirectTo: `${window.location.href.split('/pension-net/login.html')[0]}/pension-net/admin.html`,
             },
           });
+          localStorage.setItem('pensionet_just_logged_in', 'true');
           if (error) throw error;
           return data;
         } catch (error) {
@@ -589,6 +590,8 @@
                     submitBtn.textContent = (mode === 'login' ? 'כניסה' : 'הרשמה');
                 } else {
                     // Success - Redirect to admin. auth.js will redirect to setup.html if metadata is missing
+                    // Success - Redirect to admin. auth.js will redirect to setup.html if metadata is missing
+                    localStorage.setItem('pensionet_just_logged_in', 'true');
                     window.location.href = 'admin.html';
                 }
 

@@ -351,6 +351,10 @@
                     console.warn('Profile sync failed, but metadata updated:', profileError);
                 }
 
+                // Set identification flags so the user doesn't see the login overlay immediately
+                localStorage.setItem('pensionNet_activeStaff', formData.full_name);
+                localStorage.setItem('pensionet_last_pin_verified', Date.now().toString());
+                
                 window.location.href = 'admin.html';
             } catch (error) {
                 console.error(error);
