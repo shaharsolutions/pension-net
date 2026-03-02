@@ -260,8 +260,8 @@ async function loadAllUserPlans() {
 // ============================================
 
 function renderSummaryCards(sessions, orders, profiles) {
-    const filteredSessions = sessions || [];
-    const filteredProfiles = profiles || [];
+    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
+    const filteredProfiles = (profiles || []).filter(p => p.email !== ADMIN_EMAIL);
 
     // Unique users
     const uniqueUsers = new Set(filteredSessions.map(s => s.user_email)).size || filteredProfiles.length;
@@ -794,8 +794,8 @@ function renderSessionHistory(sessions) {
     const tbody = document.getElementById('sessionsTableBody');
     if (!tbody) return;
 
-    // Show all sessions
-    const filteredSessions = sessions || [];
+    // Filter out admin sessions from the history display
+    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
 
     // Show last 30 sessions
     const recentSessions = filteredSessions.slice(0, 30);
@@ -896,7 +896,10 @@ function filterActivityFeed() {
     const typeFilterVal = document.getElementById('activityTypeFilter')?.value || '';
     const searchTerm = (document.getElementById('activitySearchInput')?.value || '').toLowerCase().trim();
 
-    let filtered = logs;
+    let filtered = logs.filter(l => {
+        const u = userMap[l.user_id];
+        return u?.email !== ADMIN_EMAIL;
+    });
 
     if (userFilterVal) {
         filtered = filtered.filter(l => l.user_id === userFilterVal);
