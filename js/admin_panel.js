@@ -260,8 +260,8 @@ async function loadAllUserPlans() {
 // ============================================
 
 function renderSummaryCards(sessions, orders, profiles) {
-    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
-    const filteredProfiles = (profiles || []).filter(p => p.email !== ADMIN_EMAIL);
+    const filteredSessions = sessions || [];
+    const filteredProfiles = profiles || [];
 
     // Unique users
     const uniqueUsers = new Set(filteredSessions.map(s => s.user_email)).size || filteredProfiles.length;
@@ -405,8 +405,8 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
         }
     });
 
-    // Show all users — exclude system admin from stats/users list
-    const usersArray = Object.values(usersMap).filter(u => u.email !== ADMIN_EMAIL);
+    // Show all users
+    const usersArray = Object.values(usersMap);
 
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
@@ -794,8 +794,8 @@ function renderSessionHistory(sessions) {
     const tbody = document.getElementById('sessionsTableBody');
     if (!tbody) return;
 
-    // Filter out admin sessions from the history display
-    const filteredSessions = (sessions || []).filter(s => s.user_email !== ADMIN_EMAIL);
+    // Show all sessions
+    const filteredSessions = sessions || [];
 
     // Show last 30 sessions
     const recentSessions = filteredSessions.slice(0, 30);
