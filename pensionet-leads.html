@@ -10,6 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ניהול לידים">
+    <link rel="apple-touch-icon" href="favicon.png">
     <script src="js/config.js"></script>
     <script type="module">
         import { supabase } from './supabaseClient.js';
@@ -262,7 +268,16 @@
         </div>
     </div>
     <div class="container">
-        <header><h1>טבלת לידים – פנסיוני כלבים</h1><p>ניהול ומעקב אחרי פנייה לפנסיוני כלבים</p></header>
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <div style="width: 42px;"></div> <!-- Spacer -->
+                <h1>טבלת לידים – פנסיוני כלבים</h1>
+                <button id="installAppBtn" class="mini-btn btn-primary" style="display: none; border-radius: 12px; font-size: 0.8rem; padding: 6px 12px;">
+                    <i class="fas fa-download"></i> התקן אפליקציה
+                </button>
+            </div>
+            <p>ניהול ומעקב אחרי פנייה לפנסיוני כלבים</p>
+        </header>
         <section class="filters-panel">
             <div class="filter-group"><label>חיפוש חופשי</label><input type="text" id="searchFilter" class="filter-input" placeholder="שם, עיר, טלפון..."></div>
             <div class="filter-group"><label>עיר</label><select id="cityFilter" class="filter-input"><option value="">הכל</option></select></div>
@@ -1311,6 +1326,42 @@
             });
         }
         document.addEventListener('DOMContentLoaded', init);
+
+        // PWA Installation logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('installAppBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBtn) installBtn.style.display = 'block';
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (installBtn) installBtn.style.display = 'none';
+            deferredPrompt = null;
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Error', err));
+            });
+        }
 
     </script>
 </body>

@@ -1,0 +1,22 @@
+{
+  "name": "ניהול לידים – פנסיון-נט",
+  "short_name": "ניהול לידים",
+  "description": "מערכת ניהול ומעקב אחרי פנייה לפנסיוני כלבים",
+  "start_url": "pensionet-leads.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "any"
+}
