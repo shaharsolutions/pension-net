@@ -67,8 +67,15 @@
         .add-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .btn-add-inline { background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.2s; }
         .btn-add-inline:hover { background: var(--primary-hover); }
-        .btn-check-task { background: var(--success); color: white; border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-check-task:hover { transform: scale(1.1); }
+        .btn-check-task { 
+            background: var(--success); color: white; border: none; 
+            width: 32px; height: 32px; border-radius: 50%; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            transition: all 0.2s; flex-shrink: 0; box-shadow: 0 2px 8px rgba(16,185,129,0.2);
+        }
+        .btn-check-task:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        .btn-check-task i { font-size: 1rem; }
+        .btn-check-task.done { background: var(--warning); box-shadow: 0 2px 8px rgba(245,158,11,0.2); }
         .bulk-panel { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: none; flex-direction: column; gap: 15px; border: 1px solid var(--border-color); }
         .bulk-table-wrap { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; background: white; }
         .bulk-edit-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -631,22 +638,22 @@
                                 const isLate = t.status === 'open' && d_val < new Date().setHours(0,0,0,0);
                                 const isDone = t.status === 'done';
                                 return `<li style="flex-direction:column; align-items:flex-start;">
-                                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                                        <div style="display:flex; flex-direction:column; gap:2px;">
-                                            <span style="${isDone?'text-decoration:line-through; color:gray;':''}; font-weight:700;">${t.text}</span>
-                                            <span style="font-size:0.75rem; color:var(--text-muted);">
+                                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; gap: 15px;">
+                                        <div style="display:flex; flex-direction:column; gap:6px;">
+                                            <span style="${isDone?'text-decoration:line-through; color:gray; opacity:0.7;':''}; font-weight:700; font-size: 1.05rem;">${t.text}</span>
+                                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">
                                                 <i class="far fa-calendar-alt"></i> ${formatDueLabel(t.due_at)}
-                                                ${isLate && !isDone ? `<span class="badge badge-late" style="margin-right:5px;">באיחור</span>` : ''}
+                                                ${isLate && !isDone ? `<span class="badge badge-late" style="margin-right:8px;">באיחור</span>` : ''}
                                             </span>
                                         </div>
-                                        <button class="btn-check-task" style="background:${isDone?'var(--warning)':'var(--success)'}" onclick="toggleTaskDone('${l.id}','${t.id}')">
+                                        <button class="btn-check-task ${isDone?'done':''}" title="${isDone?'בטל ביצוע':'סמן כבוצע'}" onclick="toggleTaskDone('${l.id}','${t.id}')">
                                             <i class="fas fa-${isDone?'undo':'check'}"></i>
                                         </button>
                                     </div>
                                     <div class="task-actions">
-                                        <button class="btn-inline-action btn-edit" onclick="startEditTask('${l.id}','${t.id}')">ערוך</button>
+                                        <button class="btn-inline-action btn-edit" onclick="startEditTask('${l.id}','${t.id}')"><i class="fas fa-edit"></i> ערוך</button>
                                         <button class="btn-inline-action btn-delete ${deleteConfirmTaskId===t.id?'confirm':''}" onclick="requestDeleteTask('${l.id}','${t.id}')">
-                                            ${deleteConfirmTaskId===t.id?'אשר מחיקה':'מחק'}
+                                            <i class="fas fa-trash"></i> ${deleteConfirmTaskId===t.id?'אשר מחיקה':'מחק'}
                                         </button>
                                     </div>
                                 </li>`;
