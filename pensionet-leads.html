@@ -139,6 +139,7 @@
             background: #f8fafc; cursor: pointer; outline: none; transition: 0.2s;
         }
         .status-select-inline:hover { border-color: var(--primary); background: white; }
+        .actions-col { display: flex; gap: 8px; white-space: nowrap; align-items: center; justify-content: flex-start; }
         
         .log-actions, .task-actions { display: flex; gap: 8px; margin-top: 8px; }
         .btn-inline-action { border: none; background: none; font-size: 0.75rem; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
@@ -214,7 +215,7 @@
             <div class="filter-group"><label>חיפוש חופשי</label><input type="text" id="searchFilter" class="filter-input" placeholder="שם, עיר, טלפון..."></div>
             <div class="filter-group"><label>עיר</label><select id="cityFilter" class="filter-input"><option value="">הכל</option></select></div>
             <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="בוטיק">בוטיק</option></select></div>
-            <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול-בוטיק">גדול-בוטיק</option></select></div>
+            <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול">גדול</option></select></div>
             <div class="filter-group"><label>סטטוס פנייה</label><select id="statusFilter" class="filter-input"><option value="">הכל</option><option value="לא פניתי">לא פניתי</option><option value="נשלחה הודעה">נשלחה הודעה</option><option value="נקבעה שיחה">נקבעה שיחה</option><option value="בוצע דמו">בוצע דמו</option><option value="בפיילוט">בפיילוט</option><option value="לא רלוונטי">לא רלוונטי</option><option value="לא ענו">לא ענו</option></select></div>
             <div class="filter-group"><label>משימות</label><select id="taskFilter" class="filter-input"><option value="all">הכל</option><option value="has_task">עם משימה</option><option value="no_task">ללא משימה</option></select></div>
             <div class="filter-group" style="flex-direction:row; gap:10px; flex-wrap: wrap;">
@@ -323,7 +324,7 @@
                             <select id="asSize" class="modal-input modal-select">
                                 <option value="קטן">קטן</option>
                                 <option value="בינוני">בינוני</option>
-                                <option value="גדול-בוטיק">גדול-בוטיק</option>
+                                <option value="גדול">גדול</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -450,7 +451,8 @@
                 let nextTaskClass = '';
                 if(openTasks.length > 0) {
                     const d = new Date(openTasks[0].due_at);
-                    nextTaskStr = d.toLocaleDateString('he-IL');
+                    const dayName = d.toLocaleDateString('he-IL', { weekday: 'short' });
+                    nextTaskStr = `${d.toLocaleDateString('he-IL')} (${dayName})`;
                     if (d < new Date(new Date().setHours(0,0,0,0))) nextTaskClass = 'text-danger';
                 }
 
@@ -472,7 +474,7 @@
                             <option value="לא ענו" ${l.status==='לא ענו'?'selected':''}>לא ענו</option>
                         </select>
                     </td>
-                    <td class="${nextTaskClass}">${nextTaskStr}</td>
+                    <td class="${nextTaskClass}" style="white-space: nowrap;">${nextTaskStr}</td>
                     <td onclick="event.stopPropagation()">
                         <div class="notes-wrapper">
                             <textarea class="notes-input" placeholder="הערה קצרה..." oninput="autoGrow(this); updateLead('${l.id}','notes',this.value, true)" onblur="saveData()">${l.notes||''}</textarea>
@@ -480,9 +482,11 @@
                         </div>
                     </td>
                     <td onclick="event.stopPropagation()">
-                        <button class="action-btn btn-card" title="כרטיס פנסיון" onclick="openLeadCard('${l.id}')"><i class="fas fa-id-card"></i></button>
-                        <a href="tel:${l.phone}" class="action-btn btn-tel" title="שירות טלפוני"><i class="fas fa-phone"></i></a>
-                        <a href="${waUrl}" target="_blank" class="action-btn btn-wa ${p.length < 9 ? 'disabled' : ''}" title="שלח וואטסאפ" onclick="${p.length < 9 ? "event.preventDefault(); showToast('מספר לא תקין');" : ""}"><i class="fab fa-whatsapp"></i></a>
+                        <div class="actions-col">
+                            <button class="action-btn btn-card" title="כרטיס פנסיון" onclick="openLeadCard('${l.id}')"><i class="fas fa-id-card"></i></button>
+                            <a href="tel:${l.phone}" class="action-btn btn-tel" title="שירות טלפוני"><i class="fas fa-phone"></i></a>
+                            <a href="${waUrl}" target="_blank" class="action-btn btn-wa ${p.length < 9 ? 'disabled' : ''}" title="שלח וואטסאפ" onclick="${p.length < 9 ? "event.preventDefault(); showToast('מספר לא תקין');" : ""}"><i class="fab fa-whatsapp"></i></a>
+                        </div>
                     </td>
                 </tr>`}).join('');
             
@@ -548,7 +552,7 @@
                                     <select id="editLeadSize" class="modal-input modal-select">
                                         <option value="קטן" ${l.size==='קטן'?'selected':''}>קטן</option>
                                         <option value="בינוני" ${l.size==='בינוני'?'selected':''}>בינוני</option>
-                                        <option value="גדול-בוטיק" ${l.size==='גדול-בוטיק'?'selected':''}>גדול-בוטיק</option>
+                                        <option value="גדול" ${l.size==='גדול'||l.size==='גדול-בוטיק'?'selected':''}>גדול</option>
                                     </select>
                                 </div>
                                 <div class="filter-group">
