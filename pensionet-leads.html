@@ -1364,6 +1364,21 @@
             });
         }
 
+        // Check if iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (isIOS && !isStandalone) {
+            // Optional: show a message for iOS users once
+            setTimeout(() => {
+                const hasShownIOSNote = localStorage.getItem('pensionet_ios_note');
+                if(!hasShownIOSNote) {
+                    showToast("להתקנה באייפון: לחץ על 'שתף' ואז 'הוסף למסך הבית'");
+                    localStorage.setItem('pensionet_ios_note', 'true');
+                }
+            }, 3000);
+        }
+
     </script>
 </body>
 </html>
