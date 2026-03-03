@@ -281,7 +281,7 @@
         <section class="filters-panel">
             <div class="filter-group"><label>חיפוש חופשי</label><input type="text" id="searchFilter" class="filter-input" placeholder="שם, עיר, טלפון..."></div>
             <div class="filter-group"><label>עיר</label><select id="cityFilter" class="filter-input"><option value="">הכל</option></select></div>
-            <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="בוטיק">בוטיק</option></select></div>
+            <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="מתחם ייעודי">מתחם ייעודי</option></select></div>
             <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול">גדול</option></select></div>
             <div class="filter-group"><label>סטטוס פנייה</label><select id="statusFilter" class="filter-input"><option value="">הכל</option><option value="לא פניתי">לא פניתי</option><option value="נשלחה הודעה">נשלחה הודעה</option><option value="נקבעה שיחה">נקבעה שיחה</option><option value="בוצע דמו">בוצע דמו</option><option value="בפיילוט">בפיילוט</option><option value="לא רלוונטי">לא רלוונטי</option><option value="לא ענו">לא ענו</option></select></div>
             <div class="filter-group"><label>משימות</label><select id="taskFilter" class="filter-input"><option value="all">הכל</option><option value="has_task">עם משימה</option><option value="no_task">ללא משימה</option></select></div>
@@ -720,7 +720,7 @@
                                     <select id="editLeadSize" class="modal-input modal-select">
                                         <option value="קטן" ${l.size==='קטן'?'selected':''}>קטן</option>
                                         <option value="בינוני" ${l.size==='בינוני'?'selected':''}>בינוני</option>
-                                        <option value="גדול" ${l.size==='גדול'||l.size==='גדול-בוטיק'?'selected':''}>גדול</option>
+                                        <option value="גדול" ${l.size==='גדול'||l.size==='גדול-מתחם ייעודי'?'selected':''}>גדול</option>
                                     </select>
                                 </div>
                                 <div class="filter-group">
@@ -1019,7 +1019,7 @@
         }
         function loadDraft() { bulkDraft = JSON.parse(localStorage.getItem('pensionet_bulk_draft')) || [{},{},{}]; }
         function saveDraft() { localStorage.setItem('pensionet_bulk_draft', JSON.stringify(bulkDraft)); }
-        function renderBulkTable() { const b=document.getElementById('bulkEditBody'); b.innerHTML=bulkDraft.map((r,i)=>`<tr><td><input value="${r.name||''}" oninput="ud(${i},'name',this.value)"></td><td><input value="${r.city||''}" oninput="ud(${i},'city',this.value)"></td><td><input value="${r.phone||''}" oninput="ud(${i},'phone',this.value)"></td><td><select onchange="ud(${i},'type',this.value)"><option value="ביתי" ${r.type==='ביתי'?'selected':''}>ביתי</option><option value="בוטיק" ${r.type==='בוטיק'?'selected':''}>בוטיק</option></select></td><td><input value="${r.notes||''}" oninput="ud(${i},'notes',this.value)"></td><td><button class="mini-btn btn-delete" onclick="rr(${i})">&times;</button></td></tr>`).join(''); }
+        function renderBulkTable() { const b=document.getElementById('bulkEditBody'); b.innerHTML=bulkDraft.map((r,i)=>`<tr><td><input value="${r.name||''}" oninput="ud(${i},'name',this.value)"></td><td><input value="${r.city||''}" oninput="ud(${i},'city',this.value)"></td><td><input value="${r.phone||''}" oninput="ud(${i},'phone',this.value)"></td><td><select onchange="ud(${i},'type',this.value)"><option value="ביתי" ${r.type==='ביתי'?'selected':''}>ביתי</option><option value="מתחם ייעודי" ${r.type==='מתחם ייעודי'?'selected':''}>מתחם ייעודי</option></select></td><td><input value="${r.notes||''}" oninput="ud(${i},'notes',this.value)"></td><td><button class="mini-btn btn-delete" onclick="rr(${i})">&times;</button></td></tr>`).join(''); }
         function ud(i,f,v) { bulkDraft[i][f]=v; saveDraft(); }
         function rr(i) { bulkDraft.splice(i,1); if(!bulkDraft.length) bulkDraft=[{}]; saveDraft(); renderBulkTable(); }
         function addBulkRow() { bulkDraft.push({}); renderBulkTable(); }
