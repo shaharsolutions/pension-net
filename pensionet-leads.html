@@ -413,8 +413,21 @@
 
         function populateCity() { const s = document.getElementById('cityFilter'); const val = s.value; s.innerHTML = '<option value="">הכל</option>'; [...new Set(leadsData.map(l=>l.city))].sort().forEach(c=>{ const o=document.createElement('option'); o.value=c; o.innerText=c; if(c===val)o.selected=true; s.appendChild(o); }); }
         function getFiltered() {
-            const fS = document.getElementById('searchFilter').value.toLowerCase(), fC = document.getElementById('cityFilter').value, fT = document.getElementById('typeFilter').value, fSz = document.getElementById('sizeFilter').value;
-            return leadsData.filter(l => (l.name.toLowerCase().includes(fS)||l.city.toLowerCase().includes(fS)||l.phone.includes(fS)) && (!fC||l.city===fC) && (!fT||l.type===fT) && (fSz==='all' ? true : l.size===fSz));
+            const fS = document.getElementById('searchFilter').value.toLowerCase();
+            const fC = document.getElementById('cityFilter').value;
+            const fT = document.getElementById('typeFilter').value;
+            const fSz = document.getElementById('sizeFilter').value;
+            const fSt = document.getElementById('statusFilter').value;
+            
+            return leadsData.filter(l => {
+                const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && l.phone.includes(fS)));
+                const cityMatch = !fC || l.city === fC;
+                const typeMatch = !fT || l.type === fT;
+                const sizeMatch = fSz === 'all' || l.size === fSz;
+                const statusMatch = !fSt || l.status === fSt;
+                
+                return searchMatch && cityMatch && typeMatch && sizeMatch && statusMatch;
+            });
         }
         function render() {
             const body = document.getElementById('tableBody'); 
@@ -1086,7 +1099,13 @@
         }
 
         function setupEvents() { 
-            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter'].forEach(id=>document.getElementById(id).addEventListener('input',render)); 
+            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.addEventListener('input', render);
+                    el.addEventListener('change', render);
+                }
+            });
             document.getElementById('exportExcel').onclick = exportToExcel;
             
             // Handle ESC key to close calendar
