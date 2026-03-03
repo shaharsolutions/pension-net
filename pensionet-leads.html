@@ -216,6 +216,7 @@
             <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="בוטיק">בוטיק</option></select></div>
             <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול-בוטיק">גדול-בוטיק</option></select></div>
             <div class="filter-group"><label>סטטוס פנייה</label><select id="statusFilter" class="filter-input"><option value="">הכל</option><option value="לא פניתי">לא פניתי</option><option value="נשלחה הודעה">נשלחה הודעה</option><option value="נקבעה שיחה">נקבעה שיחה</option><option value="בוצע דמו">בוצע דמו</option><option value="בפיילוט">בפיילוט</option><option value="לא רלוונטי">לא רלוונטי</option><option value="לא ענו">לא ענו</option></select></div>
+            <div class="filter-group"><label>משימות</label><select id="taskFilter" class="filter-input"><option value="all">הכל</option><option value="has_task">עם משימה</option><option value="no_task">ללא משימה</option></select></div>
             <div class="filter-group" style="flex-direction:row; gap:10px; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="openAddLeadsModal()"><i class="fas fa-plus"></i> הוסף פנסיונים</button>
                 <button id="exportExcel" class="btn-export"><i class="fas fa-file-excel"></i> אקסל</button>
@@ -289,7 +290,7 @@
             </div>
         </section>
 
-        <div class="table-container"><table><thead><tr><th>פנסיון</th><th>עיר</th><th>כתובת</th><th>טלפון</th><th>סוג</th><th>גודל</th><th>סטטוס</th><th>הערות</th><th>פעולות</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+        <div class="table-container"><table><thead><tr><th>פנסיון</th><th>עיר</th><th>כתובת</th><th>טלפון</th><th>סוג</th><th>גודל</th><th>סטטוס</th><th>משימה הבאה</th><th>הערות</th><th>פעולות</th></tr></thead><tbody id="tableBody"></tbody></table></div>
     </div>
     <div id="modalOverlay" class="modal-overlay"><div class="lead-card" id="leadCard"></div></div>
     <div id="addLeadsModal" class="modal-overlay">
@@ -418,6 +419,7 @@
             const fT = document.getElementById('typeFilter').value;
             const fSz = document.getElementById('sizeFilter').value;
             const fSt = document.getElementById('statusFilter').value;
+            const fTk = document.getElementById('taskFilter').value;
             
             return leadsData.filter(l => {
                 const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && l.phone.includes(fS)));
@@ -426,16 +428,32 @@
                 const sizeMatch = fSz === 'all' || l.size === fSz;
                 const statusMatch = !fSt || l.status === fSt;
                 
-                return searchMatch && cityMatch && typeMatch && sizeMatch && statusMatch;
+                let taskMatch = true;
+                const hasOpenTask = l.tasks && l.tasks.some(t => t.status === 'open');
+                if (fTk === 'has_task') taskMatch = hasOpenTask;
+                else if (fTk === 'no_task') taskMatch = !hasOpenTask;
+                
+                return searchMatch && cityMatch && typeMatch && sizeMatch && statusMatch && taskMatch;
             });
         }
         function render() {
             const body = document.getElementById('tableBody'); 
             body.innerHTML = getFiltered().map(l => {
                 const isSelected = selectedLeadId === l.id;
-                const p = normPhone(l.phone);
+                const p = normPhone(l.phone || '');
                 const waUrl = p.length >= 9 ? `https://wa.me/${p.startsWith('0') ? '972'+p.substring(1) : p.startsWith('972') ? p : '972'+p}` : '#';
                 
+                // Calculate next task
+                const openTasks = (l.tasks || []).filter(t => t.status === 'open' && t.due_at);
+                openTasks.sort((a,b) => new Date(a.due_at) - new Date(b.due_at));
+                let nextTaskStr = '-';
+                let nextTaskClass = '';
+                if(openTasks.length > 0) {
+                    const d = new Date(openTasks[0].due_at);
+                    nextTaskStr = d.toLocaleDateString('he-IL');
+                    if (d < new Date(new Date().setHours(0,0,0,0))) nextTaskClass = 'text-danger';
+                }
+
                 return `<tr class="${isSelected ? 'selected' : ''}" onclick="selectLead('${l.id}')">
                     <td class="col-pension">${l.name}</td>
                     <td>${l.city}</td>
@@ -454,6 +472,7 @@
                             <option value="לא ענו" ${l.status==='לא ענו'?'selected':''}>לא ענו</option>
                         </select>
                     </td>
+                    <td class="${nextTaskClass}">${nextTaskStr}</td>
                     <td onclick="event.stopPropagation()">
                         <div class="notes-wrapper">
                             <textarea class="notes-input" placeholder="הערה קצרה..." oninput="autoGrow(this); updateLead('${l.id}','notes',this.value, true)" onblur="saveData()">${l.notes||''}</textarea>
@@ -1078,6 +1097,7 @@
             document.getElementById('typeFilter').value = '';
             document.getElementById('sizeFilter').value = 'all';
             document.getElementById('statusFilter').value = '';
+            document.getElementById('taskFilter').value = 'all';
             render();
         }
 
@@ -1099,7 +1119,7 @@
         }
 
         function setupEvents() { 
-            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter'].forEach(id => {
+            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter','taskFilter'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
                     el.addEventListener('input', render);
