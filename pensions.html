@@ -63,9 +63,11 @@
                 </div>
             </div>
             
-            <footer style="padding: 20px; text-align: center; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                <span>מבית</span>
-                <a href="https://shaharsolutions.github.io/shahardigitalsolutions/" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 700; border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 1px; transition: all 0.2s;">שחר פתרונות דיגיטליים</a>
+            <footer class="sidebar-footer">
+                <div class="credit-badge">
+                    <span>מבית</span>
+                    <a href="https://shaharsolutions.github.io/shahardigitalsolutions/" target="_blank">שחר פתרונות דיגיטליים</a>
+                </div>
             </footer>
         </aside>
 
@@ -113,6 +115,14 @@
                 <button onclick="logoutAdmin()" class="btn-primary" style="background: #ef4444; border: none;">צא עכשיו</button>
             </div>
         </div>
+    </div>
+
+    <!-- Admin Save Changes Button -->
+    <div id="saveButtonContainer">
+        <button id="saveButton" onclick="saveAdminChanges()">
+            <i class="fas fa-save"></i> 
+            <span>שמור שינויים</span>
+        </button>
     </div>
 
     <!-- Scripts -->

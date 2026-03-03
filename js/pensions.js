@@ -10,6 +10,7 @@ let userLocation = null;
 let activeFilter = 'distance';
 let isAdmin = false;
 let isInitialLoading = true;
+let pendingChanges = {}; // Track admin changes before saving
 const ADMIN_PASS = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.DIRECTORY_ADMIN_PASS : 'SC1627s@';
 
 // Geocoding cache to minimize Nominatim hits
@@ -29,8 +30,8 @@ async function init() {
     // 1. Initialize Supabase - Disable session persistence to avoid "Invalid Refresh Token" noise on public page
     pensionsSupabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, {
         auth: {
-            persistSession: false,
-            autoRefreshToken: false
+            persistSession: true, // Enable session persistence to use admin login if available
+            autoRefreshToken: true
         }
     });
 
@@ -230,7 +231,7 @@ function sortPensions() {
     const searchTerm = document.getElementById('pensionSearch').value.toLowerCase();
     
     let filtered = pensionsData.filter(p => {
-        // If not admin, only show visible ones
+        // If not admin, only show visible ones (explicitly false means hidden)
         if (!isAdmin && p.is_visible === false) return false;
 
         const nameMatch = (p.business_name || '').toLowerCase().includes(searchTerm);
@@ -324,6 +325,8 @@ function logoutAdmin() {
     trigger.classList.remove('active');
     trigger.innerHTML = '<i class="fas fa-user-shield"></i>';
     closeConfirmModal();
+    pendingChanges = {};
+    document.getElementById('saveButtonContainer').style.display = 'none';
     renderPensions();
 }
 
@@ -358,22 +361,84 @@ async function toggleVisibility(event, userId) {
     event.stopPropagation();
     const newStatus = event.target.checked;
     
-    const { error } = await pensionsSupabase
-        .from('profiles')
-        .update({ is_visible: newStatus })
-        .eq('user_id', userId);
+    // Update local data and re-render for immediate visual feedback
+    const pension = pensionsData.find(p => p.user_id === userId);
+    if (pension) pension.is_visible = newStatus;
+    
+    // Track change
+    pendingChanges[userId] = newStatus;
+    
+    // Show save button
+    document.getElementById('saveButtonContainer').style.display = 'block';
+    
+    renderPensions();
+}
 
-    if (error) {
-        console.error("Error updating visibility:", error);
-        alert('שגיאה בעדכון הסטטוס');
-        event.target.checked = !newStatus; // Rollback UI
-    } else {
-        // Update local data and re-render
-        const pension = pensionsData.find(p => p.user_id === userId);
-        if (pension) pension.is_visible = newStatus;
-        
-        // We only re-render if we want the "hidden" style to apply immediately
-        renderPensions();
+async function saveAdminChanges() {
+    const btn = document.getElementById('saveButton');
+    const container = document.getElementById('saveButtonContainer');
+    
+    if (Object.keys(pendingChanges).length === 0) return;
+
+    btn.classList.add('loading');
+    btn.querySelector('span').textContent = 'שומר שינויים...';
+    
+    try {
+        // 1. Check session
+        const { data: { session } } = await pensionsSupabase.auth.getSession();
+        console.log("Admin Session Check:", session ? session.user.email : "No session");
+
+        if (!session || session.user.email !== 'shaharsolutions@gmail.com') {
+            alert('שגיאת הרשאה: לצורך שמירה לבסיס הנתונים, עליך להיות מחובר למערכת המנהל (admin.html) בדפדפן זה כמשתמש shaharsolutions@gmail.com.');
+            btn.classList.remove('loading');
+            btn.querySelector('span').textContent = 'שמור שינויים';
+            return;
+        }
+
+        // 2. Perform updates with explicit count check
+        const promises = Object.entries(pendingChanges).map(([userId, status]) => {
+            return pensionsSupabase
+                .from('profiles')
+                .update({ is_visible: status })
+                .eq('user_id', userId)
+                .select(); // Request returning data to verify change
+        });
+
+        const results = await Promise.all(promises);
+        console.log("Save results:", results);
+
+        let totalUpdated = 0;
+        let errors = [];
+
+        results.forEach(r => {
+            if (r.error) errors.push(r.error);
+            if (r.data && r.data.length > 0) totalUpdated += r.data.length;
+        });
+
+        if (errors.length > 0) {
+            console.error("Save errors:", errors);
+            alert(`חלה שגיאה בשמירה: ${errors[0].message}`);
+        } else if (totalUpdated === 0 && Object.keys(pendingChanges).length > 0) {
+            alert('השמירה הסתיימה ללא הצלחה (0 שורות עודכנו). וודא שהרצת את סקריפט ה-SQL לעדכון הרשאות (fix_pensions_visibility.sql) ב-Supabase.');
+        } else {
+            pendingChanges = {};
+            container.style.display = 'none';
+            btn.style.background = '#10b981';
+            btn.querySelector('span').textContent = `נשמר! (${totalUpdated} שינויים)`;
+            
+            // Re-fetch to ensure sync with server
+            await fetchPensions();
+            
+            setTimeout(() => {
+                btn.style.background = '';
+                btn.querySelector('span').textContent = 'שמור שינויים';
+            }, 2000);
+        }
+    } catch (err) {
+        console.error("Fatal save error:", err);
+        alert('שגיאה בתקשורת עם השרת: ' + err.message);
+    } finally {
+        btn.classList.remove('loading');
     }
 }
 
