@@ -279,14 +279,21 @@
         <section class="global-tasks">
             <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="border:none; padding:0; margin:0;"><i class="fas fa-calendar-check"></i> משימות גלובליות</h2>
-                <button class="mini-btn btn-card" onclick="toggleBulkPanel()"><i class="fas fa-plus-circle"></i> הוסף משימה לקבוצה</button>
+                <button class="mini-btn btn-card" onclick="toggleBulkPanel()"><i class="fas fa-plus-circle"></i> הוסף משימה</button>
             </div>
             <div id="bulkAddPanel" class="bulk-panel">
                 <div class="card-body" style="grid-template-columns: 1.5fr 1fr; padding:0;">
-                    <div class="card-section"><label>משימה לכולם</label><input type="text" id="bulkTaskTextGlobal" class="filter-input" style="width:100%; margin-bottom:10px;"><label>תאריך יעד </label><input type="text" id="bulkTaskDateGlobal" class="filter-input due-date-input" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)"></div>
-                    <div class="card-section" style="background:white; border:1px solid #e2e8f0;"><input type="text" id="bulkLeadSearch" class="filter-input" style="width:100%; font-size:0.8rem;" placeholder="חפש פנסיון..." oninput="renderBulkChecklist()"><div id="bulkLeadChecklist" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><div style="margin-top:10px;"><button class="mini-btn" onclick="bulkSelectFiltered()">בחר הכל מהטבלה</button><button class="mini-btn" onclick="bulkClearSelection()">נקה</button></div></div>
+                    <div class="card-section">
+                        <label>משימה</label>
+                        <input type="text" id="bulkTaskTextGlobal" class="filter-input" style="width:100%; margin-bottom:10px;" placeholder="כותרת המשימה...">
+                        <label>תיאור (אופציונלי)</label>
+                        <textarea id="bulkTaskDescGlobal" class="filter-input" style="width:100%; min-height:60px; margin-bottom:10px; padding:10px; font-family:inherit;" placeholder="פירוט המשימה..."></textarea>
+                        <label>תאריך יעד </label>
+                        <input type="text" id="bulkTaskDateGlobal" class="filter-input due-date-input" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)">
+                    </div>
+                    <div class="card-section" style="background:white; border:1px solid #e2e8f0;"><input type="text" id="bulkLeadSearch" class="filter-input" style="width:100%; font-size:0.8rem;" placeholder="חפש פנסיון..." oninput="renderBulkChecklist()"><div id="bulkLeadChecklist" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;"><button class="mini-btn" onclick="bulkSelectFiltered()">בחר הכל מהטבלה</button><button class="mini-btn" style="background:#fef2f2; color:var(--danger);" onclick="bulkSelectNoTasks()">בחר רק לידים ללא משימה</button><button class="mini-btn" onclick="bulkClearSelection()">נקה</button></div></div>
                 </div>
-                <div style="display:flex; gap:10px;"><button class="btn-primary" onclick="bulkAddTask()">הוסף משימה לכולם</button><button class="mini-btn" onclick="toggleBulkPanel(false)">ביטול</button></div>
+                <div style="display:flex; gap:10px;"><button class="btn-primary" onclick="bulkAddTask()">הוסף משימה</button><button class="mini-btn" onclick="toggleBulkPanel(false)">ביטול</button></div>
             </div>
 
             <div class="tasks-controls">
@@ -294,6 +301,7 @@
                 <div class="days-filter-tabs">
                     <button class="tab-btn day-tab active" onclick="setGlobalDaysFilter('all')">הכל</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('0')">היום</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('tomorrow')">מחר</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('3')">3 ימים</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('7')">שבוע</button>
                     <button class="tab-btn day-tab" style="background:var(--danger); color:white; border:none;" onclick="setGlobalDaysFilter('late')">איחור</button>
@@ -307,39 +315,8 @@
                 <span><i class="fas fa-comment-alt"></i> נוסחים להודעות ראשונות (לבחירה)</span>
                 <span id="selectedPensionLabel" class="selected-pension-badge">בחר פנסיון מהטבלה</span>
             </h2>
-            <div class="templates-grid">
-                <div class="template-card">
-                    <h4>הצעה לשיתוף פעולה</h4>
-                    <p class="template-text">היי {{name}}, אני שחר, ראיתי את הפנסיון שלכם ונראה מעולה. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ובוחר מספר מצומצם של עסקים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות לאחר מכן). אשמח לקבוע פגישה ולהציג את המערכת. מעניין אתכם?</p>
-                    <div class="template-actions">
-                        <button class="mini-btn btn-msg" onclick="copyTemplate(0, false)">העתק</button>
-                        <button class="mini-btn btn-primary" onclick="copyTemplate(0, true)">עם שם</button>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <h4>בירור ראשוני</h4>
-                    <p class="template-text">שלום, אני שחר, אני פונה לגבי הפנסיון {{name}}. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול היומן וההזמנות, ובוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהראות לכם איך זה עובד.</p>
-                    <div class="template-actions">
-                        <button class="mini-btn btn-msg" onclick="copyTemplate(1, false)">העתק</button>
-                        <button class="mini-btn btn-primary" onclick="copyTemplate(1, true)">עם שם</button>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <h4>הזמנה להתרשמות</h4>
-                    <p class="template-text">היי {{name}}, אני שחר, פיתחתי מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ומפנה אתכם למה שחשוב באמת. אני בוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי במטרה להקל משמעותית על העבודה היומיומית שלכם (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח להיפגש ולהציג את המערכת.</p>
-                    <div class="template-actions">
-                        <button class="mini-btn btn-msg" onclick="copyTemplate(2, false)">העתק</button>
-                        <button class="mini-btn btn-primary" onclick="copyTemplate(2, true)">עם שם</button>
-                    </div>
-                </div>
-                <div class="template-card">
-                    <h4>הודעה קצרה</h4>
-                    <p class="template-text">שלום {{name}}, אני שחר, אני מפתח מערכת ניהול שחוסכת זמן יקר בניהול הפנסיון ומציע לכם להצטרף לפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהציג את המערכת. אפשר לשלוח פרטים?</p>
-                    <div class="template-actions">
-                        <button class="mini-btn btn-msg" onclick="copyTemplate(3, false)">העתק</button>
-                        <button class="mini-btn btn-primary" onclick="copyTemplate(3, true)">עם שם</button>
-                    </div>
-                </div>
+            <div class="templates-grid" id="templatesGrid">
+                <div class="empty-tasks">טוען נוסחים...</div>
             </div>
         </section>
 
@@ -421,12 +398,87 @@
         let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = 'all', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
         let editingLogId = null, editingTaskId = null, deleteConfirmLogId = null, deleteConfirmTaskId = null;
         let isLeadEditingHeader = false, deleteConfirmLeadId = null;
-        const TEMPLATES = [
-            "היי {{name}}, אני שחר, ראיתי את הפנסיון שלכם ונראה מעולה. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ובוחר מספר מצומצם של עסקים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות לאחר מכן). אשמח לקבוע פגישה ולהציג לכם את המערכת. מעניין אתכם?",
-            "שלום, אני שחר, אני פונה לגבי הפנסיון {{name}}. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול היומן וההזמנות, ובוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהראות לכם איך זה עובד.",
-            "היי {{name}}, אני שחר, פיתחתי מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ומפנה אתכם למה שחשוב באמת. אני בוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי במטרה להקל משמעותית על העבודה היומיומית שלכם (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח להיפגש ולהציג את המערכת.",
-            "שלום {{name}}, אני שחר, אני מפתח מערכת ניהול שחוסכת זמן יקר בניהול הפנסיון ומציע לכם להצטרף לפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהציג את המערכת. אפשר לשלוח פרטים?"
+        let templates = [];
+        let editingTemplateId = null;
+        const DEFAULT_TEMPLATES = [
+            { title: "הצעה לשיתוף פעולה", content: "היי {{name}}, אני שחר, ראיתי את הפנסיון שלכם ונראה מעולה. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ובוחר מספר מצומצם של עסקים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות לאחר מכן). אשמח לקבוע פגישה ולהציג את המערכת. מעניין אתכם?" },
+            { title: "בירור ראשוני", content: "שלום, אני שחר, אני פונה לגבי הפנסיון {{name}}. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול היומן וההזמנות, ובוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהראות לכם איך זה עובד." },
+            { title: "הזמנה להתרשמות", content: "היי {{name}}, אני שחר, פיתחתי מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ומפנה אתכם למה שחשוב באמת. אני בוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי במטרה להקל משמעותית על העבודה היומיומית שלכם (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח להיפגש ולהציג את המערכת." },
+            { title: "הודעה קצרה", content: "שלום {{name}}, אני שחר, אני מפתח מערכת ניהול שחוסכת זמן יקר בניהול הפנסיון ומציע לכם להצטרף לפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהציג את המערכת. אפשר לשלוח פרטים?" }
         ];
+
+        async function loadTemplates() {
+            try {
+                const { data, error } = await getSupabase().from('pension_lead_templates').select('*').order('created_at', { ascending: true });
+                if (error) {
+                    console.warn("Templates table not found or error, using defaults.");
+                    templates = [...DEFAULT_TEMPLATES];
+                } else if (data && data.length > 0) {
+                    templates = data;
+                } else {
+                    templates = [...DEFAULT_TEMPLATES];
+                }
+            } catch (e) {
+                templates = [...DEFAULT_TEMPLATES];
+            }
+            renderTemplates();
+        }
+
+        function renderTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            grid.innerHTML = templates.map((t, idx) => {
+                if(editingTemplateId === t.id || (editingTemplateId === 'new' && idx === templates.length -1)) {
+                    return `
+                        <div class="template-card">
+                            <input type="text" id="editTplTitle" class="edit-input" style="width:100%; margin-bottom:10px; font-weight:800;" value="${t.title}" placeholder="כותרת הנוסח">
+                            <textarea id="editTplContent" class="edit-input" style="width:100%; min-height:100px; font-family:inherit;" placeholder="תוכן ההודעה (השתמש ב-{{name}} לשם הפנסיון)">${t.content}</textarea>
+                            <div class="template-actions" style="margin-top:10px;">
+                                <button class="mini-btn btn-primary" onclick="saveTemplate('${t.id}', ${idx})">שמור</button>
+                                <button class="mini-btn" onclick="cancelEditTemplate()">בטל</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                return `
+                    <div class="template-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <h4>${t.title}</h4>
+                            <button class="btn-inline-action btn-edit" onclick="startEditTemplate('${t.id}', ${idx})" title="ערוך נוסח"><i class="fas fa-edit"></i></button>
+                        </div>
+                        <p class="template-text">${t.content}</p>
+                        <div class="template-actions">
+                            <button class="mini-btn btn-msg" onclick="copyTemplate(${idx}, false)">העתק</button>
+                            <button class="mini-btn btn-primary" onclick="copyTemplate(${idx}, true)">עם שם</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function startEditTemplate(id, idx) { editingTemplateId = id; renderTemplates(); }
+        function cancelEditTemplate() { editingTemplateId = null; renderTemplates(); }
+        
+        async function saveTemplate(id, idx) {
+            const title = document.getElementById('editTplTitle').value;
+            const content = document.getElementById('editTplContent').value;
+            if(!title || !content) return showToast("מלא כותרת ותוכן");
+
+            if(id && id !== 'undefined' && id !== 'null') {
+                const { error } = await getSupabase().from('pension_lead_templates').update({ title, content, updated_at: new Date().toISOString() }).eq('id', id);
+                if(error) return showToast("שגיאה בעדכון בבסיס הנתונים");
+                templates[idx].title = title;
+                templates[idx].content = content;
+            } else {
+                // If it's a local fallback template, we can't save to DB but we update local state
+                templates[idx].title = title;
+                templates[idx].content = content;
+                showToast("עודכן מקומית (טבלת בסיס נתונים לא נמצאה)");
+            }
+            
+            editingTemplateId = null;
+            renderTemplates();
+            showToast("נוסח עודכן");
+        }
 
         function formatDueLabel(ts) {
             if(!ts) return "ללא תאריך יעד";
@@ -482,6 +534,7 @@
             }
             document.getElementById('loginOverlay').style.display = 'none';
             await loadLeads();
+            await loadTemplates();
             setup(); 
             render(); 
         }
@@ -596,10 +649,14 @@
         function copyTemplate(idx, withName) {
             const l = leadsData.find(x=>x.id===selectedLeadId);
             if(withName && !l) return showToast("בחר פנסיון מהטבלה קודם");
-            let txt = TEMPLATES[idx];
-            if(withName) txt = txt.replace(/{{name}}/g, l.name);
-            else txt = txt.replace(/{{name}}/g, "");
-            navigator.clipboard.writeText(txt).then(() => showToast("הועתק ללוח"));
+            let tplObj = templates[idx];
+            let txt = tplObj.content;
+            if(withName && l) txt = txt.replace(/{{name}}/g, l.name);
+            else txt = txt.replace(/{{name}}/g, '(שם הפנסיון)');
+            
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("הנוסח הועתק!");
+            });
         }
         function openLeadCard(id) { const l = leadsData.find(x=>x.id===id); isLeadEditingHeader = false; deleteConfirmLeadId = null; renderLeadCard(l.id); document.getElementById('modalOverlay').style.display='flex'; }
         function closeLeadCard() { document.getElementById('modalOverlay').style.display='none'; editingLogId=null; editingTaskId=null; deleteConfirmLogId=null; deleteConfirmTaskId=null; isLeadEditingHeader = false; deleteConfirmLeadId = null; }
@@ -701,8 +758,9 @@
                     
                     <div class="card-section">
                         <h3><i class="fas fa-tasks"></i> משימות</h3>
-                        <div class="add-row" style="flex-wrap:wrap;">
-                            <input type="text" id="ntText" class="filter-input" style="width:100%;" placeholder="מה המשימה?">
+                        <div class="add-row" style="flex-wrap:wrap; gap:10px;">
+                            <input type="text" id="ntText" class="filter-input" style="width:100%;" placeholder="כותרת המשימה...">
+                            <textarea id="ntDesc" class="filter-input" style="width:100%; min-height:60px; padding:10px; font-family:inherit;" placeholder="תיאור המשימה (אופציונלי)..."></textarea>
                             <input type="text" id="ntDate" class="filter-input due-date-input" style="width:100%;" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)">
                             <button class="btn-add-inline" style="width:100%; padding:10px;" onclick="addLeadTask('${l.id}')">הוסף משימה</button>
                         </div>
@@ -713,6 +771,7 @@
                                     const dDisp = t.due_at ? new Date(t.due_at).toLocaleDateString('he-IL') : '';
                                     return `<li><div class="inline-edit-form">
                                         <input type="text" id="etText" class="edit-input" value="${t.text}">
+                                        <textarea id="etDesc" class="edit-input" style="min-height:60px;" placeholder="תיאור...">${t.description||''}</textarea>
                                         <input type="text" id="etDate" class="edit-input due-date-input" value="${dDisp}" data-date-value="${dVal}" readonly onclick="openCalendar(this)">
                                         <div class="edit-btns">
                                             <button class="btn-add-inline" onclick="saveEditTask('${l.id}', '${t.id}')">שמור</button>
@@ -727,6 +786,7 @@
                                     <div style="display:flex; justify-content:space-between; width:100%; align-items:center; gap: 15px;">
                                         <div style="display:flex; flex-direction:column; gap:6px;">
                                             <span style="${isDone?'text-decoration:line-through; color:gray; opacity:0.7;':''}; font-weight:700; font-size: 1.05rem;">${t.text}</span>
+                                            ${t.description ? `<span style="font-size:0.85rem; color:var(--text-main); margin-bottom:4px; ${isDone?'text-decoration:line-through; opacity:0.6;':''}">${t.description}</span>` : ''}
                                             <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">
                                                 <i class="far fa-calendar-alt"></i> ${formatDueLabel(t.due_at)}
                                                 ${isLate && !isDone ? `<span class="badge badge-late" style="margin-right:8px;">באיחור</span>` : ''}
@@ -783,11 +843,11 @@
         }
         
         async function addLeadTask(lid) {
-            const t = document.getElementById('ntText').value, d = document.getElementById('ntDate').dataset.dateValue;
+            const t = document.getElementById('ntText').value, desc = document.getElementById('ntDesc').value, d = document.getElementById('ntDate').dataset.dateValue;
             if(!t) return showToast("נא להזין תיאור משימה");
             if(!d) return showToast("נא לבחור תאריך יעד");
             const isoDue = new Date(d + "T12:00:00").toISOString();
-            const { data, error } = await getSupabase().from('pension_lead_tasks').insert({ lead_id: lid, text: t, due_at: isoDue }).select();
+            const { data, error } = await getSupabase().from('pension_lead_tasks').insert({ lead_id: lid, text: t, description: desc, due_at: isoDue }).select();
             if(error) return showToast("שגיאה בהוספת משימה");
             leadsData.find(x=>x.id===lid).tasks.push(data[0]);
             renderLeadCard(lid); renderGlobalTasks(); showToast("משימה נוספה");
@@ -804,14 +864,14 @@
         function startEditTask(lid, tid) { editingTaskId = tid; renderLeadCard(lid); }
         function cancelEditTask(lid) { editingTaskId = null; renderLeadCard(lid); }
         async function saveEditTask(lid, tid) {
-            const txt = document.getElementById('etText').value, d = document.getElementById('etDate').dataset.dateValue;
+            const txt = document.getElementById('etText').value, desc = document.getElementById('etDesc').value, d = document.getElementById('etDate').dataset.dateValue;
             if(!d) return showToast("בחר תאריך יעד");
             const isoDue = new Date(d + "T12:00:00").toISOString();
             const now = new Date().toISOString();
-            const { error } = await getSupabase().from('pension_lead_tasks').update({ text: txt, due_at: isoDue, updated_at: now }).eq('id', tid);
+            const { error } = await getSupabase().from('pension_lead_tasks').update({ text: txt, description: desc, due_at: isoDue, updated_at: now }).eq('id', tid);
             if(error) return showToast("שגיאה בעדכון המשימה");
             const l = leadsData.find(x=>x.id===lid), t = l.tasks.find(x=>x.id===tid);
-            t.text = txt; t.due_at = isoDue; t.updated_at = now;
+            t.text = txt; t.description = desc; t.due_at = isoDue; t.updated_at = now;
             editingTaskId = null; renderLeadCard(lid); renderGlobalTasks(); showToast("משימה עודכנה");
         }
         async function requestDeleteTask(lid, tid) {
@@ -863,6 +923,10 @@
             if(globalTaskFilter!=='all') tks = tks.filter(t=>t.status===globalTaskFilter);
             const now = new Date(), startDay = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
             if(globalDaysFilter==='late') tks=tks.filter(t=>t.status==='open' && new Date(t.due_at).getTime()<startDay);
+            else if(globalDaysFilter==='tomorrow') {
+                const tomStart = startDay + 24*3600*1000, tomEnd = tomStart + 24*3600*1000;
+                tks = tks.filter(t => { const d = new Date(t.due_at).getTime(); return d >= tomStart && d < tomEnd; });
+            }
             else if(globalDaysFilter!=='all') { 
                 const days=parseInt(globalDaysFilter), end = startDay + (days+1)*24*3600*1000; 
                 tks = tks.filter(t => {
@@ -888,7 +952,7 @@
         function setGlobalDaysFilter(v) { 
             globalDaysFilter = v; 
             document.querySelectorAll('.day-tab').forEach(b => {
-                const isMatch = (v === 'all' && b.innerText.includes('הכל')) || (v === '0' && b.innerText.includes('היום')) || (v === '3' && b.innerText.includes('3 ימים')) || (v === '7' && b.innerText.includes('שבוע')) || (v === 'late' && b.innerText.includes('איחור'));
+                const isMatch = (v === 'all' && b.innerText.includes('הכל')) || (v === '0' && b.innerText.includes('היום')) || (v === 'tomorrow' && b.innerText.includes('מחר')) || (v === '3' && b.innerText.includes('3 ימים')) || (v === '7' && b.innerText.includes('שבוע')) || (v === 'late' && b.innerText.includes('איחור'));
                 b.classList.toggle('active', isMatch);
             });
             renderGlobalTasks(); 
@@ -984,9 +1048,18 @@
             c.innerHTML=leadsData.filter(l=>l.name.toLowerCase().includes(s)||l.city.toLowerCase().includes(s)).map(l=>`<label style="display:block; padding:4px; cursor:pointer;"><input type="checkbox" onchange="toggleId('${l.id}')" ${bulkIds.has(l.id)?'checked':''}> ${l.name} (${l.city})</label>`).join(''); 
         }
         function bulkSelectFiltered() { const f = getFiltered(); f.forEach(l=>bulkIds.add(l.id)); renderBulkChecklist(); }
+        function bulkSelectNoTasks() {
+            leadsData.forEach(l => {
+                const hasOpenTask = l.tasks && l.tasks.some(t => t.status === 'open');
+                if (!hasOpenTask) bulkIds.add(l.id);
+            });
+            renderBulkChecklist();
+        }
         function bulkClearSelection() { bulkIds.clear(); renderBulkChecklist(); }
         async function bulkAddTask() {
-            const txt = document.getElementById('bulkTaskTextGlobal').value, dt = document.getElementById('bulkTaskDateGlobal').dataset.dateValue;
+            const txt = document.getElementById('bulkTaskTextGlobal').value, 
+                  desc = document.getElementById('bulkTaskDescGlobal').value,
+                  dt = document.getElementById('bulkTaskDateGlobal').dataset.dateValue;
             if(!txt) return showToast("הזן תיאור משימה");
             if(!dt) return showToast("בחר תאריך יעד");
             if(bulkIds.size === 0) return showToast("לא נבחרו פנסיונים");
@@ -995,6 +1068,7 @@
             const toInsert = Array.from(bulkIds).map(lid => ({
                 lead_id: lid,
                 text: txt,
+                description: desc,
                 due_at: due,
                 status: 'open'
             }));
@@ -1004,7 +1078,7 @@
                 .insert(toInsert)
                 .select();
 
-            if(error) return showToast("שגיאה בהוספת משימה קבוצתית");
+            if(error) return showToast("שגיאה בהוספת משימה");
 
             data.forEach(task => {
                 const l = leadsData.find(x=>x.id===task.lead_id);
