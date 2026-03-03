@@ -27,13 +27,22 @@ try {
 }
 
 async function init() {
-    // 1. Initialize Supabase - Disable session persistence to avoid "Invalid Refresh Token" noise on public page
-    pensionsSupabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, {
-        auth: {
-            persistSession: true, // Enable session persistence to use admin login if available
-            autoRefreshToken: true
+    // 1. Initialize Supabase - Use the centralized client if available
+    if (typeof supabaseClient !== 'undefined') {
+        pensionsSupabase = supabaseClient;
+    } else {
+        pensionsSupabase = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+    }
+
+    // Restore Admin state if active in session
+    if (sessionStorage.getItem('pensionNet_isAdmin') === 'true') {
+        isAdmin = true;
+        const trigger = document.getElementById('adminLoginTrigger');
+        if (trigger) {
+            trigger.classList.add('active');
+            trigger.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
         }
-    });
+    }
 
     // 2. Initialize Map (Center on Israel by default)
     initMap();
@@ -321,6 +330,7 @@ function closeConfirmModal() {
 
 function logoutAdmin() {
     isAdmin = false;
+    sessionStorage.removeItem('pensionNet_isAdmin');
     const trigger = document.getElementById('adminLoginTrigger');
     trigger.classList.remove('active');
     trigger.innerHTML = '<i class="fas fa-user-shield"></i>';
@@ -339,6 +349,7 @@ function checkAdminPassword() {
     const pass = document.getElementById('adminPassword').value;
     if (pass === ADMIN_PASS) {
         isAdmin = true;
+        sessionStorage.setItem('pensionNet_isAdmin', 'true');
         const trigger = document.getElementById('adminLoginTrigger');
         trigger.classList.add('active');
         trigger.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
@@ -377,57 +388,64 @@ async function toggleVisibility(event, userId) {
 async function saveAdminChanges() {
     const btn = document.getElementById('saveButton');
     const container = document.getElementById('saveButtonContainer');
+    const expectedUpdates = Object.keys(pendingChanges).length;
     
-    if (Object.keys(pendingChanges).length === 0) return;
+    if (expectedUpdates === 0) return;
 
     btn.classList.add('loading');
     btn.querySelector('span').textContent = 'שומר שינויים...';
     
     try {
-        // 1. Check session
+        // 1. Verify Auth Session
         const { data: { session } } = await pensionsSupabase.auth.getSession();
-        console.log("Admin Session Check:", session ? session.user.email : "No session");
+        console.log("Persistence Log - Admin Session:", session ? session.user.email : "No Session");
 
         if (!session || session.user.email !== 'shaharsolutions@gmail.com') {
-            alert('שגיאת הרשאה: לצורך שמירה לבסיס הנתונים, עליך להיות מחובר למערכת המנהל (admin.html) בדפדפן זה כמשתמש shaharsolutions@gmail.com.');
+            alert('שגיאת הרשאה: לצורך שמירה לצמיתות, עליך להיות מחובר למערכת המנהל (admin.html) באותו הדפדפן (כמשתמש shaharsolutions@gmail.com).');
             btn.classList.remove('loading');
             btn.querySelector('span').textContent = 'שמור שינויים';
             return;
         }
 
-        // 2. Perform updates with explicit count check
+        // 2. Execute Updates and verify they affected rows
         const promises = Object.entries(pendingChanges).map(([userId, status]) => {
             return pensionsSupabase
                 .from('profiles')
                 .update({ is_visible: status })
                 .eq('user_id', userId)
-                .select(); // Request returning data to verify change
+                .select(); // Returns updated row
         });
 
         const results = await Promise.all(promises);
-        console.log("Save results:", results);
+        console.log("Persistence Log - DB Results:", results);
 
-        let totalUpdated = 0;
+        let totalSucceeded = 0;
         let errors = [];
 
-        results.forEach(r => {
-            if (r.error) errors.push(r.error);
-            if (r.data && r.data.length > 0) totalUpdated += r.data.length;
+        results.forEach(res => {
+            if (res.error) errors.push(res.error);
+            if (res.data && res.data.length > 0) {
+                totalSucceeded++;
+                // Synchronize local data
+                const local = pensionsData.find(p => p.user_id === res.data[0].user_id);
+                if (local) local.is_visible = res.data[0].is_visible;
+            }
         });
 
         if (errors.length > 0) {
-            console.error("Save errors:", errors);
-            alert(`חלה שגיאה בשמירה: ${errors[0].message}`);
-        } else if (totalUpdated === 0 && Object.keys(pendingChanges).length > 0) {
-            alert('השמירה הסתיימה ללא הצלחה (0 שורות עודכנו). וודא שהרצת את סקריפט ה-SQL לעדכון הרשאות (fix_pensions_visibility.sql) ב-Supabase.');
+            console.error("DB Errors:", errors);
+            alert(`חלה שגיאה טכנית בשמירה: ${errors[0].message}`);
+        } else if (totalSucceeded === 0) {
+            alert('השמירה נכשלה: 0 שורות עודכנו. זה נגרם בדרך כלל בגלל חוסר הרשאות ב-Supabase. וודא שהרצת את סקריפט ה-SQL לעדכון הרשאות (fix_pensions_visibility.sql).');
         } else {
+            // Full success (or partial success handled by UI sync)
             pendingChanges = {};
             container.style.display = 'none';
             btn.style.background = '#10b981';
-            btn.querySelector('span').textContent = `נשמר! (${totalUpdated} שינויים)`;
+            btn.querySelector('span').textContent = totalSucceeded < expectedUpdates ? `נשמרו ${totalSucceeded} שינויים` : 'נשמר בהצלחה!';
             
-            // Re-fetch to ensure sync with server
-            await fetchPensions();
+            // Re-render markers if visibility changed
+            renderMarkers();
             
             setTimeout(() => {
                 btn.style.background = '';
@@ -435,8 +453,8 @@ async function saveAdminChanges() {
             }, 2000);
         }
     } catch (err) {
-        console.error("Fatal save error:", err);
-        alert('שגיאה בתקשורת עם השרת: ' + err.message);
+        console.error("Fatal persistence error:", err);
+        alert('שגיאת מערכת בשמירה: ' + err.message);
     } finally {
         btn.classList.remove('loading');
     }

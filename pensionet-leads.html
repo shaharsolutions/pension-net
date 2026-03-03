@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טבלת לידים – פנסיוני כלבים קטנים ובינוניים | אזור המרכז</title>
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+        window.supabase = supabase;
+    </script>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-hover: #4f46e5; --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --text-main: #1e293b; --text-muted: #64748b; --border-radius: 14px; --shadow-soft: 0 10px 25px -5px rgba(0,0,0,0.05);
+            --border-color: #e2e8f0; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #3b82f6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Heebo', sans-serif; background: var(--bg-gradient); color: var(--text-main); line-height: 1.6; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; animation: fadeInDown 0.6s ease-out; }
+        header h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .filters-panel { background: white; padding: 24px; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        .filter-input { padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; outline: none; transition: all 0.2s; font-family: inherit; }
+        .filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .btn-export, .btn-primary { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); }
+        .btn-export:hover, .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .global-tasks { margin-bottom: 30px; background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); }
+        .global-tasks h2 { font-size: 1.4rem; margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .tasks-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .tasks-tabs, .days-filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab-btn, .mini-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: #f8fafc; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: all 0.2s; color: var(--text-muted); }
+        .tab-btn.active, .day-tab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+        .tasks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .task-card-global { background: #f8fafc; padding: 20px; border-radius: 14px; border-right: 5px solid var(--primary); display: flex; flex-direction: column; gap: 12px; transition: all 0.3s; border: 1px solid #e2e8f0; position: relative; }
+        .task-card-global.late { border-right-color: var(--danger); }
+        .task-card-global.today { border-right-color: var(--warning); }
+        .task-card-global.done { border-right-color: var(--success); opacity: 0.7; }
+        .card-pension-name { font-weight: 800; font-size: 0.85rem; color: var(--primary); background: #eef2ff; padding: 4px 10px; border-radius: 6px; display: inline-block; }
+        .card-task-text { font-weight: 700; font-size: 1.05rem; min-height: 2.5em; }
+        .card-footer { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+        .table-container { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); overflow: auto; max-height: 700px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        thead { position: sticky; top: 0; background: #f8fafc; z-index: 5; }
+        th { padding: 16px; color: var(--text-muted); border-bottom: 2px solid var(--border-color); font-size: 0.9rem; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+        .col-pension { font-weight: 700; color: var(--primary); }
+        .action-btn { width: 36px; height: 36px; border-radius: 50%; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 5px; color: white !important; transition: 0.2s; }
+        .btn-wa { background: #25d366; color: white !important; } .btn-tel { background: #3b82f6; color: white !important; } .btn-copy { background: #64748b; color: white !important; } .btn-card { background: #4f46e5; color: white !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .action-btn:hover { transform: scale(1.1); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .lead-card { background: white; width: 90%; max-width: 800px; max-height: 90vh; border-radius: 20px; display: flex; flex-direction: column; overflow: visible; position: relative; }
+        .card-header { padding: 20px; background: #f8fafc; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }
+        .card-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; overflow: visible; }
+        .card-section { background: #f1f5f9; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .card-section h3 { font-size: 1.1rem; margin-bottom: 15px; color: var(--text-main); font-weight: 800; border-right: 4px solid var(--primary); padding-right: 10px; }
+        .task-list, .log-list { list-style: none; margin-top: 15px; }
+        .task-list li, .log-list li { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); border: 1px solid #eee; }
+        .add-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-add-inline { background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .btn-add-inline:hover { background: var(--primary-hover); }
+        .btn-check-task { background: var(--success); color: white; border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-check-task:hover { transform: scale(1.1); }
+        .bulk-panel { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: none; flex-direction: column; gap: 15px; border: 1px solid var(--border-color); }
+        .bulk-table-wrap { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; background: white; }
+        .bulk-edit-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .bulk-edit-table th, .bulk-edit-table td { border: 1px solid #e2e8f0; padding: 4px; }
+        .bulk-edit-table input, .bulk-edit-table select { width: 100%; border: none; padding: 8px; outline: none; }
+        .row-error { color: var(--danger); font-size: 0.7rem; display: block; }
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; z-index: 3000; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .custom-datepicker { position: absolute; top: 50px; right: 0; background: white; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); padding: 15px; width: 280px; z-index: 10000; display: none; border: 1px solid var(--border-color); }
+        .datepicker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+        .day-cell { padding: 8px; cursor: pointer; border-radius: 8px; }
+        .day-cell:hover { background: #f1f5f9; }
+        .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: 800; }
+        .badge-late { background: var(--danger); } .badge-today { background: var(--warning); } .badge-upcoming { background: var(--info); } .badge-done { background: var(--success); }
+        .close-btn { 
+            background: #f1f5f9; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); 
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            transition: all 0.2s; 
+        }
+        .close-btn:hover { background: #e2e8f0; color: var(--danger); transform: rotate(90deg); }
+
+        
+        /* New Styles */
+        .notes-wrapper { position: relative; display: flex; flex-direction: column; gap: 4px; }
+        .notes-input { 
+            width: 100%; min-height: 44px; height: 44px; padding: 8px 12px; 
+            border: 1px solid var(--border-color); border-radius: 12px; 
+            font-size: 0.85rem; font-family: inherit; resize: none; overflow: hidden;
+            transition: all 0.2s; background: #fcfdfe;
+        }
+        .notes-input:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .btn-expand-notes { 
+            font-size: 0.7rem; color: var(--primary); cursor: pointer; text-decoration: underline; 
+            align-self: flex-end; font-weight: 700; border: none; background: none; padding: 0;
+        }
+        
+        .message-templates { margin-bottom: 30px; background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); }
+        .message-templates h2 { font-size: 1.2rem; margin-bottom: 15px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .selected-pension-badge { font-size: 0.9rem; background: #eef2ff; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-weight: 700; }
+        .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
+        .template-card { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
+        .template-card h4 { font-size: 0.9rem; color: var(--primary); }
+        .template-text { font-size: 0.85rem; color: var(--text-main); min-height: 50px; }
+        .template-actions { display: flex; gap: 8px; }
+        
+        tr.selected { background-color: #f1f5ff !important; border-right: 4px solid var(--primary); }
+        
+        .log-time { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; display: block; }
+        .log-item { display: flex; flex-direction: column; align-items: flex-start !important; }
+        
+        .btn-wa { background: #25d366; color: white !important; }
+        .btn-msg { background: #6366f1; color: white !important; }
+        
+        /* Lead Card Enhancements */
+        .lead-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid #eef2ff; padding-bottom: 20px; }
+        .detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .detail-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
+        .detail-value { font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
+        .status-badge { 
+            display: inline-block; padding: 4px 10px; border-radius: 20px; 
+            font-size: 0.8rem; font-weight: 800; background: #eef2ff; color: var(--primary); 
+            border: 1px solid transparent; cursor: pointer; outline: none; transition: 0.2s;
+            appearance: none; -webkit-appearance: none; text-align: center;
+        }
+        .status-badge:hover { border-color: var(--primary); background: white; }
+        .status-select-inline { 
+            padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0; 
+            font-size: 0.8rem; font-weight: 700; color: var(--text-main); 
+            background: #f8fafc; cursor: pointer; outline: none; transition: 0.2s;
+        }
+        .status-select-inline:hover { border-color: var(--primary); background: white; }
+        
+        .log-actions, .task-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-inline-action { border: none; background: none; font-size: 0.75rem; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
+        .btn-edit { color: var(--primary); background: #eef2ff; }
+        .btn-delete { color: var(--danger); background: #fef2f2; }
+        .btn-delete.confirm { background: var(--danger); color: white; }
+        .mini-btn.btn-done { background: var(--success); color: white; border: none; }
+        .mini-btn.btn-undo { background: var(--warning); color: white; border: none; }
+        
+        .inline-edit-form { width: 100%; display: flex; flex-direction: column; gap: 8px; background: white; padding: 10px; border-radius: 12px; border: 2px solid var(--primary); }
+        .edit-input { padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+        .edit-btns { display: flex; gap: 8px; }
+
+        /* Custom Date Picker Popover */
+        .date-popover {
+            position: fixed; background: white; border-radius: 16px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25); width: 300px; z-index: 999999; 
+            padding: 16px; border: 1px solid var(--border-color); display: none; 
+            flex-direction: column; gap: 12px; font-family: 'Heebo', sans-serif;
+        }
+        .date-popover.active { display: flex; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .cal-title { font-weight: 800; color: var(--text-main); font-size: 1.1rem; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .cal-day-name { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); padding-bottom: 8px; }
+        .cal-day { 
+            font-size: 0.9rem; padding: 8px 0; cursor: pointer; border-radius: 10px; 
+            transition: 0.2s; color: var(--text-main); font-weight: 500;
+        }
+        .cal-day:hover { background: #f1f5f9; color: var(--primary); }
+        .cal-day.other-month { color: #cbd5e1; }
+        .cal-day.today-highlight { background: #eef2ff; color: var(--primary); font-weight: 800; border: 1px solid var(--primary); }
+        .cal-day.selected-day { background: var(--primary) !important; color: white !important; font-weight: 800; }
+        .cal-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+        .cal-btn { 
+            border: none; background: #f1f5f9; padding: 6px 12px; border-radius: 8px; 
+            font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; color: var(--text-muted);
+        }
+        .cal-btn:hover { background: #e2e8f0; color: var(--text-main); }
+        .cal-btn.primary-btn { background: var(--primary); color: white; }
+        .cal-nav { background: none; border: none; font-size: 1rem; cursor: pointer; color: var(--primary); padding: 4px 8px; border-radius: 6px; }
+        .cal-nav:hover { background: #eef2ff; }
+        
+        .due-date-input { cursor: pointer; background: #fcfdfe; }
+        .due-date-input:read-only { cursor: pointer; }
+
+        /* Modal Form Styling */
+        .modal-body-content { padding: 24px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group-full { grid-column: span 2; }
+        .modal-label { font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: block; }
+        .modal-input { 
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 12px; 
+            font-size: 1rem; outline: none; transition: all 0.2s; background: #f8fafc; font-family: inherit;
+        }
+        .modal-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .modal-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 12px center; background-size: 16px; }
+        
+        .bulk-table-wrap table { width:100%; border-collapse: separate; border-spacing:0; border-radius:12px; overflow:hidden; border: 1px solid var(--border-color); }
+        .bulk-table-wrap th { background: #f1f5f9; padding:12px; text-align:right; font-size:0.85rem; }
+        .bulk-table-wrap td { padding:0; border-top: 1px solid var(--border-color); }
+        .bulk-table-wrap input, .bulk-table-wrap select { border:none; padding:12px; width:100%; background:transparent; outline:none; font-size:0.9rem; }
+        .bulk-table-wrap input:focus, .bulk-table-wrap select:focus { background: #f8fafc; }
+    </style>
+
+
+
+</head>
+<body>
+    <div class="container">
+        <header><h1>טבלת לידים – פנסיוני כלבים קטנים ובינוניים | אזור המרכז</h1><p>ניהול ומעקב אחרי פנייה לפנסיוני בוטיק וביתיים במרכז</p></header>
+        <section class="filters-panel">
+            <div class="filter-group"><label>חיפוש חופשי</label><input type="text" id="searchFilter" class="filter-input" placeholder="שם, עיר, טלפון..."></div>
+            <div class="filter-group"><label>עיר</label><select id="cityFilter" class="filter-input"><option value="">הכל</option></select></div>
+            <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="בוטיק">בוטיק</option></select></div>
+            <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול-בוטיק">גדול-בוטיק</option></select></div>
+            <div class="filter-group"><label>סטטוס פנייה</label><select id="statusFilter" class="filter-input"><option value="">הכל</option><option value="לא פניתי">לא פניתי</option><option value="נשלחה הודעה">נשלחה הודעה</option><option value="נקבעה שיחה">נקבעה שיחה</option><option value="בוצע דמו">בוצע דמו</option><option value="בפיילוט">בפיילוט</option><option value="לא רלוונטי">לא רלוונטי</option><option value="לא ענו">לא ענו</option></select></div>
+            <div class="filter-group" style="flex-direction:row; gap:10px; flex-wrap: wrap;">
+                <button class="btn-primary" onclick="openAddLeadsModal()"><i class="fas fa-plus"></i> הוסף פנסיונים</button>
+                <button id="exportExcel" class="btn-export"><i class="fas fa-file-excel"></i> אקסל</button>
+                <button class="mini-btn" onclick="clearAllFilters()" title="נקה סינונים" style="padding: 10px; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-undo"></i></button>
+            </div>
+        </section>
+        <section class="global-tasks">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="border:none; padding:0; margin:0;"><i class="fas fa-calendar-check"></i> משימות גלובליות</h2>
+                <button class="mini-btn btn-card" onclick="toggleBulkPanel()"><i class="fas fa-plus-circle"></i> הוסף משימה לקבוצה</button>
+            </div>
+            <div id="bulkAddPanel" class="bulk-panel">
+                <div class="card-body" style="grid-template-columns: 1.5fr 1fr; padding:0;">
+                    <div class="card-section"><label>משימה לכולם</label><input type="text" id="bulkTaskTextGlobal" class="filter-input" style="width:100%; margin-bottom:10px;"><label>תאריך יעד </label><input type="text" id="bulkTaskDateGlobal" class="filter-input due-date-input" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)"></div>
+                    <div class="card-section" style="background:white; border:1px solid #e2e8f0;"><input type="text" id="bulkLeadSearch" class="filter-input" style="width:100%; font-size:0.8rem;" placeholder="חפש פנסיון..." oninput="renderBulkChecklist()"><div id="bulkLeadChecklist" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><div style="margin-top:10px;"><button class="mini-btn" onclick="bulkSelectFiltered()">בחר הכל מהטבלה</button><button class="mini-btn" onclick="bulkClearSelection()">נקה</button></div></div>
+                </div>
+                <div style="display:flex; gap:10px;"><button class="btn-primary" onclick="bulkAddTask()">הוסף משימה לכולם</button><button class="mini-btn" onclick="toggleBulkPanel(false)">ביטול</button></div>
+            </div>
+
+            <div class="tasks-controls">
+                <div class="tasks-tabs"><button class="tab-btn active" onclick="setGlobalTaskFilter('open')">פתוחות</button><button class="tab-btn" onclick="setGlobalTaskFilter('done')">בוצעו</button><button class="tab-btn" onclick="setGlobalTaskFilter('all')">הכל</button></div>
+                <div class="days-filter-tabs">
+                    <button class="tab-btn day-tab active" onclick="setGlobalDaysFilter('all')">הכל</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('0')">היום</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('3')">3 ימים</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('7')">שבוע</button>
+                    <button class="tab-btn day-tab" style="background:var(--danger); color:white; border:none;" onclick="setGlobalDaysFilter('late')">איחור</button>
+                </div>
+            </div>
+            <div class="tasks-grid" id="globalTasksGrid"></div>
+        </section>
+
+        <section class="message-templates">
+            <h2>
+                <span><i class="fas fa-comment-alt"></i> נוסחים להודעות ראשונות (לבחירה)</span>
+                <span id="selectedPensionLabel" class="selected-pension-badge">בחר פנסיון מהטבלה</span>
+            </h2>
+            <div class="templates-grid">
+                <div class="template-card">
+                    <h4>הצעה לשיתוף פעולה</h4>
+                    <p class="template-text">היי {{name}}, אני שחר, ראיתי את הפנסיון שלכם ונראה מעולה. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ובוחר מספר מצומצם של עסקים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות לאחר מכן). אשמח לקבוע פגישה ולהציג את המערכת. מעניין אתכם?</p>
+                    <div class="template-actions">
+                        <button class="mini-btn btn-msg" onclick="copyTemplate(0, false)">העתק</button>
+                        <button class="mini-btn btn-primary" onclick="copyTemplate(0, true)">עם שם</button>
+                    </div>
+                </div>
+                <div class="template-card">
+                    <h4>בירור ראשוני</h4>
+                    <p class="template-text">שלום, אני שחר, אני פונה לגבי הפנסיון {{name}}. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול היומן וההזמנות, ובוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהראות לכם איך זה עובד.</p>
+                    <div class="template-actions">
+                        <button class="mini-btn btn-msg" onclick="copyTemplate(1, false)">העתק</button>
+                        <button class="mini-btn btn-primary" onclick="copyTemplate(1, true)">עם שם</button>
+                    </div>
+                </div>
+                <div class="template-card">
+                    <h4>הזמנה להתרשמות</h4>
+                    <p class="template-text">היי {{name}}, אני שחר, פיתחתי מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ומפנה אתכם למה שחשוב באמת. אני בוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי במטרה להקל משמעותית על העבודה היומיומית שלכם (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח להיפגש ולהציג את המערכת.</p>
+                    <div class="template-actions">
+                        <button class="mini-btn btn-msg" onclick="copyTemplate(2, false)">העתק</button>
+                        <button class="mini-btn btn-primary" onclick="copyTemplate(2, true)">עם שם</button>
+                    </div>
+                </div>
+                <div class="template-card">
+                    <h4>הודעה קצרה</h4>
+                    <p class="template-text">שלום {{name}}, אני שחר, אני מפתח מערכת ניהול שחוסכת זמן יקר בניהול הפנסיון ומציע לכם להצטרף לפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהציג את המערכת. אפשר לשלוח פרטים?</p>
+                    <div class="template-actions">
+                        <button class="mini-btn btn-msg" onclick="copyTemplate(3, false)">העתק</button>
+                        <button class="mini-btn btn-primary" onclick="copyTemplate(3, true)">עם שם</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="table-container"><table><thead><tr><th>פנסיון</th><th>עיר</th><th>כתובת</th><th>טלפון</th><th>סוג</th><th>גודל</th><th>סטטוס</th><th>הערות</th><th>פעולות</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay"><div class="lead-card" id="leadCard"></div></div>
+    <div id="addLeadsModal" class="modal-overlay">
+        <div class="lead-card" style="max-width:900px;">
+            <div class="card-header">
+                <h2><i class="fas fa-plus-circle"></i> הוספת פנסיונים חדשים</h2>
+                <button class="close-btn" onclick="closeAddLeadsModal()">&times;</button>
+            </div>
+            <div class="modal-body-content">
+                <div class="tasks-tabs" style="margin-bottom:20px;">
+                    <button id="tabSingle" class="tab-btn active" onclick="setAddTab('single')"><i class="fas fa-user-plus"></i> הוספה מהירה</button>
+                    <button id="tabBulk" class="tab-btn" onclick="setAddTab('bulk')"><i class="fas fa-table"></i> הוספה מרובה (טבלה)</button>
+                </div>
+                
+                <div id="addSingleArea">
+                    <div class="form-grid">
+                        <div class="filter-group"><label class="modal-label">שם הפנסיון*</label><input type="text" id="asName" class="modal-input" placeholder="לדוגמא: הפנסיון של צ'יף"></div>
+                        <div class="filter-group"><label class="modal-label">עיר*</label><input type="text" id="asCity" class="modal-input" placeholder="עיר"></div>
+                        <div class="filter-group"><label class="modal-label">טלפון*</label><input type="tel" id="asPhone" class="modal-input" placeholder="050-0000000"></div>
+                        <div class="filter-group"><label class="modal-label">כתובת</label><input type="text" id="asAddress" class="modal-input" placeholder="רחוב ומספר"></div>
+                        <div class="filter-group">
+                            <label class="modal-label">סוג</label>
+                            <select id="asType" class="modal-input modal-select">
+                                <option value="ביתי">ביתי</option>
+                                <option value="בוטיק">בוטיק</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="modal-label">גודל</label>
+                            <select id="asSize" class="modal-input modal-select">
+                                <option value="קטן">קטן</option>
+                                <option value="בינוני">בינוני</option>
+                                <option value="גדול-בוטיק">גדול-בוטיק</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="modal-label">מקור</label>
+                            <input type="text" id="asSource" class="modal-input" placeholder="לדוגמא: פייסבוק, המלצה...">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width:100%; margin-top:30px; padding:15px; font-size:1.1rem;" onclick="addSingleLead()"><i class="fas fa-save"></i> שמור פנסיון</button>
+                </div>
+
+                <div id="addBulkArea" style="display:none;">
+                    <div class="bulk-table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>שם הפנסיון*</th>
+                                    <th>עיר*</th>
+                                    <th>טלפון*</th>
+                                    <th style="width:120px;">סוג</th>
+                                    <th>הערות</th>
+                                    <th style="width:50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bulkEditBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:20px; display:flex; gap:12px; justify-content: flex-end;">
+                        <button class="mini-btn" style="border-radius:10px; padding:10px 20px;" onclick="addBulkRow()"><i class="fas fa-plus"></i> הוסף שורה</button>
+                        <button class="mini-btn" style="border-radius:10px; padding:10px 20px;" onclick="bulkClearTable()"><i class="fas fa-trash"></i> נקה הכל</button>
+                        <button class="btn-primary" style="border-radius:10px; padding:10px 30px;" onclick="submitBulkLeads()"><i class="fas fa-check-double"></i> הוסף את כל הרשימה</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="datePickerPopover" class="date-popover"></div>
+
+    <script>
+        // Use window.supabase which was attached in the module script above
+        const getSupabase = () => window.supabase;
+
+        let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = 'all', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
+        let editingLogId = null, editingTaskId = null, deleteConfirmLogId = null, deleteConfirmTaskId = null;
+        let isLeadEditingHeader = false, deleteConfirmLeadId = null;
+        const TEMPLATES = [
+            "היי {{name}}, אני שחר, ראיתי את הפנסיון שלכם ונראה מעולה. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ובוחר מספר מצומצם של עסקים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות לאחר מכן). אשמח לקבוע פגישה ולהציג לכם את המערכת. מעניין אתכם?",
+            "שלום, אני שחר, אני פונה לגבי הפנסיון {{name}}. אני מפתח מערכת ניהול שחוסכת המון זמן בניהול היומן וההזמנות, ובוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהראות לכם איך זה עובד.",
+            "היי {{name}}, אני שחר, פיתחתי מערכת ניהול שחוסכת המון זמן בניהול הפנסיון ומפנה אתכם למה שחשוב באמת. אני בוחר מספר מצומצם של פנסיונים שישתתפו בפיילוט חינמי במטרה להקל משמעותית על העבודה היומיומית שלכם (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח להיפגש ולהציג את המערכת.",
+            "שלום {{name}}, אני שחר, אני מפתח מערכת ניהול שחוסכת זמן יקר בניהול הפנסיון ומציע לכם להצטרף לפיילוט חינמי (משתתפים פעילים יזכו למחיר מיוחד לצמיתות). אשמח לקבוע פגישה ולהציג את המערכת. אפשר לשלוח פרטים?"
+        ];
+
+        function formatDueLabel(ts) {
+            if(!ts) return "ללא תאריך יעד";
+            const dt = new Date(ts);
+            if(isNaN(dt.getTime())) return "ללא תאריך יעד";
+            const weekday = dt.toLocaleDateString('he-IL', { weekday: 'long' });
+            const date = dt.toLocaleDateString('he-IL');
+            return `${weekday}, ${date}`;
+        }
+
+
+        
+        async function init() { 
+            await loadLeads();
+            setup(); 
+            render(); 
+        }
+        
+        async function loadLeads() {
+            const { data, error } = await getSupabase()
+                .from('pension_leads')
+                .select('*, logs:pension_lead_logs(*), tasks:pension_lead_tasks(*)');
+            
+            if (error) {
+                console.error("Error loading leads:", error);
+                showToast("שגיאה בטעינת נתונים");
+                return;
+            }
+            leadsData = data || [];
+        }
+
+        function setup() { populateCity(); setupEvents(); loadDraft(); }
+        
+        async function saveData() { 
+            // Local storage is now only used for drafts, the source of truth is the DB.
+            // But we keep this function signature for places that might still call it.
+        }
+
+        function populateCity() { const s = document.getElementById('cityFilter'); const val = s.value; s.innerHTML = '<option value="">הכל</option>'; [...new Set(leadsData.map(l=>l.city))].sort().forEach(c=>{ const o=document.createElement('option'); o.value=c; o.innerText=c; if(c===val)o.selected=true; s.appendChild(o); }); }
+        function getFiltered() {
+            const fS = document.getElementById('searchFilter').value.toLowerCase(), fC = document.getElementById('cityFilter').value, fT = document.getElementById('typeFilter').value, fSz = document.getElementById('sizeFilter').value;
+            return leadsData.filter(l => (l.name.toLowerCase().includes(fS)||l.city.toLowerCase().includes(fS)||l.phone.includes(fS)) && (!fC||l.city===fC) && (!fT||l.type===fT) && (fSz==='all' ? true : l.size===fSz));
+        }
+        function render() {
+            const body = document.getElementById('tableBody'); 
+            body.innerHTML = getFiltered().map(l => {
+                const isSelected = selectedLeadId === l.id;
+                const p = normPhone(l.phone);
+                const waUrl = p.length >= 9 ? `https://wa.me/${p.startsWith('0') ? '972'+p.substring(1) : p.startsWith('972') ? p : '972'+p}` : '#';
+                
+                return `<tr class="${isSelected ? 'selected' : ''}" onclick="selectLead('${l.id}')">
+                    <td class="col-pension">${l.name}</td>
+                    <td>${l.city}</td>
+                    <td>${l.address||''}</td>
+                    <td>${l.phone}</td>
+                    <td>${l.type}</td>
+                    <td>${l.size||''}</td>
+                    <td onclick="event.stopPropagation()">
+                        <select class="status-select-inline" onchange="updateLead('${l.id}', 'status', this.value)">
+                            <option value="לא פניתי" ${l.status==='לא פניתי'?'selected':''}>לא פניתי</option>
+                            <option value="נשלחה הודעה" ${l.status==='נשלחה הודעה'?'selected':''}>נשלחה הודעה</option>
+                            <option value="נקבעה שיחה" ${l.status==='נקבעה שיחה'?'selected':''}>נקבעה שיחה</option>
+                            <option value="בוצע דמו" ${l.status==='בוצע דמו'?'selected':''}>בוצע דמו</option>
+                            <option value="בפיילוט" ${l.status==='בפיילוט'?'selected':''}>בפיילוט</option>
+                            <option value="לא רלוונטי" ${l.status==='לא רלוונטי'?'selected':''}>לא רלוונטי</option>
+                            <option value="לא ענו" ${l.status==='לא ענו'?'selected':''}>לא ענו</option>
+                        </select>
+                    </td>
+                    <td onclick="event.stopPropagation()">
+                        <div class="notes-wrapper">
+                            <textarea class="notes-input" placeholder="הערה קצרה..." oninput="autoGrow(this); updateLead('${l.id}','notes',this.value, true)" onblur="saveData()">${l.notes||''}</textarea>
+                            <button class="btn-expand-notes" onclick="openLeadCard('${l.id}')">הרחב</button>
+                        </div>
+                    </td>
+                    <td onclick="event.stopPropagation()">
+                        <button class="action-btn btn-card" title="כרטיס פנסיון" onclick="openLeadCard('${l.id}')"><i class="fas fa-id-card"></i></button>
+                        <a href="tel:${l.phone}" class="action-btn btn-tel" title="שירות טלפוני"><i class="fas fa-phone"></i></a>
+                        <a href="${waUrl}" target="_blank" class="action-btn btn-wa ${p.length < 9 ? 'disabled' : ''}" title="שלח וואטסאפ" onclick="${p.length < 9 ? "event.preventDefault(); showToast('מספר לא תקין');" : ""}"><i class="fab fa-whatsapp"></i></a>
+                    </td>
+                </tr>`}).join('');
+            
+            document.querySelectorAll('.notes-input').forEach(el => autoGrow(el));
+            renderGlobalTasks();
+            updateSelectedLabel();
+        }
+        function autoGrow(el) { el.style.height = '44px'; el.style.height = (el.scrollHeight) + 'px'; }
+        function selectLead(id) { selectedLeadId = id; render(); }
+        function updateSelectedLabel() {
+            const l = leadsData.find(x=>x.id===selectedLeadId);
+            document.getElementById('selectedPensionLabel').innerText = l ? `נבחר: ${l.name}` : "לא נבחר פנסיון - בחר מהטבלה";
+        }
+        function copyTemplate(idx, withName) {
+            const l = leadsData.find(x=>x.id===selectedLeadId);
+            if(withName && !l) return showToast("בחר פנסיון מהטבלה קודם");
+            let txt = TEMPLATES[idx];
+            if(withName) txt = txt.replace(/{{name}}/g, l.name);
+            else txt = txt.replace(/{{name}}/g, "");
+            navigator.clipboard.writeText(txt).then(() => showToast("הועתק ללוח"));
+        }
+        function openLeadCard(id) { const l = leadsData.find(x=>x.id===id); isLeadEditingHeader = false; deleteConfirmLeadId = null; renderLeadCard(l.id); document.getElementById('modalOverlay').style.display='flex'; }
+        function closeLeadCard() { document.getElementById('modalOverlay').style.display='none'; editingLogId=null; editingTaskId=null; deleteConfirmLogId=null; deleteConfirmTaskId=null; isLeadEditingHeader = false; deleteConfirmLeadId = null; }
+        
+        function renderLeadCard(lid) {
+            const l = leadsData.find(x=>x.id===lid); if(!l) return;
+            l.logs.forEach(lg => { if(!lg.createdAt) lg.createdAt = lg.id || Date.now(); });
+            const sLogs = [...l.logs].sort((a,b) => b.createdAt - a.createdAt);
+            const sTasks = [...l.tasks].sort((a,b) => (a.status==='done'?1:-1) - (b.status==='done'?1:-1));
+            const p = normPhone(l.phone);
+            const waUrl = `https://wa.me/${p.startsWith('0') ? '972'+p.substring(1) : p}`;
+
+            document.getElementById('leadCard').innerHTML = `
+                <div class="card-header">
+                    <h2><i class="fas fa-id-card"></i> כרטיס פנסיון: ${l.name}</h2>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="mini-btn btn-delete ${deleteConfirmLeadId===l.id?'confirm':''}" onclick="requestDeleteLead('${l.id}')">
+                            <i class="fas fa-trash"></i> ${deleteConfirmLeadId===l.id?'אשר מחיקה':'מחק פנסיון'}
+                        </button>
+                        <button class="mini-btn btn-card" onclick="toggleLeadEdit('${l.id}')">
+                            <i class="fas fa-${isLeadEditingHeader?'times':'edit'}"></i> ${isLeadEditingHeader?'בטל':'ערוך'}
+                        </button>
+                        <button class="close-btn" onclick="closeLeadCard()">&times;</button>
+                    </div>
+                </div>
+                <div class="card-body" style="overflow-y:auto; overflow-x:hidden;">
+                    <div class="card-section" style="grid-column: span 2; background: #fff;">
+                        ${isLeadEditingHeader ? `
+                            <div class="form-grid" style="margin-bottom:20px;">
+                                <div class="filter-group"><label class="modal-label">שם</label><input type="text" id="editLeadName" class="modal-input" value="${l.name}"></div>
+                                <div class="filter-group"><label class="modal-label">טלפון</label><input type="tel" id="editLeadPhone" class="modal-input" value="${l.phone}"></div>
+                                <div class="filter-group"><label class="modal-label">עיר</label><input type="text" id="editLeadCity" class="modal-input" value="${l.city}"></div>
+                                <div class="filter-group"><label class="modal-label">כתובת</label><input type="text" id="editLeadAddress" class="modal-input" value="${l.address||''}"></div>
+                                <div class="filter-group">
+                                    <label class="modal-label">סוג</label>
+                                    <select id="editLeadType" class="modal-input modal-select">
+                                        <option value="ביתי" ${l.type==='ביתי'?'selected':''}>ביתי</option>
+                                        <option value="בוטיק" ${l.type==='בוטיק'?'selected':''}>בוטיק</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label class="modal-label">גודל</label>
+                                    <select id="editLeadSize" class="modal-input modal-select">
+                                        <option value="קטן" ${l.size==='קטן'?'selected':''}>קטן</option>
+                                        <option value="בינוני" ${l.size==='בינוני'?'selected':''}>בינוני</option>
+                                        <option value="גדול-בוטיק" ${l.size==='גדול-בוטיק'?'selected':''}>גדול-בוטיק</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label class="modal-label">סטטוס</label>
+                                    <select id="editLeadStatus" class="modal-input modal-select">
+                                        <option value="לא פניתי" ${l.status==='לא פניתי'?'selected':''}>לא פניתי</option>
+                                        <option value="נשלחה הודעה" ${l.status==='נשלחה הודעה'?'selected':''}>נשלחה הודעה</option>
+                                        <option value="נקבעה שיחה" ${l.status==='נקבעה שיחה'?'selected':''}>נקבעה שיחה</option>
+                                        <option value="בוצע דמו" ${l.status==='בוצע דמו'?'selected':''}>בוצע דמו</option>
+                                        <option value="בפיילוט" ${l.status==='בפיילוט'?'selected':''}>בפיילוט</option>
+                                        <option value="לא רלוונטי" ${l.status==='לא רלוונטי'?'selected':''}>לא רלוונטי</option>
+                                        <option value="לא ענו" ${l.status==='לא ענו'?'selected':''}>לא ענו</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group"><label class="modal-label">מקור</label><input type="text" id="editLeadSource" class="modal-input" value="${l.source||''}"></div>
+                            </div>
+                            <button class="btn-primary" style="width:100%; margin-bottom:20px; padding:12px;" onclick="saveLeadHeaderEdit('${l.id}')"><i class="fas fa-save"></i> שמור שינויים</button>
+                        ` : `
+                            <div class="lead-details-grid">
+                                <div class="detail-item"><span class="detail-label">שם</span><span class="detail-value">${l.name}</span></div>
+                                <div class="detail-item"><span class="detail-label">טלפון</span><span class="detail-value">${l.phone}</span></div>
+                                <div class="detail-item"><span class="detail-label">עיר</span><span class="detail-value">${l.city}</span></div>
+                                <div class="detail-item"><span class="detail-label">כתובת</span><span class="detail-value">${l.address||'-'}</span></div>
+                                <div class="detail-item"><span class="detail-label">סוג</span><span class="detail-value">${l.type}</span></div>
+                                <div class="detail-item"><span class="detail-label">גודל</span><span class="detail-value">${l.size||'-'}</span></div>
+                                <div class="detail-item"><span class="detail-label">מקור</span><span class="detail-value">${l.source||''}</span></div>
+                                <div class="detail-item">
+                                    <span class="detail-label">סטטוס</span>
+                                    <select class="status-badge" style="border:none; cursor:pointer;" onchange="updateLead('${l.id}', 'status', this.value); renderLeadCard('${l.id}')">
+                                        <option value="לא פניתי" ${l.status==='לא פניתי'?'selected':''}>לא פניתי</option>
+                                        <option value="נשלחה הודעה" ${l.status==='נשלחה הודעה'?'selected':''}>נשלחה הודעה</option>
+                                        <option value="נקבעה שיחה" ${l.status==='נקבעה שיחה'?'selected':''}>נקבעה שיחה</option>
+                                        <option value="בוצע דמו" ${l.status==='בוצע דמו'?'selected':''}>בוצע דמו</option>
+                                        <option value="בפיילוט" ${l.status==='בפיילוט'?'selected':''}>בפיילוט</option>
+                                        <option value="לא רלוונטי" ${l.status==='לא רלוונטי'?'selected':''}>לא רלוונטי</option>
+                                        <option value="לא ענו" ${l.status==='לא ענו'?'selected':''}>לא ענו</option>
+                                    </select>
+                                </div>
+                            </div>
+                        `}
+                        <div style="margin-bottom:20px;">
+                            <label class="detail-label" style="display:block; margin-bottom:8px;">הערה כללית (מהטבלה)</label>
+                            <textarea class="modal-input" style="min-height:100px; width:100%; resize:vertical; background:#fcfdfe;" 
+                                      placeholder="הערה כללית על הפנסיון..."
+                                      oninput="updateLead('${l.id}', 'notes', this.value, true)" 
+                                      onblur="saveData()">${l.notes||''}</textarea>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <a href="tel:${l.phone}" class="btn-primary" style="flex:1; padding:8px; border-radius:10px;"><i class="fas fa-phone"></i> התקשר</a>
+                            <a href="${waUrl}" target="_blank" class="btn-export" style="flex:1; padding:8px; border-radius:10px; background:#25d366;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-section">
+                        <h3><i class="fas fa-tasks"></i> משימות</h3>
+                        <div class="add-row" style="flex-wrap:wrap;">
+                            <input type="text" id="ntText" class="filter-input" style="width:100%;" placeholder="מה המשימה?">
+                            <input type="text" id="ntDate" class="filter-input due-date-input" style="width:100%;" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)">
+                            <button class="btn-add-inline" style="width:100%; padding:10px;" onclick="addLeadTask('${l.id}')">הוסף משימה</button>
+                        </div>
+                        <ul class="task-list">
+                            ${sTasks.map(t => {
+                                if(editingTaskId === t.id) {
+                                    const dVal = t.due_at ? new Date(t.due_at).toISOString().split('T')[0] : '';
+                                    const dDisp = t.due_at ? new Date(t.due_at).toLocaleDateString('he-IL') : '';
+                                    return `<li><div class="inline-edit-form">
+                                        <input type="text" id="etText" class="edit-input" value="${t.text}">
+                                        <input type="text" id="etDate" class="edit-input due-date-input" value="${dDisp}" data-date-value="${dVal}" readonly onclick="openCalendar(this)">
+                                        <div class="edit-btns">
+                                            <button class="btn-add-inline" onclick="saveEditTask('${l.id}', '${t.id}')">שמור</button>
+                                            <button class="mini-btn" onclick="cancelEditTask('${l.id}')">בטל</button>
+                                        </div>
+                                    </div></li>`;
+                                }
+                                const d_val = t.due_at ? new Date(t.due_at).getTime() : 0;
+                                const isLate = t.status === 'open' && d_val < new Date().setHours(0,0,0,0);
+                                const isDone = t.status === 'done';
+                                return `<li style="flex-direction:column; align-items:flex-start;">
+                                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                        <div style="display:flex; flex-direction:column; gap:2px;">
+                                            <span style="${isDone?'text-decoration:line-through; color:gray;':''}; font-weight:700;">${t.text}</span>
+                                            <span style="font-size:0.75rem; color:var(--text-muted);">
+                                                <i class="far fa-calendar-alt"></i> ${formatDueLabel(t.due_at)}
+                                                ${isLate && !isDone ? `<span class="badge badge-late" style="margin-right:5px;">באיחור</span>` : ''}
+                                            </span>
+                                        </div>
+                                        <button class="btn-check-task" style="background:${isDone?'var(--warning)':'var(--success)'}" onclick="toggleTaskDone('${l.id}','${t.id}')">
+                                            <i class="fas fa-${isDone?'undo':'check'}"></i>
+                                        </button>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn-inline-action btn-edit" onclick="startEditTask('${l.id}','${t.id}')">ערוך</button>
+                                        <button class="btn-inline-action btn-delete ${deleteConfirmTaskId===t.id?'confirm':''}" onclick="requestDeleteTask('${l.id}','${t.id}')">
+                                            ${deleteConfirmTaskId===t.id?'אשר מחיקה':'מחק'}
+                                        </button>
+                                    </div>
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="card-section">
+                        <h3><i class="fas fa-comment"></i> הערות מהמערכת</h3>
+                        <div class="add-row">
+                            <input type="text" id="nlText" class="filter-input" placeholder="הערה חדשה...">
+                            <button class="btn-add-inline" onclick="addLeadLog('${l.id}')">הוסף</button>
+                        </div>
+                        <ul class="log-list">
+                            ${sLogs.map(lg => {
+                                if(editingLogId === lg.id) {
+                                    return `<li><div class="inline-edit-form">
+                                        <textarea id="elText" class="edit-input" rows="3">${lg.text}</textarea>
+                                        <div class="edit-btns">
+                                            <button class="btn-add-inline" onclick="saveEditLog('${l.id}', '${lg.id}')">שמור</button>
+                                            <button class="mini-btn" onclick="cancelEditLog('${l.id}')">בטל</button>
+                                        </div>
+                                    </div></li>`;
+                                }
+                                const dt = new Date(lg.created_at);
+                                const tStr = dt.toLocaleDateString('he-IL') + ' ' + dt.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+                                return `<li class="log-item">
+                                    <span class="log-time">${tStr} ${lg.updated_at !== lg.created_at ? '(עודכן)' : ''}</span>
+                                    <span>${lg.text}</span>
+                                    <div class="log-actions">
+                                        <button class="btn-inline-action btn-edit" onclick="startEditLog('${l.id}','${lg.id}')">ערוך</button>
+                                        <button class="btn-inline-action btn-delete ${deleteConfirmLogId===lg.id?'confirm':''}" onclick="requestDeleteLog('${l.id}','${lg.id}')">
+                                            ${deleteConfirmLogId===lg.id?'אשר מחיקה':'מחק'}
+                                        </button>
+                                    </div>
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    </div>
+                </div>`;
+        }
+        
+        async function addLeadTask(lid) {
+            const t = document.getElementById('ntText').value, d = document.getElementById('ntDate').dataset.dateValue;
+            if(!t) return showToast("נא להזין תיאור משימה");
+            if(!d) return showToast("נא לבחור תאריך יעד");
+            const isoDue = new Date(d + "T12:00:00").toISOString();
+            const { data, error } = await getSupabase().from('pension_lead_tasks').insert({ lead_id: lid, text: t, due_at: isoDue }).select();
+            if(error) return showToast("שגיאה בהוספת משימה");
+            leadsData.find(x=>x.id===lid).tasks.push(data[0]);
+            renderLeadCard(lid); renderGlobalTasks(); showToast("משימה נוספה");
+        }
+        async function toggleTaskDone(lid, tid) {
+            const l = leadsData.find(x=>x.id===lid), t = l.tasks.find(x=>x.id===tid);
+            const newStatus = t.status === 'open' ? 'done' : 'open';
+            const doneAt = newStatus === 'done' ? new Date().toISOString() : null;
+            const { error } = await getSupabase().from('pension_lead_tasks').update({ status: newStatus, done_at: doneAt }).eq('id', tid);
+            if(error) return showToast("שגיאה בעדכון המשימה");
+            t.status = newStatus; t.done_at = doneAt;
+            renderLeadCard(lid); renderGlobalTasks(); showToast(t.status==='done'?"בוצע!":"הוחזר לפתוח");
+        }
+        function startEditTask(lid, tid) { editingTaskId = tid; renderLeadCard(lid); }
+        function cancelEditTask(lid) { editingTaskId = null; renderLeadCard(lid); }
+        async function saveEditTask(lid, tid) {
+            const txt = document.getElementById('etText').value, d = document.getElementById('etDate').dataset.dateValue;
+            if(!d) return showToast("בחר תאריך יעד");
+            const isoDue = new Date(d + "T12:00:00").toISOString();
+            const now = new Date().toISOString();
+            const { error } = await getSupabase().from('pension_lead_tasks').update({ text: txt, due_at: isoDue, updated_at: now }).eq('id', tid);
+            if(error) return showToast("שגיאה בעדכון המשימה");
+            const l = leadsData.find(x=>x.id===lid), t = l.tasks.find(x=>x.id===tid);
+            t.text = txt; t.due_at = isoDue; t.updated_at = now;
+            editingTaskId = null; renderLeadCard(lid); renderGlobalTasks(); showToast("משימה עודכנה");
+        }
+        async function requestDeleteTask(lid, tid) {
+            if(deleteConfirmTaskId === tid) {
+                const { error } = await getSupabase().from('pension_lead_tasks').delete().eq('id', tid);
+                if(error) return showToast("שגיאה במחיקת המשימה");
+                const l = leadsData.find(x=>x.id===lid);
+                l.tasks = l.tasks.filter(x=>x.id!==tid);
+                deleteConfirmTaskId = null; renderLeadCard(lid); renderGlobalTasks(); showToast("נמחק");
+            } else {
+                deleteConfirmTaskId = tid; renderLeadCard(lid);
+                setTimeout(() => { if(deleteConfirmTaskId === tid) { deleteConfirmTaskId = null; renderLeadCard(lid); } }, 3000);
+            }
+        }
+
+        async function addLeadLog(lid) {
+            const t = document.getElementById('nlText').value; if(!t) return;
+            const { data, error } = await getSupabase().from('pension_lead_logs').insert({ lead_id: lid, text: t }).select();
+            if(error) return showToast("שגיאה בהוספת הערה");
+            leadsData.find(x=>x.id===lid).logs.push(data[0]);
+            renderLeadCard(lid); showToast("הערה נוספה");
+        }
+        function startEditLog(lid, logId) { editingLogId = logId; renderLeadCard(lid); }
+        function cancelEditLog(lid) { editingLogId = null; renderLeadCard(lid); }
+        async function saveEditLog(lid, logId) {
+            const txt = document.getElementById('elText').value;
+            const now = new Date().toISOString();
+            const { error } = await getSupabase().from('pension_lead_logs').update({ text: txt, updated_at: now }).eq('id', logId);
+            if(error) return showToast("שגיאה בעדכון ההערה");
+            const l = leadsData.find(x=>x.id===lid), lg = l.logs.find(x=>x.id===logId);
+            lg.text = txt; lg.updated_at = now;
+            editingLogId = null; renderLeadCard(lid); showToast("עודכן");
+        }
+        async function requestDeleteLog(lid, logId) {
+            if(deleteConfirmLogId === logId) {
+                const { error } = await getSupabase().from('pension_lead_logs').delete().eq('id', logId);
+                if(error) return showToast("שגיאה במחיקת ההערה");
+                const l = leadsData.find(x=>x.id===lid);
+                l.logs = l.logs.filter(x=>x.id!==logId);
+                deleteConfirmLogId = null; renderLeadCard(lid); showToast("נמחק");
+            } else {
+                deleteConfirmLogId = logId; renderLeadCard(lid);
+                setTimeout(() => { if(deleteConfirmLogId === logId) { deleteConfirmLogId = null; renderLeadCard(lid); } }, 3000);
+            }
+        }
+
+        function renderGlobalTasks() {
+            const g = document.getElementById('globalTasksGrid'); let tks = []; leadsData.forEach(l=>l.tasks.forEach(t=>tks.push({...t,leadId:l.id,leadName:l.name})));
+            if(globalTaskFilter!=='all') tks = tks.filter(t=>t.status===globalTaskFilter);
+            const now = new Date(), startDay = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+            if(globalDaysFilter==='late') tks=tks.filter(t=>t.status==='open' && new Date(t.due_at).getTime()<startDay);
+            else if(globalDaysFilter!=='all') { 
+                const days=parseInt(globalDaysFilter), end = startDay + (days+1)*24*3600*1000; 
+                tks = tks.filter(t => {
+                    const d = new Date(t.due_at).getTime();
+                    return d >= startDay && d < end;
+                });
+            }
+            if(!tks.length) { g.innerHTML='<div class="empty-tasks">אין משימות</div>'; return; }
+            g.innerHTML = tks.map(t=>`
+                <div class="task-card-global ${new Date(t.due_at).getTime()<startDay && t.status==='open'?'late':''} ${t.status==='done'?'done':''}">
+                    <div class="card-pension-name">${t.leadName}</div>
+                    <div class="card-task-text" style="margin-bottom:4px;">${t.text}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;"><i class="far fa-calendar-alt"></i> מיועדת ל: ${formatDueLabel(t.due_at)}</div>
+                    <div class="card-footer">
+                        <button class="mini-btn" onclick="openLeadCard('${t.leadId}')">פתח</button>
+                        <button class="mini-btn ${t.status==='done'?'btn-undo':'btn-done'}" onclick="toggleTaskDone('${t.leadId}','${t.id}')">
+                            ${t.status==='done'?'בטל ביצוע':'בוצע'}
+                        </button>
+                    </div>
+                </div>`).join('');
+        }
+        function setGlobalTaskFilter(f) { globalTaskFilter=f; document.querySelectorAll('.tasks-tabs button').forEach(b=>b.classList.toggle('active',b.innerText.includes(f==='open'?'פתוחות':f==='done'?'בוצעו':'הכל'))); renderGlobalTasks(); }
+        function setGlobalDaysFilter(v) { 
+            globalDaysFilter = v; 
+            document.querySelectorAll('.day-tab').forEach(b => {
+                const isMatch = (v === 'all' && b.innerText.includes('הכל')) || (v === '0' && b.innerText.includes('היום')) || (v === '3' && b.innerText.includes('3 ימים')) || (v === '7' && b.innerText.includes('שבוע')) || (v === 'late' && b.innerText.includes('איחור'));
+                b.classList.toggle('active', isMatch);
+            });
+            renderGlobalTasks(); 
+        }
+        function openAddLeadsModal() { document.getElementById('addLeadsModal').style.display='flex'; setAddTab('single'); }
+        function closeAddLeadsModal() { document.getElementById('addLeadsModal').style.display='none'; }
+        function setAddTab(t) { const s=t==='single'; document.getElementById('tabSingle').classList.toggle('active',s); document.getElementById('tabBulk').classList.toggle('active',!s); document.getElementById('addSingleArea').style.display=s?'block':'none'; document.getElementById('addBulkArea').style.display=s?'none':'block'; if(!s) renderBulkTable(); }
+        function normPhone(p) { return p ? p.toString().replace(/\D/g,'') : ''; }
+        async function addSingleLead() {
+            const n = document.getElementById('asName').value, 
+                  c = document.getElementById('asCity').value, 
+                  p = document.getElementById('asPhone').value;
+            
+            if(!n || !c || !p) return showToast("נא למלא את שדות החובה (*)");
+            if(leadsData.some(l => normPhone(l.phone) === normPhone(p))) return showToast("מספר טלפון זה כבר קיים במערכת");
+            
+            const newLeadRow = {
+                name: n,
+                city: c,
+                phone: p,
+                address: document.getElementById('asAddress').value,
+                type: document.getElementById('asType').value,
+                size: document.getElementById('asSize').value,
+                source: document.getElementById('asSource').value,
+                status: 'לא פניתי',
+                notes: ''
+            };
+            
+            const { data, error } = await getSupabase()
+                .from('pension_leads')
+                .insert([newLeadRow])
+                .select();
+
+            if (error) return showToast("שגיאה בשמירת הפנסיון");
+
+            const newLead = { ...data[0], logs: [], tasks: [] };
+            leadsData.push(newLead);
+            populateCity(); render(); closeAddLeadsModal(); 
+            showToast("הפנסיון נוסף בהצלחה!");
+            
+            // Clear fields
+            ['asName', 'asCity', 'asPhone', 'asAddress', 'asSource'].forEach(id => document.getElementById(id).value = '');
+        }
+        function loadDraft() { bulkDraft = JSON.parse(localStorage.getItem('pensionet_bulk_draft')) || [{},{},{}]; }
+        function saveDraft() { localStorage.setItem('pensionet_bulk_draft', JSON.stringify(bulkDraft)); }
+        function renderBulkTable() { const b=document.getElementById('bulkEditBody'); b.innerHTML=bulkDraft.map((r,i)=>`<tr><td><input value="${r.name||''}" oninput="ud(${i},'name',this.value)"></td><td><input value="${r.city||''}" oninput="ud(${i},'city',this.value)"></td><td><input value="${r.phone||''}" oninput="ud(${i},'phone',this.value)"></td><td><select onchange="ud(${i},'type',this.value)"><option value="ביתי" ${r.type==='ביתי'?'selected':''}>ביתי</option><option value="בוטיק" ${r.type==='בוטיק'?'selected':''}>בוטיק</option></select></td><td><input value="${r.notes||''}" oninput="ud(${i},'notes',this.value)"></td><td><button class="mini-btn btn-delete" onclick="rr(${i})">&times;</button></td></tr>`).join(''); }
+        function ud(i,f,v) { bulkDraft[i][f]=v; saveDraft(); }
+        function rr(i) { bulkDraft.splice(i,1); if(!bulkDraft.length) bulkDraft=[{}]; saveDraft(); renderBulkTable(); }
+        function addBulkRow() { bulkDraft.push({}); renderBulkTable(); }
+        function bulkClearTable() { bulkDraft=[{},{},{}]; saveDraft(); renderBulkTable(); }
+        async function submitBulkLeads() {
+            let addCount=0, skip=0, newD=[]; let bIds = new Set(leadsData.map(l=>normPhone(l.phone)));
+            const toInsert = [];
+            
+            bulkDraft.forEach(r=>{ 
+                if(!r.name||!r.city||!r.phone){ if(r.name||r.city||r.phone) {r.err="חסר"; newD.push(r); skip++;} return; } 
+                if(bIds.has(normPhone(r.phone))){ r.err="קיים"; newD.push(r); skip++; return; } 
+                
+                toInsert.push({
+                    name: r.name,
+                    city: r.city,
+                    phone: r.phone,
+                    type: r.type || 'ביתי',
+                    status: 'לא פניתי',
+                    notes: r.notes || ''
+                });
+                bIds.add(normPhone(r.phone));
+            });
+
+            if(toInsert.length > 0) {
+                const { data, error } = await getSupabase()
+                    .from('pension_leads')
+                    .insert(toInsert)
+                    .select();
+                
+                if(error) return showToast("שגיאה בשמירת הנתונים");
+                
+                data.forEach(d => {
+                    leadsData.push({ ...d, logs: [], tasks: [] });
+                    addCount++;
+                });
+            }
+
+            bulkDraft=newD; if(!bulkDraft.length) bulkDraft=[{},{},{}]; 
+            saveDraft(); populateCity(); render(); 
+            showToast(`נוספו ${addCount}`); if(!skip) closeAddLeadsModal(); else renderBulkTable();
+        }
+        function showToast(m) { const t=document.createElement('div'); t.className='toast'; t.innerText=m; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300)},2000); }
+        function toggleBulkPanel(s) { const p=document.getElementById('bulkAddPanel'); p.style.display=(s===undefined?p.style.display==='none':s)?'flex':'none'; if(p.style.display==='flex') renderBulkChecklist(); }
+        function toggleId(id) { if(bulkIds.has(id)) bulkIds.delete(id); else bulkIds.add(id); renderBulkChecklist(); }
+        function renderBulkChecklist() { 
+            const c=document.getElementById('bulkLeadChecklist'), s=document.getElementById('bulkLeadSearch').value.toLowerCase(); 
+            c.innerHTML=leadsData.filter(l=>l.name.toLowerCase().includes(s)||l.city.toLowerCase().includes(s)).map(l=>`<label style="display:block; padding:4px; cursor:pointer;"><input type="checkbox" onchange="toggleId('${l.id}')" ${bulkIds.has(l.id)?'checked':''}> ${l.name} (${l.city})</label>`).join(''); 
+        }
+        function bulkSelectFiltered() { const f = getFiltered(); f.forEach(l=>bulkIds.add(l.id)); renderBulkChecklist(); }
+        function bulkClearSelection() { bulkIds.clear(); renderBulkChecklist(); }
+        async function bulkAddTask() {
+            const txt = document.getElementById('bulkTaskTextGlobal').value, dt = document.getElementById('bulkTaskDateGlobal').dataset.dateValue;
+            if(!txt) return showToast("הזן תיאור משימה");
+            if(!dt) return showToast("בחר תאריך יעד");
+            if(bulkIds.size === 0) return showToast("לא נבחרו פנסיונים");
+            
+            const due = new Date(dt + "T12:00:00").toISOString();
+            const toInsert = Array.from(bulkIds).map(lid => ({
+                lead_id: lid,
+                text: txt,
+                due_at: due,
+                status: 'open'
+            }));
+
+            const { data, error } = await getSupabase()
+                .from('pension_lead_tasks')
+                .insert(toInsert)
+                .select();
+
+            if(error) return showToast("שגיאה בהוספת משימה קבוצתית");
+
+            data.forEach(task => {
+                const l = leadsData.find(x=>x.id===task.lead_id);
+                if(l) l.tasks.push(task);
+            });
+
+            bulkIds.clear(); toggleBulkPanel(false); render(); renderGlobalTasks(); showToast(`נוספו ${data.length} משימות`);
+            document.getElementById('bulkTaskTextGlobal').value = ''; 
+            const bd = document.getElementById('bulkTaskDateGlobal'); bd.value = ''; bd.dataset.dateValue = '';
+        }
+        async function toggleLeadEdit(lid) { isLeadEditingHeader = !isLeadEditingHeader; renderLeadCard(lid); }
+        async function saveLeadHeaderEdit(lid) {
+            const l = leadsData.find(x=>x.id===lid);
+            const updates = {
+                name: document.getElementById('editLeadName').value,
+                phone: document.getElementById('editLeadPhone').value,
+                city: document.getElementById('editLeadCity').value,
+                address: document.getElementById('editLeadAddress').value,
+                type: document.getElementById('editLeadType').value,
+                size: document.getElementById('editLeadSize').value,
+                status: document.getElementById('editLeadStatus').value,
+                source: document.getElementById('editLeadSource').value,
+                updated_at: new Date().toISOString()
+            };
+            
+            const { error } = await getSupabase()
+                .from('pension_leads')
+                .update(updates)
+                .eq('id', lid);
+
+            if(error) return showToast("שגיאה בעדכון הפנסיון");
+
+            Object.assign(l, updates);
+            isLeadEditingHeader = false;
+            populateCity(); render(); renderLeadCard(lid); showToast("פרטי פנסיון עודכנו");
+        }
+        async function requestDeleteLead(lid) {
+            if(deleteConfirmLeadId === lid) {
+                const { error } = await getSupabase().from('pension_leads').delete().eq('id', lid);
+                if(error) return showToast("שגיאה במחיקת הפנסיון");
+
+                leadsData = leadsData.filter(x=>x.id!==lid);
+                deleteConfirmLeadId = null; 
+                populateCity(); render(); closeLeadCard(); 
+                showToast("פנסיון נמחק לצמיתות");
+            } else {
+                deleteConfirmLeadId = lid; renderLeadCard(lid);
+                setTimeout(() => { if(deleteConfirmLeadId === lid) { deleteConfirmLeadId = null; renderLeadCard(lid); } }, 4000);
+            }
+        }
+        async function updateLead(id,f,v,noRender) { 
+            const l=leadsData.find(x=>x.id===id); 
+            if(l){
+                const { error } = await getSupabase()
+                    .from('pension_leads')
+                    .update({ [f]: v, updated_at: new Date().toISOString() })
+                    .eq('id', id);
+                
+                if(error) return showToast("שגיאה בעדכון");
+                
+                l[f]=v; 
+                if(!noRender) render();
+            }
+        }
+        function setGlobalTaskFilter(f) { globalTaskFilter=f; document.querySelectorAll('.tasks-tabs button').forEach(b=>b.classList.toggle('active',b.innerText.includes(f==='open'?'פתוחות':f==='done'?'בוצעו':'הכל'))); renderGlobalTasks(); }
+
+        // --- Custom Hebrew Calendar Logic ---
+        let calTargetInput = null;
+        let calCurrentMonth = new Date().getMonth();
+        let calCurrentYear = new Date().getFullYear();
+        const HEB_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+        const HEB_DAYS = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
+
+        function openCalendar(input) {
+            calTargetInput = input;
+            const val = input.dataset.dateValue;
+            if(val) {
+                const d = new Date(val);
+                calCurrentMonth = d.getMonth();
+                calCurrentYear = d.getFullYear();
+            } else {
+                calCurrentMonth = new Date().getMonth();
+                calCurrentYear = new Date().getFullYear();
+            }
+            positionCalendar();
+            renderCalendar();
+            document.getElementById('datePickerPopover').classList.add('active');
+            
+            // Close on outside click
+            const closeHandler = (e) => {
+                if(!e.target.closest('.date-popover') && !e.target.closest('.due-date-input')) {
+                    closeCalendar();
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeHandler), 10);
+        }
+
+        function closeCalendar() {
+            document.getElementById('datePickerPopover').classList.remove('active');
+            calTargetInput = null;
+        }
+
+        function positionCalendar() {
+            const rect = calTargetInput.getBoundingClientRect();
+            const pop = document.getElementById('datePickerPopover');
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const popHeight = 350; // estimate
+            
+            pop.style.left = (rect.right - 300) + 'px'; // align with right side (RTL)
+            if(spaceBelow < popHeight && rect.top > popHeight) {
+                pop.style.top = (rect.top - popHeight - 10) + 'px';
+            } else {
+                pop.style.top = (rect.bottom + 5) + 'px';
+            }
+        }
+
+        function renderCalendar() {
+            const pop = document.getElementById('datePickerPopover');
+            const firstDay = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+            const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+            
+            const today = new Date(); today.setHours(0,0,0,0);
+            const selectedVal = calTargetInput ? calTargetInput.dataset.dateValue : null;
+
+            let html = `
+                <div class="cal-header">
+                    <button class="cal-nav" onclick="changeMonth(-1)"><i class="fas fa-chevron-right"></i></button>
+                    <div class="cal-title">${HEB_MONTHS[calCurrentMonth]} ${calCurrentYear}</div>
+                    <button class="cal-nav" onclick="changeMonth(1)"><i class="fas fa-chevron-left"></i></button>
+                    <button class="close-btn" style="width:24px; height:24px; font-size:0.9rem;" onclick="closeCalendar()">&times;</button>
+                </div>
+                <div class="cal-grid">
+                    ${HEB_DAYS.map(d => `<div class="cal-day-name">${d}</div>`).join('')}
+            `;
+
+            // Previous month days
+            for(let i = firstDay; i > 0; i--) {
+                html += `<div class="cal-day other-month">${daysInPrevMonth - i + 1}</div>`;
+            }
+
+            // Current month days
+            for(let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(calCurrentYear, calCurrentMonth, d);
+                const iso = `${calCurrentYear}-${(calCurrentMonth+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+                
+                let classes = "cal-day";
+                if(dateObj.getTime() === today.getTime()) classes += " today-highlight";
+                if(iso === selectedVal) classes += " selected-day";
+                
+                html += `<div class="${classes}" onclick="selectDate('${iso}')">${d}</div>`;
+            }
+
+            html += `</div>
+                <div class="cal-footer">
+                    <button class="cal-btn" onclick="selectDate('')">נקה</button>
+                    <button class="cal-btn primary-btn" onclick="selectDate('${today.toISOString().split('T')[0]}')">היום</button>
+                </div>
+            `;
+            pop.innerHTML = html;
+        }
+
+        function changeMonth(diff) {
+            calCurrentMonth += diff;
+            if(calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; }
+            if(calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; }
+            renderCalendar();
+        }
+
+        function selectDate(iso) {
+            if(!calTargetInput) return;
+            if(iso === '') {
+                calTargetInput.value = '';
+                calTargetInput.dataset.dateValue = '';
+            } else {
+                const [y, m, d] = iso.split('-');
+                calTargetInput.value = `${d}/${m}/${y}`;
+                calTargetInput.dataset.dateValue = iso;
+            }
+            closeCalendar();
+        }
+        
+        function clearAllFilters() {
+            document.getElementById('searchFilter').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('sizeFilter').value = 'all';
+            document.getElementById('statusFilter').value = '';
+            render();
+        }
+
+        function exportToExcel() {
+            const filtered = getFiltered();
+            if(!filtered.length) return showToast("אין נתונים לייצוא");
+            let csv = "שם הפנסיון,עיר,כתובת,טלפון,סוג,גודל,סטטוס,הערות\n";
+            filtered.forEach(l => {
+                csv += `"${l.name}","${l.city}","${l.address||''}","${l.phone}","${l.type}","${l.size||''}","${l.status}","${(l.notes||'').replace(/\n/g,' ')}"\n`;
+            });
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `pensionet_leads_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("ייצוא הושלם");
+        }
+
+        function setupEvents() { 
+            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter'].forEach(id=>document.getElementById(id).addEventListener('input',render)); 
+            document.getElementById('exportExcel').onclick = exportToExcel;
+            
+            // Handle ESC key to close calendar
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'Escape') closeCalendar();
+            });
+        }
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
