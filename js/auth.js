@@ -38,6 +38,13 @@ const Auth = {
   },
 
   async checkAuth() {
+    // Check for demo mode in URL to prevent redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') {
+      console.log('🛡️ Auth check bypassed for Demo Mode');
+      return null;
+    }
+
     const session = await this.getSession();
     if (!session) {
       // If we are on a protected page and not logged in, redirect to login

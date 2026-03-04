@@ -6,6 +6,14 @@ const PIN_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 Hours in MS
 
 // --- Supabase Auth Integration ---
 async function checkAuthStatus() {
+  // Check for demo mode in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('demo') === 'true') {
+    console.log('🚀 Running in Demo Mode');
+    window.isDemoMode = true;
+    return { user: { id: 'demo-user', email: 'demo@example.com' } };
+  }
+
   const session = await Auth.getSession();
   if (!session) {
     window.location.href = "login.html";
@@ -100,6 +108,16 @@ async function copyBookingLink(event) {
 
 
 document.addEventListener("DOMContentLoaded", async function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('demo') === 'true') {
+     window.isDemoMode = true;
+     window.managerName = 'מנהל דמו';
+     window.currentStaffMembers = [{ name: 'עובד לדוגמה', pin: '1234', permissions: { edit_status: true, edit_details: true } }];
+     document.body.classList.add('demo-mode');
+     const overlay = document.getElementById('login-overlay');
+     if (overlay) overlay.style.setProperty('display', 'none', 'important');
+  }
+
   const session = await checkAuthStatus();
   if (session) {
     window.currentUserSession = session; // Cache session
@@ -176,7 +194,13 @@ document.addEventListener("DOMContentLoaded", async function () {
       
       // Close the login overlay if open
       const overlay = document.getElementById('login-overlay');
-      if (overlay) overlay.style.display = 'none';
+      if (overlay) {
+        if (window.isDemoMode) {
+          overlay.style.setProperty('display', 'none', 'important');
+        } else {
+          overlay.style.display = 'none';
+        }
+      }
 
       // Add a CSS rule to help make it read-only and handle banner layout
       const style = document.createElement('style');
@@ -798,13 +822,13 @@ async function renderMonthlyCalendar(allOrders) {
       const dogCount = dogsBySize[size].length;
 
       // --- הוספת שם הבעלים בסוגריים ---
-      const dogEntries = dogsBySize[size]
+      const dogEntriesHTML = dogsBySize[size]
         .map((d) => {
           const dogName = d.dog_name || "ללא שם";
           const ownerName = d.owner_name ? ` (${d.owner_name})` : "";
-          return dogName + ownerName;
+          return `<div class="dog-tooltip-item"><strong>${dogName}</strong>${ownerName}</div>`;
         })
-        .join(" | ");
+        .join("");
       // ---------------------------------
 
       // בודק אם זה יום שבת (עמודה אחרונה, יום 6) כדי להפוך את כיוון ה-tooltip
@@ -814,10 +838,7 @@ async function renderMonthlyCalendar(allOrders) {
       dogsContentHTML += `
               <div class="dog-size-label${reverseClass}" >
                   ${size} (${dogCount})
-                  <div class="dog-tooltip">${dogEntries.replace(
-                    / \| /g,
-                    "<br>"
-                  )}</div>
+                  <div class="dog-tooltip"><div class="dog-tooltip-content">${dogEntriesHTML}</div></div>
               </div>
           `;
     });
@@ -1123,8 +1144,8 @@ function renderPastOrdersTable() {
         ${row.dog_photo ? `
           <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
         ` : `
-          <div class="dog-thumbnail-placeholder" title="לחצו להעלאת תמונה" onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')">
-            <i class="fas fa-camera"></i>
+          <div class="dog-thumbnail-placeholder" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')"`}>
+            <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
           </div>
         `}
         <span style="font-weight: 600;">${row.dog_name || ""}</span>
@@ -1451,6 +1472,30 @@ function renderMovementStats(data) {
 }
 
 async function loadData() {
+  if (window.isDemoMode) {
+    console.log('📦 Loading mock demo data...');
+    const demoData = generateLocalDemoData(); 
+    window.allOrdersCache = demoData;
+    
+    // Call the correct rendering functions
+    renderCurrentDogsColumnView(demoData);
+    renderMovementStats(demoData);
+    renderFutureOrdersTable();
+    
+    // Set past orders for history tab
+    const now = new Date();
+    window.pastOrdersRawData = demoData.filter(row => new Date(row.check_out) < now);
+    renderPastOrdersTable();
+    
+    // Process clients for clients tab
+    processClientsData();
+    
+    renderMonthlyCalendar(demoData);
+    
+    // Enforce read-only UI
+    document.body.classList.add('demo-read-only');
+    return;
+  }
   const session = window.currentUserSession || await Auth.getSession();
   if (!session) return;
 
@@ -1611,8 +1656,8 @@ function renderFutureOrdersTable() {
           ${row.dog_photo ? `
             <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
           ` : `
-            <div class="dog-thumbnail-placeholder" title="לחצו להעלאת תמונה" onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')">
-              <i class="fas fa-camera"></i>
+            <div class="dog-thumbnail-placeholder" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')"`}>
+              <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
             </div>
           `}
           <span style="font-weight: 600;">${row.dog_name || ""}</span>
@@ -2403,9 +2448,9 @@ function updateModeUI() {
   const activeStaffName = document.getElementById('activeStaffSelect')?.value || 'צוות';
   let allowSave = false;
 
-  if (window.isImpersonating) {
-    allowSave = false;
-    badge.innerHTML = '<i class="fas fa-user-secret"></i> מצב צפייה';
+  if (window.isImpersonating || window.isDemoMode) {
+    allowSave = !window.isImpersonating; // Allow save in demo mode for local trial
+    badge.innerHTML = window.isDemoMode ? '<i class="fas fa-magic"></i> מצב דמו' : '<i class="fas fa-user-secret"></i> מצב צפייה';
     badge.className = 'mode-badge manager'; // Using manager style for gold feel
     document.body.classList.remove('staff-mode', 'no-identity');
   } else if (window.isAdminMode) {
@@ -2496,7 +2541,9 @@ function updateModeUI() {
   // LOCK: If no valid profile selected OR PIN expired, show login overlay (FOR BOTH MODES)
   if (overlay) {
     const hasOnlyManager = (window.currentStaffMembers || []).length === 0 && window.managerName;
-    if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager) {
+    if (window.isDemoMode) {
+       overlay.style.setProperty('display', 'none', 'important');
+    } else if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager) {
        overlay.style.setProperty('display', 'flex', 'important');
     } else {
        overlay.style.setProperty('display', 'none', 'important');
@@ -2791,6 +2838,18 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', async function
 });
 
 async function loadSettings() {
+  if (window.isDemoMode) {
+    window.businessName = 'פנסיון לדוגמה';
+    const titleEl = document.getElementById('header-business-name');
+    if (titleEl) titleEl.textContent = window.businessName;
+    
+    // Set holiday toggle to true by default in demo mode
+    const holidayToggle = document.getElementById('settings-show-holidays');
+    if (holidayToggle) {
+        holidayToggle.checked = true;
+    }
+    return;
+  }
   console.log('Attempting to load settings...');
   const session = window.currentUserSession || await Auth.getSession();
   if (!session || !session.user) {
@@ -3310,6 +3369,37 @@ async function createAuditLog(actionType, description, orderId = null) {
 async function loadAuditLogs() {
     const logsList = document.getElementById('auditLogsList');
     if (!logsList) return;
+
+    if (window.isDemoMode) {
+        const now = Date.now();
+        const demoLogs = [
+            { id: 1, staff_name: 'מנהל דמו', action_type: 'UPDATE', description: 'עדכון סטטוס הזמנה עבור רקס (יוסי כהן) ל"מאושר"', created_at: new Date(now - 120000).toISOString() },
+            { id: 2, staff_name: 'עובד לדוגמה', action_type: 'INSERT', description: 'הזמנה חדשה נוספה: בל (שרה לוי)', created_at: new Date(now - 3600000).toISOString() },
+            { id: 3, staff_name: 'מנהל דמו', action_type: 'UPDATE', description: 'שינוי תאריכי שהייה: סימבה (דני רובס)', created_at: new Date(now - 7200000).toISOString() },
+            { id: 4, staff_name: 'מערכת', action_type: 'UPDATE', description: 'גיבוי אוטומטי בוצע בהצלחה', created_at: new Date(now - 86400000).toISOString() }
+        ];
+
+        logsList.innerHTML = demoLogs.map(log => {
+            let iconClass = 'update';
+            let icon = '<i class="fas fa-edit"></i>';
+            if (log.action_type === 'INSERT') { iconClass = 'insert'; icon = '<i class="fas fa-plus-circle"></i>'; }
+            if (log.action_type === 'DELETE') { iconClass = 'delete'; icon = '<i class="fas fa-trash-alt"></i>'; }
+
+            return `
+                <div class="audit-item">
+                    <div class="audit-icon ${iconClass}">${icon}</div>
+                    <div class="audit-info">
+                        <div class="audit-header">
+                            <span class="audit-staff">${log.staff_name}</span>
+                            <span class="audit-time">${typeof formatDateTime === 'function' ? formatDateTime(log.created_at) : new Date(log.created_at).toLocaleString('he-IL')}</span>
+                        </div>
+                        <div class="audit-desc">${log.description}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
 
     try {
         const { data: logs, error } = await pensionNetSupabase
@@ -3848,8 +3938,8 @@ function openEditClientModal(phoneKey) {
             ${photo ? `
               <img src="${photo}" class="dog-thumbnail" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}')" />
             ` : `
-              <div class="dog-thumbnail-placeholder" onclick="document.getElementById('adminDogPhotoInput-${index}').click()">
-                <i class="fas fa-camera"></i>
+              <div class="dog-thumbnail-placeholder" ${window.isDemoMode ? '' : `onclick="document.getElementById('adminDogPhotoInput-${index}').click()"`}>
+                <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
               </div>
             `}
           </div>
@@ -3860,7 +3950,7 @@ function openEditClientModal(phoneKey) {
                    onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
           </div>
           <div class="edit-dog-actions" style="display: flex; gap: 4px;">
-            <button type="button" class="edit-dog-photo-btn" onclick="document.getElementById('adminDogPhotoInput-${index}').click()" title="העלה תמונה">
+            <button type="button" class="edit-dog-photo-btn" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : `onclick="document.getElementById('adminDogPhotoInput-${index}').click()"`} title="${window.isDemoMode ? '' : 'העלה תמונה'}">
               <i class="fas fa-image"></i>
               <input type="file" id="adminDogPhotoInput-${index}" style="display: none;" accept="image/*" onchange="handleAdminDogPhotoUpload(event, '${dog.replace(/'/g, "\\'")}', '${phoneKey}')">
             </button>
@@ -4447,3 +4537,167 @@ function closeImagePreview() {
 
 window.openImagePreview = openImagePreview;
 window.closeImagePreview = closeImagePreview;
+// --- Helper for Demo Mode ---
+function generateLocalDemoData() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const dayMs = 86400000;
+    
+    // Helper to format date
+    const f = (d) => d.toISOString().split('T')[0];
+    const termsSuffix = ' ✅ הלקוח/ה אישר/ה תנאי שימוש';
+    
+    const demoOrders = [
+        // --- TODAY'S MOVEMENTS (Crucial for relative timing) ---
+        {
+            id: 'demo-today-in',
+            order_date: f(new Date(today.getTime() - 7 * dayMs)),
+            owner_name: 'שרה לוי',
+            dog_name: 'בל',
+            dog_age: '2',
+            dog_breed: 'קטן',
+            neutered: 'כן (מעוקרת)',
+            notes: 'פחדנית מרעשים' + termsSuffix,
+            phone: '0522222222',
+            check_in: f(today),
+            check_out: f(new Date(today.getTime() + 5 * dayMs)),
+            status: 'מאושר',
+            is_arrived: false,
+            is_paid: false,
+            price_per_day: 150,
+            admin_note: 'צריכה הרבה יחס'
+        },
+        {
+            id: 'demo-today-out',
+            order_date: f(new Date(today.getTime() - 14 * dayMs)),
+            owner_name: 'יוסי כהן',
+            dog_name: 'רקס',
+            dog_age: '4',
+            dog_breed: 'גדול',
+            neutered: 'כן (מסורס)',
+            notes: 'אוכל פעמיים ביום' + termsSuffix,
+            phone: '0501111111',
+            check_in: f(new Date(today.getTime() - 5 * dayMs)),
+            check_out: f(today),
+            status: 'מאושר',
+            is_arrived: true,
+            is_paid: true,
+            price_per_day: 130,
+            admin_note: 'בחדר גדול'
+        },
+        // --- ACTIVE / STAYING ---
+        {
+            id: 'demo-stay-1',
+            order_date: f(new Date(today.getTime() - 10 * dayMs)),
+            owner_name: 'דני רובס',
+            dog_name: 'סימבה',
+            dog_age: '6',
+            dog_breed: 'בינוני',
+            neutered: 'כן (מסורס)',
+            notes: 'אוהב כדורים' + termsSuffix,
+            phone: '0543333333',
+            check_in: f(new Date(today.getTime() - 3 * dayMs)),
+            check_out: f(new Date(today.getTime() + 4 * dayMs)),
+            status: 'מאושר',
+            is_arrived: true,
+            is_paid: true,
+            price_per_day: 140,
+            admin_note: 'לקוח VIP'
+        },
+        // --- FUTURE ---
+        {
+            id: 'demo-future-1',
+            order_date: f(new Date(today.getTime() - 2 * dayMs)),
+            owner_name: 'מיכל ירון',
+            dog_name: 'צ׳ארלי',
+            dog_age: '1',
+            dog_breed: 'קטן',
+            neutered: 'לא',
+            notes: 'גור אנרגטי' + termsSuffix,
+            phone: '0504444444',
+            check_in: f(new Date(today.getTime() + 2 * dayMs)),
+            check_out: f(new Date(today.getTime() + 8 * dayMs)),
+            status: 'מאושר',
+            is_arrived: false,
+            is_paid: false,
+            price_per_day: 140,
+            admin_note: 'להוציא הרבה לחצר'
+        },
+        {
+            id: 'demo-future-2',
+            order_date: f(new Date(today.getTime() - 1 * dayMs)),
+            owner_name: 'אביב גפן',
+            dog_name: 'לוקה',
+            dog_age: '8',
+            dog_breed: 'גדול',
+            neutered: 'כן (מעוקרת)',
+            notes: 'כלב מבוגר ושקט' + termsSuffix,
+            phone: '0525555555',
+            check_in: f(new Date(today.getTime() + 10 * dayMs)),
+            check_out: f(new Date(today.getTime() + 15 * dayMs)),
+            status: 'מאושר',
+            is_arrived: false,
+            is_paid: false,
+            price_per_day: 130,
+            admin_note: 'תרופות בבוקר'
+        },
+        {
+            id: 'demo-future-3',
+            order_date: f(new Date(today.getTime() - 4 * dayMs)),
+            owner_name: 'נועה קירל',
+            dog_name: 'ביגי',
+            dog_age: '3',
+            dog_breed: 'בינוני',
+            neutered: 'כן (מסורס)',
+            notes: 'אוהב לשחק' + termsSuffix,
+            phone: '0546666666',
+            check_in: f(new Date(today.getTime() + 15 * dayMs)),
+            check_out: f(new Date(today.getTime() + 20 * dayMs)),
+            status: 'מאושר',
+            is_arrived: false,
+            is_paid: true,
+            price_per_day: 140,
+            admin_note: 'לקוחה מפורסמת'
+        },
+        // --- HISTORY ---
+        {
+            id: 'demo-history-1',
+            order_date: f(new Date(today.getTime() - 45 * dayMs)),
+            owner_name: 'רון שחר',
+            dog_name: 'מקס',
+            dog_age: '7',
+            dog_breed: 'בינוני',
+            neutered: 'לא',
+            notes: 'דומיננטי' + termsSuffix,
+            phone: '0525555555',
+            check_in: f(new Date(today.getTime() - 40 * dayMs)),
+            check_out: f(new Date(today.getTime() - 35 * dayMs)),
+            status: 'מאושר',
+            is_arrived: true,
+            is_departed: true,
+            is_paid: true,
+            price_per_day: 140,
+            admin_note: 'להפריד מאחרים'
+        },
+        {
+            id: 'demo-history-2',
+            order_date: f(new Date(today.getTime() - 60 * dayMs)),
+            owner_name: 'מיכל אברהם',
+            dog_name: 'בוני',
+            dog_age: '5',
+            dog_breed: 'קטן',
+            neutered: 'כן (מעוקרת)',
+            notes: 'זקוק לסירוק יומי' + termsSuffix,
+            phone: '0504444444',
+            check_in: f(new Date(today.getTime() - 55 * dayMs)),
+            check_out: f(new Date(today.getTime() - 50 * dayMs)),
+            status: 'מאושר',
+            is_arrived: true,
+            is_departed: true,
+            is_paid: true,
+            price_per_day: 120,
+            admin_note: 'כלב חמוד מאוד'
+        }
+    ];
+    return demoOrders;
+}

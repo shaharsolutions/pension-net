@@ -136,6 +136,27 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+  }
+  
+  .header-actions {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .header-center {
+    order: 1;
+    width: 100%;
+  }
 }
 
 header h1 {
@@ -209,6 +230,17 @@ header h1 {
   box-shadow: var(--shadow-sm);
   border: none;
   overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 15px;
+    margin: 10px auto;
+  }
+  
+  .container h3 {
+    font-size: 20px;
+  }
 }
 
 .container h3 {
@@ -2033,12 +2065,21 @@ body.staff-mode.perm-manage-payments #payments-table button {
 }
 
 .movement-box {
-  flex: 1;
-  min-width: 250px;
+  flex: 1 1 200px;
+  min-width: 140px;
   text-align: center;
   padding: 20px;
   border-radius: 12px;
   transition: transform 0.2s;
+}
+
+@media (max-width: 640px) {
+  .movement-box {
+    padding: 15px;
+  }
+  .movement-box h4 {
+    font-size: 14px;
+  }
 }
 
 .movement-box:hover {
@@ -2422,4 +2463,167 @@ body.impersonation-mode #deleteAllBtn {
   pointer-events: none;
   opacity: 0.4;
   filter: grayscale(0.5);
+}
+
+/* --- Demo Mode UI Refinements --- */
+body.demo-mode .logout-btn,
+body.demo-mode .only-manager:not(#growthReportsLink),
+body.demo-mode #saveButtonContainer,
+body.demo-mode #settingsPlanBadgeContainer,
+body.demo-mode #userPlanBadgeContainer,
+body.demo-mode .mode-indicator,
+body.demo-mode button[onclick*="copyBookingLink"] {
+  display: none !important;
+}
+
+body.demo-mode #growthReportsLink {
+  display: flex !important;
+}
+
+body.demo-mode header {
+  padding: 10px 20px;
+}
+
+body.demo-mode .tabs-nav {
+  margin-bottom: 10px;
+}
+
+body.demo-mode::-webkit-scrollbar {
+  width: 6px;
+}
+body.demo-mode::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* --- Read-Only Demo Styles --- */
+body.demo-read-only button:not(.tab-btn):not(.calendar-toggle-btn),
+body.demo-read-only input,
+body.demo-read-only select,
+body.demo-read-only .movement-action-btn,
+body.demo-read-only .delete-btn,
+body.demo-read-only .header-btn:not(.calendar-toggle-btn),
+body.demo-read-only a[href^="tel:"],
+body.demo-read-only a[href*="wa.me"],
+body.demo-read-only a[href*="whatsapp.com"],
+body.demo-read-only .whatsapp-confirm-btn,
+body.demo-read-only .switch,
+body.demo-read-only #growthReportsLink {
+  pointer-events: none !important;
+  cursor: default !important;
+  opacity: 0.6 !important;
+  filter: grayscale(0.5); /* Make it look inactive */
+}
+
+body.demo-read-only #adminPanelLink {
+  display: none !important;
+}
+
+/* Allow scrolling on textareas even if read-only */
+body.demo-read-only textarea {
+  pointer-events: auto !important;
+  cursor: text !important;
+  caret-color: transparent;
+}
+
+/* Allow scrolling and hover effects */
+body.demo-read-only .tab-content {
+  pointer-events: auto !important;
+}
+
+body.demo-read-only .tabs-nav button,
+body.demo-read-only .calendar-toggle-btn {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+body.demo-read-only .ongoing-table-container,
+body.demo-read-only .calendar-wrapper,
+body.demo-read-only #monthlyCalendarGrid,
+body.demo-read-only .container,
+body.demo-read-only #pastOrdersTableWrapper {
+  overflow-x: auto !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* --- Scroll Indicators for Tables --- */
+.container:not(#monthlyCalendarContainer):has(table) {
+  position: relative;
+}
+
+.container:not(#monthlyCalendarContainer):has(table)::after {
+  content: '← גלול לצד →';
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 20px;
+  pointer-events: none;
+  font-weight: 700;
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .container:not(#monthlyCalendarContainer):has(table)::after {
+    display: block;
+  }
+}
+
+/* Fix for mobile scrolling inside the landing page iframe */
+@media (max-width: 600px) {
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .header-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    flex: 1 1 calc(50% - 10px);
+    justify-content: center;
+  }
+}
+
+/* Enhancing Dog Tooltip to look like a real "window" */
+.dog-tooltip {
+  background: white !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  padding: 0 !important;
+  width: 240px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.dog-tooltip::before {
+  content: 'פירוט כלבים';
+  display: block;
+  background: #f8fafc;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #6366f1;
+  text-align: right;
+}
+
+.dog-tooltip-content {
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dog-tooltip-item {
+  padding: 4px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dog-tooltip-item:last-child {
+  border-bottom: none;
 }

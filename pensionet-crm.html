@@ -390,7 +390,7 @@
             <div class="filter-group"><label>משימות</label><div id="taskFilter" class="ms-wrapper"></div></div>
             <div class="filter-group" style="flex-direction:row; gap:10px; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="openAddLeadsModal()"><i class="fas fa-plus"></i> הוסף פנסיונים</button>
-                <button id="exportExcel" class="btn-export"><i class="fas fa-file-excel"></i> אקסל</button>
+                <button id="exportExcel" class="btn-export"><i class="fas fa-download"></i> ייצא לאקסל</button>
                 <button class="mini-btn" onclick="clearAllFilters()" title="נקה סינונים" style="padding: 10px; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-undo"></i></button>
             </div>
         </section>
@@ -987,7 +987,10 @@
             let tplObj = templates[idx];
             let txt = tplObj.content;
             if(withName && l) txt = txt.replace(/{{name}}/g, l.name);
-            else txt = txt.replace(/{{name}}/g, '(שם הפנסיון)');
+            else txt = txt.replace(/{{name}}/g, '');
+            
+            // Clean up: remove spaces before punctuation marks
+            txt = txt.replace(/\s+([,.!?:;])/g, '$1').trim();
             
             navigator.clipboard.writeText(txt).then(() => {
                 showToast("הנוסח הועתק!");
