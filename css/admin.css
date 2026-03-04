@@ -2506,13 +2506,13 @@ body.demo-read-only .header-btn:not(.calendar-toggle-btn),
 body.demo-read-only a[href^="tel:"],
 body.demo-read-only a[href*="wa.me"],
 body.demo-read-only a[href*="whatsapp.com"],
-body.demo-read-only .whatsapp-confirm-btn,
 body.demo-read-only .switch,
+body.demo-read-only .whatsapp-confirm-btn,
 body.demo-read-only #growthReportsLink {
   pointer-events: none !important;
   cursor: default !important;
-  opacity: 0.6 !important;
-  filter: grayscale(0.5); /* Make it look inactive */
+  opacity: 0.5 !important;
+  filter: grayscale(1) brightness(0.9) !important;
 }
 
 body.demo-read-only #adminPanelLink {

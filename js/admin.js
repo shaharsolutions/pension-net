@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('demo') === 'true') {
      window.isDemoMode = true;
+     window.currentPlanId = 'pro_plus'; // Show all features in demo
      window.managerName = 'מנהל דמו';
      window.currentStaffMembers = [{ name: 'עובד לדוגמה', pin: '1234', permissions: { edit_status: true, edit_details: true } }];
      document.body.classList.add('demo-mode');
@@ -2848,6 +2849,11 @@ async function loadSettings() {
     if (holidayToggle) {
         holidayToggle.checked = true;
     }
+    
+    // Refresh features visibility now that plan is active
+    if (typeof Features !== 'undefined') {
+        Features.syncUI();
+    }
     return;
   }
   console.log('Attempting to load settings...');
@@ -4543,15 +4549,23 @@ function generateLocalDemoData() {
     today.setHours(0,0,0,0);
     const dayMs = 86400000;
     
+    // Helper to format date with specific time
+    const ft = (d, h, m) => {
+        const date = new Date(d);
+        date.setHours(h, m, 0, 0);
+        return date.toISOString();
+    };
+    
     // Helper to format date
     const f = (d) => d.toISOString().split('T')[0];
+    
     const termsSuffix = ' ✅ הלקוח/ה אישר/ה תנאי שימוש';
     
     const demoOrders = [
-        // --- TODAY'S MOVEMENTS (Crucial for relative timing) ---
+        // --- TODAY'S MOVEMENTS ---
         {
             id: 'demo-today-in',
-            order_date: f(new Date(today.getTime() - 7 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 7 * dayMs), 10, 15),
             owner_name: 'שרה לוי',
             dog_name: 'בל',
             dog_age: '2',
@@ -4569,7 +4583,7 @@ function generateLocalDemoData() {
         },
         {
             id: 'demo-today-out',
-            order_date: f(new Date(today.getTime() - 14 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 14 * dayMs), 14, 30),
             owner_name: 'יוסי כהן',
             dog_name: 'רקס',
             dog_age: '4',
@@ -4588,7 +4602,7 @@ function generateLocalDemoData() {
         // --- ACTIVE / STAYING ---
         {
             id: 'demo-stay-1',
-            order_date: f(new Date(today.getTime() - 10 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 10 * dayMs), 11, 45),
             owner_name: 'דני רובס',
             dog_name: 'סימבה',
             dog_age: '6',
@@ -4607,7 +4621,7 @@ function generateLocalDemoData() {
         // --- FUTURE ---
         {
             id: 'demo-future-1',
-            order_date: f(new Date(today.getTime() - 2 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 2 * dayMs), 9, 20),
             owner_name: 'מיכל ירון',
             dog_name: 'צ׳ארלי',
             dog_age: '1',
@@ -4617,7 +4631,7 @@ function generateLocalDemoData() {
             phone: '0504444444',
             check_in: f(new Date(today.getTime() + 2 * dayMs)),
             check_out: f(new Date(today.getTime() + 8 * dayMs)),
-            status: 'מאושר',
+            status: 'ממתין',
             is_arrived: false,
             is_paid: false,
             price_per_day: 140,
@@ -4625,7 +4639,7 @@ function generateLocalDemoData() {
         },
         {
             id: 'demo-future-2',
-            order_date: f(new Date(today.getTime() - 1 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 1 * dayMs), 16, 10),
             owner_name: 'אביב גפן',
             dog_name: 'לוקה',
             dog_age: '8',
@@ -4635,7 +4649,7 @@ function generateLocalDemoData() {
             phone: '0525555555',
             check_in: f(new Date(today.getTime() + 10 * dayMs)),
             check_out: f(new Date(today.getTime() + 15 * dayMs)),
-            status: 'מאושר',
+            status: 'ממתין',
             is_arrived: false,
             is_paid: false,
             price_per_day: 130,
@@ -4643,7 +4657,7 @@ function generateLocalDemoData() {
         },
         {
             id: 'demo-future-3',
-            order_date: f(new Date(today.getTime() - 4 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 4 * dayMs), 18, 55),
             owner_name: 'נועה קירל',
             dog_name: 'ביגי',
             dog_age: '3',
@@ -4662,7 +4676,7 @@ function generateLocalDemoData() {
         // --- HISTORY ---
         {
             id: 'demo-history-1',
-            order_date: f(new Date(today.getTime() - 45 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 45 * dayMs), 12, 5),
             owner_name: 'רון שחר',
             dog_name: 'מקס',
             dog_age: '7',
@@ -4681,7 +4695,7 @@ function generateLocalDemoData() {
         },
         {
             id: 'demo-history-2',
-            order_date: f(new Date(today.getTime() - 60 * dayMs)),
+            order_date: ft(new Date(today.getTime() - 60 * dayMs), 8, 40),
             owner_name: 'מיכל אברהם',
             dog_name: 'בוני',
             dog_age: '5',
