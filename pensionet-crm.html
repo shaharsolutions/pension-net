@@ -818,7 +818,7 @@
             const fS = document.getElementById('searchFilter').value.toLowerCase();
             
             let filtered = leadsData.filter(l => {
-                const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && l.phone.includes(fS)));
+                const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && normPhone(l.phone).includes(normPhone(fS))));
                 const cityMatch = activeFilters.city.length === 0 || activeFilters.city.some(v => {
                     if (v && v.startsWith('region:')) {
                         const r = v.split(':')[1];
@@ -929,7 +929,7 @@
                     <td class="col-pension">${l.name}</td>
                     <td>${l.city}</td>
                     <td>${l.address||''}</td>
-                    <td style="white-space: nowrap;">${l.phone}</td>
+                    <td style="white-space: nowrap;">${formatPhone(l.phone)}</td>
                     <td>${l.type}</td>
                     <td>${l.size||''}</td>
                     <td onclick="event.stopPropagation()">
@@ -1028,7 +1028,7 @@
                         ${isLeadEditingHeader ? `
                             <div class="form-grid" style="margin-bottom:20px;">
                                 <div class="filter-group"><label class="modal-label">שם</label><input type="text" id="editLeadName" class="modal-input" value="${l.name}"></div>
-                                <div class="filter-group"><label class="modal-label">טלפון</label><input type="tel" id="editLeadPhone" class="modal-input" value="${l.phone}"></div>
+                                <div class="filter-group"><label class="modal-label">טלפון</label><input type="tel" id="editLeadPhone" class="modal-input" value="${formatPhone(l.phone)}"></div>
                                 <div class="filter-group"><label class="modal-label">עיר</label><input type="text" id="editLeadCity" class="modal-input" value="${l.city}"></div>
                                 <div class="filter-group"><label class="modal-label">כתובת</label><input type="text" id="editLeadAddress" class="modal-input" value="${l.address||''}"></div>
                                 <div class="filter-group">
@@ -1065,7 +1065,7 @@
                         ` : `
                             <div class="lead-details-grid">
                                 <div class="detail-item"><span class="detail-label">שם</span><span class="detail-value">${l.name}</span></div>
-                                <div class="detail-item"><span class="detail-label">טלפון</span><span class="detail-value">${l.phone}</span></div>
+                                <div class="detail-item"><span class="detail-label">טלפון</span><span class="detail-value">${formatPhone(l.phone)}</span></div>
                                 <div class="detail-item"><span class="detail-label">עיר</span><span class="detail-value">${l.city}</span></div>
                                 <div class="detail-item"><span class="detail-label">כתובת</span><span class="detail-value">${l.address||'-'}</span></div>
                                 <div class="detail-item"><span class="detail-label">סוג</span><span class="detail-value">${l.type}</span></div>
@@ -1370,6 +1370,14 @@
         function closeAddLeadsModal() { document.getElementById('addLeadsModal').style.display='none'; }
         function setAddTab(t) { const s=t==='single'; document.getElementById('tabSingle').classList.toggle('active',s); document.getElementById('tabBulk').classList.toggle('active',!s); document.getElementById('addSingleArea').style.display=s?'block':'none'; document.getElementById('addBulkArea').style.display=s?'none':'block'; if(!s) renderBulkTable(); }
         function normPhone(p) { return p ? p.toString().replace(/\D/g,'') : ''; }
+        function formatPhone(p) {
+            if (!p) return '';
+            let s = p.toString().trim();
+            if (/^05\d-/.test(s)) return s;
+            let d = s.replace(/\D/g, '');
+            if (/^05\d{8}$/.test(d)) return d.substring(0, 3) + '-' + d.substring(3);
+            return s;
+        }
         async function addSingleLead() {
             const n = document.getElementById('asName').value, 
                   c = document.getElementById('asCity').value, 
@@ -1381,7 +1389,7 @@
             const newLeadRow = {
                 name: n,
                 city: c,
-                phone: p,
+                phone: formatPhone(p),
                 address: document.getElementById('asAddress').value,
                 type: document.getElementById('asType').value,
                 size: document.getElementById('asSize').value,
@@ -1424,7 +1432,7 @@
                 toInsert.push({
                     name: r.name,
                     city: r.city,
-                    phone: r.phone,
+                    phone: formatPhone(r.phone),
                     type: r.type || 'ביתי',
                     status: 'לא פניתי',
                     notes: r.notes || ''
@@ -1504,7 +1512,7 @@
             const l = leadsData.find(x=>x.id===lid);
             const updates = {
                 name: document.getElementById('editLeadName').value,
-                phone: document.getElementById('editLeadPhone').value,
+                phone: formatPhone(document.getElementById('editLeadPhone').value),
                 city: document.getElementById('editLeadCity').value,
                 address: document.getElementById('editLeadAddress').value,
                 type: document.getElementById('editLeadType').value,
