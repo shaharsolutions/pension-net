@@ -246,6 +246,43 @@
             font-size: 1.1rem; padding: 5px; transition: 0.2s;
         }
         .toggle-pass:hover { color: var(--primary); }
+
+        /* Multi-select Styles */
+        .ms-wrapper { position: relative; width: 100%; user-select: none; }
+        .ms-trigger { 
+            padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 10px; 
+            font-size: 0.95rem; background: white; cursor: pointer; display: flex; 
+            justify-content: space-between; align-items: center; min-height: 42px;
+            transition: all 0.2s;
+        }
+        .ms-trigger:hover { border-color: var(--primary); }
+        .ms-trigger.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .ms-values { 
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
+            max-width: 140px; font-weight: 500; font-size: 0.85rem; color: var(--text-main);
+        }
+        .ms-dropdown { 
+            position: absolute; top: calc(100% + 5px); right: 0; left: 0; background: white; 
+            border: 1px solid #e2e8f0; border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; display: none; 
+            max-height: 250px; overflow-y: auto; padding: 8px 0;
+            animation: slideDown 0.2s ease-out;
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .ms-dropdown.active { display: block; }
+        .ms-option { 
+            padding: 8px 15px; display: flex; align-items: center; gap: 10px; 
+            cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
+            color: var(--text-main);
+        }
+        .ms-option:hover { background: #f8fafc; }
+        .ms-option input[type="checkbox"] { 
+            width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);
+        }
+        .ms-badge { 
+            background: var(--primary); color: white; padding: 2px 6px; 
+            border-radius: 6px; font-size: 0.7rem; margin-right: 5px; font-weight: 800;
+        }
     </style>
 
 
@@ -281,11 +318,11 @@
         </header>
         <section class="filters-panel">
             <div class="filter-group"><label>חיפוש חופשי</label><input type="text" id="searchFilter" class="filter-input" placeholder="שם, עיר, טלפון..."></div>
-            <div class="filter-group"><label>עיר</label><select id="cityFilter" class="filter-input"><option value="">הכל</option></select></div>
-            <div class="filter-group"><label>סוג</label><select id="typeFilter" class="filter-input"><option value="">הכל</option><option value="ביתי">ביתי</option><option value="מתחם ייעודי">מתחם ייעודי</option></select></div>
-            <div class="filter-group"><label>גודל</label><select id="sizeFilter" class="filter-input"><option value="all" selected>הכל</option><option value="קטן">קטן</option><option value="בינוני">בינוני</option><option value="גדול">גדול</option></select></div>
-            <div class="filter-group"><label>סטטוס פנייה</label><select id="statusFilter" class="filter-input"><option value="">הכל</option><option value="לא פניתי">לא פניתי</option><option value="נשלחה הודעה">נשלחה הודעה</option><option value="נקבעה שיחה">נקבעה שיחה</option><option value="בוצע דמו">בוצע דמו</option><option value="בפיילוט">בפיילוט</option><option value="לא רלוונטי">לא רלוונטי</option><option value="לא ענו">לא ענו</option></select></div>
-            <div class="filter-group"><label>משימות</label><select id="taskFilter" class="filter-input"><option value="all">הכל</option><option value="has_task">עם משימה</option><option value="no_task">ללא משימה</option></select></div>
+            <div class="filter-group"><label>עיר</label><div id="cityFilter" class="ms-wrapper"></div></div>
+            <div class="filter-group"><label>סוג</label><div id="typeFilter" class="ms-wrapper"></div></div>
+            <div class="filter-group"><label>גודל</label><div id="sizeFilter" class="ms-wrapper"></div></div>
+            <div class="filter-group"><label>סטטוס פנייה</label><div id="statusFilter" class="ms-wrapper"></div></div>
+            <div class="filter-group"><label>משימות</label><div id="taskFilter" class="ms-wrapper"></div></div>
             <div class="filter-group" style="flex-direction:row; gap:10px; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="openAddLeadsModal()"><i class="fas fa-plus"></i> הוסף פנסיונים</button>
                 <button id="exportExcel" class="btn-export"><i class="fas fa-file-excel"></i> אקסל</button>
@@ -336,7 +373,7 @@
             </div>
         </section>
 
-        <div class="table-container"><table><thead><tr><th>פנסיון</th><th>עיר</th><th>כתובת</th><th>טלפון</th><th>סוג</th><th>גודל</th><th>סטטוס</th><th>משימה הבאה</th><th>הערות</th><th>פעולות</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+        <div class="table-container"><table><thead id="mainTableHead"></thead><tbody id="tableBody"></tbody></table></div>
     </div>
     <div id="modalOverlay" class="modal-overlay"><div class="lead-card" id="leadCard"></div></div>
     <div id="addLeadsModal" class="modal-overlay">
@@ -414,6 +451,8 @@
         let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = 'all', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
         let editingLogId = null, editingTaskId = null, deleteConfirmLogId = null, deleteConfirmTaskId = null;
         let isLeadEditingHeader = false, deleteConfirmLeadId = null;
+        let sortCol = null, sortDir = 'asc';
+        const activeFilters = { city: [], type: [], size: [], status: [], task: [] };
         let templates = [];
         let editingTemplateId = null;
         const DEFAULT_TEMPLATES = [
@@ -568,38 +607,178 @@
             leadsData = data || [];
         }
 
-        function setup() { populateCity(); setupEvents(); loadDraft(); }
+        function setup() { initMultiSelects(); populateCity(); setupEvents(); loadDraft(); }
+        
+        function initMultiSelects() {
+            renderMultiSelect('typeFilter', ['ביתי', 'מתחם ייעודי'], 'type');
+            renderMultiSelect('sizeFilter', ['קטן', 'בינוני', 'גדול'], 'size');
+            renderMultiSelect('statusFilter', ['לא פניתי', 'נשלחה הודעה', 'נקבעה שיחה', 'בוצע דמו', 'בפיילוט', 'לא רלוונטי', 'לא ענו'], 'status');
+            renderMultiSelect('taskFilter', [{ lab: 'עם משימה', val: 'has_task' }, { lab: 'ללא משימה', val: 'no_task' }], 'task');
+        }
+
+        function toggleMS(id) {
+            const dropdown = document.getElementById(`${id}-dropdown`);
+            const trigger = document.querySelector(`#${id} .ms-trigger`);
+            const isActive = dropdown.classList.contains('active');
+            document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.ms-trigger').forEach(t => t.classList.remove('active'));
+            if (!isActive) { dropdown.classList.add('active'); trigger.classList.add('active'); }
+        }
+
+        function toggleOption(key, val, id) {
+            const arr = activeFilters[key];
+            const idx = arr.indexOf(val);
+            if (idx > -1) arr.splice(idx, 1);
+            else arr.push(val);
+            renderSpecificMS(id, key);
+            render();
+        }
+
+        function renderSpecificMS(id, key) {
+            let options = [];
+            if (key === 'city') options = [...new Set(leadsData.map(l=>l.city))].sort();
+            else if (key === 'type') options = ['ביתי', 'מתחם ייעודי'];
+            else if (key === 'size') options = ['קטן', 'בינוני', 'גדול'];
+            else if (key === 'status') options = ['לא פניתי', 'נשלחה הודעה', 'נקבעה שיחה', 'בוצע דמו', 'בפיילוט', 'לא רלוונטי', 'לא ענו'];
+            else if (key === 'task') options = [{ lab: 'עם משימה', val: 'has_task' }, { lab: 'ללא משימה', val: 'no_task' }];
+            renderMultiSelect(id, options, key);
+            document.getElementById(`${id}-dropdown`).classList.add('active');
+            document.querySelector(`#${id} .ms-trigger`).classList.add('active');
+        }
+
+        function renderMultiSelect(id, options, filterKey) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            const selected = activeFilters[filterKey] || [];
+            
+            let labelText = 'הכל';
+            if (selected.length === 1) {
+                const opt = options.find(o => (typeof o === 'object' ? o.val : o) === selected[0]);
+                labelText = typeof opt === 'object' ? opt.lab : opt;
+            } else if (selected.length > 1) {
+                labelText = `${selected.length} נבחרו`;
+            }
+
+            container.innerHTML = `
+                <div class="ms-trigger" onclick="event.stopPropagation(); toggleMS('${id}')">
+                    <span class="ms-values">${labelText}</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.7rem; color:var(--text-muted);"></i>
+                </div>
+                <div class="ms-dropdown" id="${id}-dropdown">
+                    <div class="ms-option" style="border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary);" onclick="event.stopPropagation(); activeFilters['${filterKey}']=[]; renderSpecificMS('${id}', '${filterKey}'); render();">
+                        <i class="fas fa-undo"></i> <span>נקה הכל</span>
+                    </div>
+                    ${options.map(opt => {
+                        const val = typeof opt === 'object' ? opt.val : opt;
+                        const lab = typeof opt === 'object' ? opt.lab : opt;
+                        const isChecked = selected.includes(val);
+                        return `<div class="ms-option" onclick="event.stopPropagation(); toggleOption('${filterKey}', '${val}', '${id}')">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="event.stopPropagation(); toggleOption('${filterKey}', '${val}', '${id}')">
+                            <span>${lab}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.ms-trigger').forEach(t => t.classList.remove('active'));
+        });
         
         async function saveData() { 
             // Local storage is now only used for drafts, the source of truth is the DB.
             // But we keep this function signature for places that might still call it.
         }
 
-        function populateCity() { const s = document.getElementById('cityFilter'); const val = s.value; s.innerHTML = '<option value="">הכל</option>'; [...new Set(leadsData.map(l=>l.city))].sort().forEach(c=>{ const o=document.createElement('option'); o.value=c; o.innerText=c; if(c===val)o.selected=true; s.appendChild(o); }); }
+        function populateCity() { renderMultiSelect('cityFilter', [...new Set(leadsData.map(l=>l.city))].sort(), 'city'); }
         function getFiltered() {
             const fS = document.getElementById('searchFilter').value.toLowerCase();
-            const fC = document.getElementById('cityFilter').value;
-            const fT = document.getElementById('typeFilter').value;
-            const fSz = document.getElementById('sizeFilter').value;
-            const fSt = document.getElementById('statusFilter').value;
-            const fTk = document.getElementById('taskFilter').value;
             
-            return leadsData.filter(l => {
+            let filtered = leadsData.filter(l => {
                 const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && l.phone.includes(fS)));
-                const cityMatch = !fC || l.city === fC;
-                const typeMatch = !fT || l.type === fT;
-                const sizeMatch = fSz === 'all' || l.size === fSz;
-                const statusMatch = !fSt || l.status === fSt;
+                const cityMatch = activeFilters.city.length === 0 || activeFilters.city.includes(l.city);
+                const typeMatch = activeFilters.type.length === 0 || activeFilters.type.includes(l.type);
+                const sizeMatch = activeFilters.size.length === 0 || activeFilters.size.includes(l.size);
+                const statusMatch = activeFilters.status.length === 0 || activeFilters.status.includes(l.status);
                 
                 let taskMatch = true;
                 const hasOpenTask = l.tasks && l.tasks.some(t => t.status === 'open');
-                if (fTk === 'has_task') taskMatch = hasOpenTask;
-                else if (fTk === 'no_task') taskMatch = !hasOpenTask;
+                if (activeFilters.task.length > 0) {
+                    if (activeFilters.task.includes('has_task') && activeFilters.task.includes('no_task')) taskMatch = true;
+                    else if (activeFilters.task.includes('has_task')) taskMatch = hasOpenTask;
+                    else if (activeFilters.task.includes('no_task')) taskMatch = !hasOpenTask;
+                }
                 
                 return searchMatch && cityMatch && typeMatch && sizeMatch && statusMatch && taskMatch;
             });
+
+            if (sortCol) {
+                filtered.sort((a, b) => {
+                    let valA = a[sortCol];
+                    let valB = b[sortCol];
+
+                    if (sortCol === 'nextTask') {
+                        const getNextTaskTime = (lead) => {
+                            const openTasks = (lead.tasks || []).filter(t => t.status === 'open' && t.due_at);
+                            if (openTasks.length === 0) return Infinity;
+                            openTasks.sort((t1, t2) => new Date(t1.due_at) - new Date(t2.due_at));
+                            return new Date(openTasks[0].due_at).getTime();
+                        };
+                        valA = getNextTaskTime(a);
+                        valB = getNextTaskTime(b);
+                    } else {
+                        valA = valA || '';
+                        valB = valB || '';
+                        if (typeof valA === 'string') valA = valA.toLowerCase();
+                        if (typeof valB === 'string') valB = valB.toLowerCase();
+                    }
+
+                    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            return filtered;
+        }
+
+        function handleSort(col) {
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = 'asc';
+            }
+            render();
+        }
+
+        function renderHeaders() {
+            const getIcon = (col) => {
+                if (sortCol !== col) return '<i class="fas fa-sort" style="margin-right:8px; opacity:0.3;"></i>';
+                return sortDir === 'asc' ? '<i class="fas fa-sort-up" style="margin-right:8px; color:var(--primary);"></i>' : '<i class="fas fa-sort-down" style="margin-right:8px; color:var(--primary);"></i>';
+            };
+
+            const headers = [
+                { lab: 'פנסיון', col: 'name' },
+                { lab: 'עיר', col: 'city' },
+                { lab: 'כתובת', col: 'address' },
+                { lab: 'טלפון', col: 'phone' },
+                { lab: 'סוג', col: 'type' },
+                { lab: 'גודל', col: 'size' },
+                { lab: 'סטטוס', col: 'status' },
+                { lab: 'משימה הבאה', col: 'nextTask' },
+                { lab: 'הערות', col: 'notes' }
+            ];
+
+            const thead = document.getElementById('mainTableHead');
+            thead.innerHTML = `<tr>
+                ${headers.map(h => `<th style="cursor:pointer;" onclick="handleSort('${h.col}')">${h.lab} ${getIcon(h.col)}</th>`).join('')}
+                <th>פעולות</th>
+            </tr>`;
         }
         function render() {
+            renderHeaders();
             const body = document.getElementById('tableBody'); 
             body.innerHTML = getFiltered().map(l => {
                 const isSelected = selectedLeadId === l.id;
@@ -1286,11 +1465,9 @@
         
         function clearAllFilters() {
             document.getElementById('searchFilter').value = '';
-            document.getElementById('cityFilter').value = '';
-            document.getElementById('typeFilter').value = '';
-            document.getElementById('sizeFilter').value = 'all';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('taskFilter').value = 'all';
+            Object.keys(activeFilters).forEach(k => activeFilters[k] = []);
+            initMultiSelects();
+            populateCity();
             render();
         }
 
@@ -1312,11 +1489,10 @@
         }
 
         function setupEvents() { 
-            ['searchFilter','cityFilter','typeFilter','sizeFilter','statusFilter','taskFilter'].forEach(id => {
+            ['searchFilter'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
                     el.addEventListener('input', render);
-                    el.addEventListener('change', render);
                 }
             });
             document.getElementById('exportExcel').onclick = exportToExcel;
