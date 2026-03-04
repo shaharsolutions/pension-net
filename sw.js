@@ -1,6 +1,6 @@
-const CACHE_NAME = 'pension-net-leads-v1';
+const CACHE_NAME = 'pension-net-crm-v1';
 const ASSETS = [
-    'pensionet-leads.html',
+    'pensionet-crm.html',
     'favicon.png',
     'js/config.js',
     'supabaseClient.js'

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>טבלת לידים – פנסיוני כלבים</title>
+    <title>מערכת CRM – פנסיון-נט</title>
     <link rel="icon" href="favicon.png" type="image/png" />
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ניהול לידים">
+    <meta name="apple-mobile-web-app-title" content="Pension-Net CRM">
     <link rel="apple-touch-icon" href="favicon.png">
     <script src="js/config.js"></script>
     <script type="module">
@@ -294,7 +294,7 @@
             <div style="width: 70px; height: 70px; background: #eef2ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
                 <i class="fas fa-lock" style="font-size: 2rem; color: var(--primary);"></i>
             </div>
-            <h2>כספת לידים</h2>
+            <h2>כספת CRM</h2>
             <p style="color: var(--text-muted); font-weight: 500;">הזן סיסמה כדי לגשת לנתונים</p>
             <div class="pass-container">
                 <input type="password" id="loginPass" class="login-input" placeholder="סיסמה">
@@ -309,7 +309,7 @@
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <div style="width: 42px;"></div> <!-- Spacer -->
-                <h1>טבלת לידים – פנסיוני כלבים</h1>
+                <h1>מערכת CRM – פנסיון-נט</h1>
                 <button id="installAppBtn" class="mini-btn btn-primary" style="display: none; border-radius: 12px; font-size: 0.8rem; padding: 6px 12px;">
                     <i class="fas fa-download"></i> התקן אפליקציה
                 </button>
@@ -353,6 +353,7 @@
                 <div class="tasks-tabs"><button class="tab-btn active" onclick="setGlobalTaskFilter('open')">פתוחות</button><button class="tab-btn" onclick="setGlobalTaskFilter('done')">בוצעו</button><button class="tab-btn" onclick="setGlobalTaskFilter('all')">הכל</button></div>
                 <div class="days-filter-tabs">
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('all')">הכל</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('yesterday')">אתמול</button>
                     <button class="tab-btn day-tab active" onclick="setGlobalDaysFilter('0')">היום</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('tomorrow')">מחר</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('3')">3 ימים</button>
@@ -455,6 +456,12 @@
         let isLeadEditingHeader = false, deleteConfirmLeadId = null;
         let sortCol = null, sortDir = 'asc';
         const activeFilters = { city: [], type: [], size: [], status: [], task: [] };
+        const CITY_TO_REGION = {
+            'חיפה': 'North', 'נצרת': 'North', 'חדרה': 'North', 'עפולה': 'North', 'טבריה': 'North', 'נהריה': 'North', 'עכו': 'North', 'כרמיאל': 'North', 'צפת': 'North', 'קריית שמונה': 'North', 'קצרין': 'North', 'מעלות תרשיחא': 'North', 'בית שאן': 'North', 'מגדל העמק': 'North', 'נשר': 'North', 'יוקנעם': 'North', 'טירת כרמל': 'North', 'עתלית': 'North', 'זכרון יעקב': 'North',
+            'תל אביב': 'Center', 'תל אביב יפו': 'Center', 'ראשון לציון': 'Center', 'פתח תקווה': 'Center', 'נתניה': 'Center', 'חולון': 'Center', 'בני ברק': 'Center', 'רמת גן': 'Center', 'רחובות': 'Center', 'הרצליה': 'Center', 'כפר סבא': 'Center', 'רעננה': 'Center', 'הוד השרון': 'Center', 'ראש העין': 'Center', 'לוד': 'Center', 'רמלה': 'Center', 'גבעתיים': 'Center', 'מודיעין': 'Center', 'יהוד': 'Center', 'אלעד': 'Center', 'גבעת שמואל': 'Center', 'באר יעקב': 'Center', 'רמת השרון': 'Center', 'נס ציונה': 'Center', 'קריית אונו': 'Center', 'אור יהודה': 'Center', 'שוהם': 'Center', 'סביון': 'Center', 'יהוד מונסון': 'Center', 'גבעת שמאל': 'Center', 'מודיעין מכבים רעות': 'Center', 'מעש': 'Center', 'אור יהודה': 'Center',
+            'ירושלים': 'Jerusalem', 'בית שמש': 'Jerusalem',
+            'אשדוד': 'South', 'באר שבע': 'South', 'אשקלון': 'South', 'קריית גת': 'South', 'אילת': 'South', 'דימונה': 'South', 'נתיבות': 'South', 'שדרות': 'South', 'ערד': 'South', 'אופקים': 'South', 'קריית מלאכי': 'South', 'ירוחם': 'South'
+        };
         let templates = [];
         let editingTemplateId = null;
         const DEFAULT_TEMPLATES = [
@@ -637,13 +644,16 @@
         }
 
         function renderSpecificMS(id, key) {
-            let options = [];
-            if (key === 'city') options = [...new Set(leadsData.map(l=>l.city))].sort();
-            else if (key === 'type') options = ['ביתי', 'מתחם ייעודי'];
-            else if (key === 'size') options = ['קטן', 'בינוני', 'גדול'];
-            else if (key === 'status') options = ['לא פניתי', 'נשלחה הודעה', 'נקבעה שיחה', 'בוצע דמו', 'בפיילוט', 'לא רלוונטי', 'לא ענו'];
-            else if (key === 'task') options = [{ lab: 'עם משימה', val: 'has_task' }, { lab: 'ללא משימה', val: 'no_task' }];
-            renderMultiSelect(id, options, key);
+            if (key === 'city') {
+                populateCity();
+            } else {
+                let options = [];
+                if (key === 'type') options = ['ביתי', 'מתחם ייעודי'];
+                else if (key === 'size') options = ['קטן', 'בינוני', 'גדול'];
+                else if (key === 'status') options = ['לא פניתי', 'נשלחה הודעה', 'נקבעה שיחה', 'בוצע דמו', 'בפיילוט', 'לא רלוונטי', 'לא ענו'];
+                else if (key === 'task') options = [{ lab: 'עם משימה', val: 'has_task' }, { lab: 'ללא משימה', val: 'no_task' }];
+                renderMultiSelect(id, options, key);
+            }
             document.getElementById(`${id}-dropdown`).classList.add('active');
             document.querySelector(`#${id} .ms-trigger`).classList.add('active');
         }
@@ -656,7 +666,16 @@
             let labelText = 'הכל';
             if (selected.length === 1) {
                 const opt = options.find(o => (typeof o === 'object' ? o.val : o) === selected[0]);
-                labelText = typeof opt === 'object' ? opt.lab : opt;
+                if (opt) {
+                    labelText = typeof opt === 'object' ? opt.lab : opt;
+                } else {
+                    // Fallback if not found in current options
+                    labelText = selected[0].startsWith('region:') ? selected[0].split(':')[1] : selected[0];
+                    if (labelText === 'North') labelText = 'צפון';
+                    if (labelText === 'Center') labelText = 'מרכז';
+                    if (labelText === 'Jerusalem') labelText = 'ירושלים';
+                    if (labelText === 'South') labelText = 'דרום';
+                }
             } else if (selected.length > 1) {
                 labelText = `${selected.length} נבחרו`;
             }
@@ -693,13 +712,42 @@
             // But we keep this function signature for places that might still call it.
         }
 
-        function populateCity() { renderMultiSelect('cityFilter', [...new Set(leadsData.map(l=>l.city))].sort(), 'city'); }
+        function populateCity() {
+            const counts = {};
+            leadsData.forEach(l => { counts[l.city] = (counts[l.city] || 0) + 1; });
+            
+            const rc = { North: 0, Center: 0, Jerusalem: 0, South: 0 };
+            leadsData.forEach(l => {
+                const r = CITY_TO_REGION[l.city];
+                if (r) rc[r]++;
+            });
+
+            const rOpts = [
+                { lab: `צפון (${rc.North})`, val: 'region:North' },
+                { lab: `מרכז (${rc.Center})`, val: 'region:Center' },
+                { lab: `ירושלים (${rc.Jerusalem})`, val: 'region:Jerusalem' },
+                { lab: `דרום (${rc.South})`, val: 'region:South' }
+            ];
+
+            const cOpts = [...new Set(leadsData.map(l => l.city))].sort().map(c => ({
+                lab: `${c} (${counts[c] || 0})`,
+                val: c
+            }));
+
+            renderMultiSelect('cityFilter', [...rOpts, ...cOpts], 'city');
+        }
         function getFiltered() {
             const fS = document.getElementById('searchFilter').value.toLowerCase();
             
             let filtered = leadsData.filter(l => {
                 const searchMatch = !fS || (l.name.toLowerCase().includes(fS) || l.city.toLowerCase().includes(fS) || (l.phone && l.phone.includes(fS)));
-                const cityMatch = activeFilters.city.length === 0 || activeFilters.city.includes(l.city);
+                const cityMatch = activeFilters.city.length === 0 || activeFilters.city.some(v => {
+                    if (v && v.startsWith('region:')) {
+                        const r = v.split(':')[1];
+                        return CITY_TO_REGION[l.city] === r;
+                    }
+                    return l.city === v;
+                });
                 const typeMatch = activeFilters.type.length === 0 || activeFilters.type.includes(l.type);
                 const sizeMatch = activeFilters.size.length === 0 || activeFilters.size.includes(l.size);
                 const statusMatch = activeFilters.status.length === 0 || activeFilters.status.includes(l.status);
@@ -1134,6 +1182,10 @@
             if(globalTaskFilter!=='all') tks = tks.filter(t=>t.status===globalTaskFilter);
             const now = new Date(), startDay = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
             if(globalDaysFilter==='late') tks=tks.filter(t=>t.status==='open' && new Date(t.due_at).getTime()<startDay);
+            else if(globalDaysFilter==='yesterday') {
+                const yestStart = startDay - 24*3600*1000, yestEnd = startDay;
+                tks = tks.filter(t => { const d = new Date(t.due_at).getTime(); return d >= yestStart && d < yestEnd; });
+            }
             else if(globalDaysFilter==='tomorrow') {
                 const tomStart = startDay + 24*3600*1000, tomEnd = tomStart + 24*3600*1000;
                 tks = tks.filter(t => { const d = new Date(t.due_at).getTime(); return d >= tomStart && d < tomEnd; });
@@ -1162,8 +1214,12 @@
         function setGlobalTaskFilter(f) { globalTaskFilter=f; document.querySelectorAll('.tasks-tabs button').forEach(b=>b.classList.toggle('active',b.innerText.includes(f==='open'?'פתוחות':f==='done'?'בוצעו':'הכל'))); renderGlobalTasks(); }
         function setGlobalDaysFilter(v) { 
             globalDaysFilter = v; 
+            if (v === 'yesterday') {
+                globalTaskFilter = 'all';
+                document.querySelectorAll('.tasks-tabs button').forEach(b => b.classList.toggle('active', b.innerText.includes('הכל')));
+            }
             document.querySelectorAll('.day-tab').forEach(b => {
-                const isMatch = (v === 'all' && b.innerText.includes('הכל')) || (v === '0' && b.innerText.includes('היום')) || (v === 'tomorrow' && b.innerText.includes('מחר')) || (v === '3' && b.innerText.includes('3 ימים')) || (v === '7' && b.innerText.includes('שבוע')) || (v === 'late' && b.innerText.includes('איחור'));
+                const isMatch = (v === 'all' && b.innerText.includes('הכל')) || (v === 'yesterday' && b.innerText.includes('אתמול')) || (v === '0' && b.innerText.includes('היום')) || (v === 'tomorrow' && b.innerText.includes('מחר')) || (v === '3' && b.innerText.includes('3 ימים')) || (v === '7' && b.innerText.includes('שבוע')) || (v === 'late' && b.innerText.includes('איחור'));
                 b.classList.toggle('active', isMatch);
             });
             renderGlobalTasks(); 
