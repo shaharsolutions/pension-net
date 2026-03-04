@@ -47,7 +47,7 @@
         .tasks-tabs, .days-filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
         .tab-btn, .mini-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: #f8fafc; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: all 0.2s; color: var(--text-muted); }
         .tab-btn.active, .day-tab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
-        .tasks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        /* .tasks-grid moved to end of style block */
         .task-card-global { background: #f8fafc; padding: 20px; border-radius: 14px; border-right: 5px solid var(--primary); display: flex; flex-direction: column; gap: 12px; transition: all 0.3s; border: 1px solid #e2e8f0; position: relative; }
         .task-card-global.late { border-right-color: var(--danger); }
         .task-card-global.today { border-right-color: var(--warning); }
@@ -122,7 +122,24 @@
         .message-templates { margin-bottom: 30px; background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); }
         .message-templates h2 { font-size: 1.2rem; margin-bottom: 15px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
         .selected-pension-badge { font-size: 0.9rem; background: #eef2ff; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-weight: 700; }
-        .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
+        .templates-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 15px; 
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+        .templates-grid.collapsed {
+            max-height: 0;
+            margin-top: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .message-templates.collapsed {
+            padding-bottom: 10px;
+        }
         .template-card { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
         .template-card h4 { font-size: 0.9rem; color: var(--primary); }
         .template-text { font-size: 0.85rem; color: var(--text-main); min-height: 50px; }
@@ -283,6 +300,42 @@
             background: var(--primary); color: white; padding: 2px 6px; 
             border-radius: 6px; font-size: 0.7rem; margin-right: 5px; font-weight: 800;
         }
+        
+        /* Collapse styles */
+        .tasks-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+        .tasks-grid.collapsed {
+            max-height: 260px; /* Adjust to roughly one row */
+        }
+        .collapse-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            background: #f8fafc;
+        }
+        .collapse-toggle:hover {
+            border-color: var(--primary);
+            background: #eef2ff;
+        }
+        .collapse-toggle i {
+            transition: transform 0.3s ease;
+        }
+        .collapse-toggle.collapsed i {
+            transform: rotate(180deg);
+        }
     </style>
 
 
@@ -307,10 +360,9 @@
     </div>
     <div class="container">
         <header>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <div style="width: 42px;"></div> <!-- Spacer -->
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 5px; position: relative;">
                 <h1>מערכת CRM – פנסיון-נט</h1>
-                <button id="installAppBtn" class="mini-btn btn-primary" style="display: none; border-radius: 12px; font-size: 0.8rem; padding: 6px 12px;">
+                <button id="installAppBtn" class="mini-btn btn-primary" style="display: none; border-radius: 12px; font-size: 0.8rem; padding: 6px 12px; position: absolute; left: 0;">
                     <i class="fas fa-download"></i> התקן אפליקציה
                 </button>
             </div>
@@ -331,7 +383,13 @@
         </section>
         <section class="global-tasks">
             <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="border:none; padding:0; margin:0;"><i class="fas fa-calendar-check"></i> משימות גלובליות</h2>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <h2 style="border:none; padding:0; margin:0;"><i class="fas fa-calendar-check"></i> משימות גלובליות</h2>
+                    <button id="tasksCollapseToggle" class="collapse-toggle" onclick="toggleTasksCollapse()">
+                        <i class="fas fa-chevron-up"></i>
+                        <span id="collapseText">קפל</span>
+                    </button>
+                </div>
                 <button class="mini-btn btn-card" onclick="toggleBulkPanel()"><i class="fas fa-plus-circle"></i> הוסף משימה</button>
             </div>
             <div id="bulkAddPanel" class="bulk-panel">
@@ -364,10 +422,16 @@
             <div class="tasks-grid" id="globalTasksGrid"></div>
         </section>
 
-        <section class="message-templates">
+        <section id="messageTemplatesSection" class="message-templates">
             <h2>
-                <span><i class="fas fa-comment-alt"></i> נוסחים להודעות ראשונות (לבחירה)</span>
-                <span id="selectedPensionLabel" class="selected-pension-badge">בחר פנסיון מהטבלה</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span><i class="fas fa-comment-alt"></i> נוסחים להודעות ראשונות (לבחירה)</span>
+                    <button id="templatesCollapseToggle" class="collapse-toggle" onclick="toggleTemplatesCollapse()">
+                        <i class="fas fa-chevron-up"></i>
+                        <span id="templatesCollapseText">קפל</span>
+                    </button>
+                    <span id="selectedPensionLabel" class="selected-pension-badge">בחר פנסיון מהטבלה</span>
+                </div>
             </h2>
             <div class="templates-grid" id="templatesGrid">
                 <div class="empty-tasks">טוען נוסחים...</div>
@@ -486,6 +550,7 @@
                 templates = [...DEFAULT_TEMPLATES];
             }
             renderTemplates();
+            applyTemplatesCollapse();
         }
 
         function renderTemplates() {
@@ -1176,8 +1241,57 @@
                 setTimeout(() => { if(deleteConfirmLogId === logId) { deleteConfirmLogId = null; renderLeadCard(lid); } }, 3000);
             }
         }
+        
+        function toggleTasksCollapse() {
+            const grid = document.getElementById('globalTasksGrid');
+            const btn = document.getElementById('tasksCollapseToggle');
+            const txt = document.getElementById('collapseText');
+            const isCollapsed = grid.classList.toggle('collapsed');
+            btn.classList.toggle('collapsed', isCollapsed);
+            txt.innerText = isCollapsed ? 'הצג הכל' : 'קפל';
+            localStorage.setItem('tasks_collapsed', isCollapsed);
+        }
+
+        function toggleTemplatesCollapse() {
+            const section = document.getElementById('messageTemplatesSection');
+            const grid = document.getElementById('templatesGrid');
+            const btn = document.getElementById('templatesCollapseToggle');
+            const txt = document.getElementById('templatesCollapseText');
+            const isCollapsed = grid.classList.toggle('collapsed');
+            section.classList.toggle('collapsed', isCollapsed);
+            btn.classList.toggle('collapsed', isCollapsed);
+            txt.innerText = isCollapsed ? 'הצג הכל' : 'קפל';
+            localStorage.setItem('templates_collapsed', isCollapsed);
+        }
+
+        function applyTemplatesCollapse() {
+            const isCollapsed = localStorage.getItem('templates_collapsed') === 'true';
+            if (isCollapsed) {
+                const section = document.getElementById('messageTemplatesSection');
+                const grid = document.getElementById('templatesGrid');
+                const btn = document.getElementById('templatesCollapseToggle');
+                const txt = document.getElementById('templatesCollapseText');
+                if (grid) grid.classList.add('collapsed');
+                if (section) section.classList.add('collapsed');
+                if (btn) btn.classList.add('collapsed');
+                if (txt) txt.innerText = 'הצג הכל';
+            }
+        }
 
         function renderGlobalTasks() {
+            const grid = document.getElementById('globalTasksGrid');
+            const isCollapsed = localStorage.getItem('tasks_collapsed') === 'true';
+            const btn = document.getElementById('tasksCollapseToggle');
+            const txt = document.getElementById('collapseText');
+            if (isCollapsed) {
+                grid.classList.add('collapsed');
+                if (btn) btn.classList.add('collapsed');
+                if (txt) txt.innerText = 'הצג הכל';
+            } else {
+                grid.classList.remove('collapsed');
+                if (btn) btn.classList.remove('collapsed');
+                if (txt) txt.innerText = 'קפל';
+            }
             const g = document.getElementById('globalTasksGrid'); let tks = []; leadsData.forEach(l=>l.tasks.forEach(t=>tks.push({...t,leadId:l.id,leadName:l.name})));
             if(globalTaskFilter!=='all') tks = tks.filter(t=>t.status===globalTaskFilter);
             const now = new Date(), startDay = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
