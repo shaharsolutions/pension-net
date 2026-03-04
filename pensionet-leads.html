@@ -352,8 +352,8 @@
             <div class="tasks-controls">
                 <div class="tasks-tabs"><button class="tab-btn active" onclick="setGlobalTaskFilter('open')">פתוחות</button><button class="tab-btn" onclick="setGlobalTaskFilter('done')">בוצעו</button><button class="tab-btn" onclick="setGlobalTaskFilter('all')">הכל</button></div>
                 <div class="days-filter-tabs">
-                    <button class="tab-btn day-tab active" onclick="setGlobalDaysFilter('all')">הכל</button>
-                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('0')">היום</button>
+                    <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('all')">הכל</button>
+                    <button class="tab-btn day-tab active" onclick="setGlobalDaysFilter('0')">היום</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('tomorrow')">מחר</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('3')">3 ימים</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('7')">שבוע</button>
@@ -398,9 +398,10 @@
                             <label class="modal-label">סוג</label>
                             <select id="asType" class="modal-input modal-select">
                                 <option value="ביתי">ביתי</option>
-                                <option value="בוטיק">בוטיק</option>
+                                <option value="מתחם ייעודי">מתחם ייעודי</option>
                             </select>
                         </div>
+                        <div class="filter-group"><label class="modal-label">אתר אינטרנט</label><input type="url" id="asWebsite" class="modal-input" placeholder="https://example.com"></div>
                         <div class="filter-group">
                             <label class="modal-label">גודל</label>
                             <select id="asSize" class="modal-input modal-select">
@@ -426,6 +427,7 @@
                                     <th>עיר*</th>
                                     <th>טלפון*</th>
                                     <th style="width:120px;">סוג</th>
+                                    <th>אתר</th>
                                     <th>הערות</th>
                                     <th style="width:50px;"></th>
                                 </tr>
@@ -448,7 +450,7 @@
         // Use window.supabase which was attached in the module script above
         const getSupabase = () => window.supabase;
 
-        let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = 'all', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
+        let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = '0', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
         let editingLogId = null, editingTaskId = null, deleteConfirmLogId = null, deleteConfirmTaskId = null;
         let isLeadEditingHeader = false, deleteConfirmLeadId = null;
         let sortCol = null, sortDir = 'asc';
@@ -892,9 +894,10 @@
                                     <label class="modal-label">סוג</label>
                                     <select id="editLeadType" class="modal-input modal-select">
                                         <option value="ביתי" ${l.type==='ביתי'?'selected':''}>ביתי</option>
-                                        <option value="בוטיק" ${l.type==='בוטיק'?'selected':''}>בוטיק</option>
+                                        <option value="מתחם ייעודי" ${l.type==='מתחם ייעודי'?'selected':''}>מתחם ייעודי</option>
                                     </select>
                                 </div>
+                                <div class="filter-group"><label class="modal-label">אתר אינטרנט</label><input type="url" id="editLeadWebsite" class="modal-input" value="${l.website||''}"></div>
                                 <div class="filter-group">
                                     <label class="modal-label">גודל</label>
                                     <select id="editLeadSize" class="modal-input modal-select">
@@ -927,6 +930,13 @@
                                 <div class="detail-item"><span class="detail-label">סוג</span><span class="detail-value">${l.type}</span></div>
                                 <div class="detail-item"><span class="detail-label">גודל</span><span class="detail-value">${l.size||'-'}</span></div>
                                 <div class="detail-item"><span class="detail-label">מקור</span><span class="detail-value">${l.source||''}</span></div>
+                                <div class="detail-item">
+                                    <span class="detail-label">אתר אינטרנט</span>
+                                    <span class="detail-value" style="display:flex; align-items:center; gap:8px;">
+                                        ${l.website ? `<a href="${l.website.startsWith('http') ? l.website : 'https://' + l.website}" target="_blank" style="color:var(--primary); font-size:1.1rem;"><i class="fas fa-external-link-alt"></i></a>` : '-'}
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px;">${l.website||''}</span>
+                                    </span>
+                                </div>
                                 <div class="detail-item">
                                     <span class="detail-label">סטטוס</span>
                                     <select class="status-badge" style="border:none; cursor:pointer;" onchange="updateLead('${l.id}', 'status', this.value); renderLeadCard('${l.id}')">
@@ -1178,6 +1188,7 @@
                 type: document.getElementById('asType').value,
                 size: document.getElementById('asSize').value,
                 source: document.getElementById('asSource').value,
+                website: document.getElementById('asWebsite').value,
                 status: 'לא פניתי',
                 notes: ''
             };
@@ -1195,11 +1206,11 @@
             showToast("הפנסיון נוסף בהצלחה!");
             
             // Clear fields
-            ['asName', 'asCity', 'asPhone', 'asAddress', 'asSource'].forEach(id => document.getElementById(id).value = '');
+            ['asName', 'asCity', 'asPhone', 'asAddress', 'asSource', 'asWebsite'].forEach(id => document.getElementById(id).value = '');
         }
         function loadDraft() { bulkDraft = JSON.parse(localStorage.getItem('pensionet_bulk_draft')) || [{},{},{}]; }
         function saveDraft() { localStorage.setItem('pensionet_bulk_draft', JSON.stringify(bulkDraft)); }
-        function renderBulkTable() { const b=document.getElementById('bulkEditBody'); b.innerHTML=bulkDraft.map((r,i)=>`<tr><td><input value="${r.name||''}" oninput="ud(${i},'name',this.value)"></td><td><input value="${r.city||''}" oninput="ud(${i},'city',this.value)"></td><td><input value="${r.phone||''}" oninput="ud(${i},'phone',this.value)"></td><td><select onchange="ud(${i},'type',this.value)"><option value="ביתי" ${r.type==='ביתי'?'selected':''}>ביתי</option><option value="מתחם ייעודי" ${r.type==='מתחם ייעודי'?'selected':''}>מתחם ייעודי</option></select></td><td><input value="${r.notes||''}" oninput="ud(${i},'notes',this.value)"></td><td><button class="mini-btn btn-delete" onclick="rr(${i})">&times;</button></td></tr>`).join(''); }
+        function renderBulkTable() { const b=document.getElementById('bulkEditBody'); b.innerHTML=bulkDraft.map((r,i)=>`<tr><td><input value="${r.name||''}" oninput="ud(${i},'name',this.value)"></td><td><input value="${r.city||''}" oninput="ud(${i},'city',this.value)"></td><td><input value="${r.phone||''}" oninput="ud(${i},'phone',this.value)"></td><td><select onchange="ud(${i},'type',this.value)"><option value="ביתי" ${r.type==='ביתי'?'selected':''}>ביתי</option><option value="מתחם ייעודי" ${r.type==='מתחם ייעודי'?'selected':''}>מתחם ייעודי</option></select></td><td><input placeholder="https://..." value="${r.website||''}" oninput="ud(${i},'website',this.value)"></td><td><input value="${r.notes||''}" oninput="ud(${i},'notes',this.value)"></td><td><button class="mini-btn btn-delete" onclick="rr(${i})">&times;</button></td></tr>`).join(''); }
         function ud(i,f,v) { bulkDraft[i][f]=v; saveDraft(); }
         function rr(i) { bulkDraft.splice(i,1); if(!bulkDraft.length) bulkDraft=[{}]; saveDraft(); renderBulkTable(); }
         function addBulkRow() { bulkDraft.push({}); renderBulkTable(); }
@@ -1302,6 +1313,7 @@
                 size: document.getElementById('editLeadSize').value,
                 status: document.getElementById('editLeadStatus').value,
                 source: document.getElementById('editLeadSource').value,
+                website: document.getElementById('editLeadWebsite').value,
                 updated_at: new Date().toISOString()
             };
             
