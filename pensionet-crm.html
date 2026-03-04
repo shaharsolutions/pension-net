@@ -106,14 +106,27 @@
 
         
         /* New Styles */
-        .notes-wrapper { position: relative; display: flex; flex-direction: column; gap: 4px; }
+        .notes-wrapper { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 180px; }
         .notes-input { 
-            width: 100%; min-height: 44px; height: 44px; padding: 8px 12px; 
+            width: 100%; min-height: 60px; height: 60px; padding: 8px 12px; 
             border: 1px solid var(--border-color); border-radius: 12px; 
             font-size: 0.85rem; font-family: inherit; resize: none; overflow: hidden;
-            transition: all 0.2s; background: #fcfdfe;
+            transition: height 0.3s ease, border-color 0.2s, box-shadow 0.2s; background: #fcfdfe;
+            cursor: pointer;
         }
-        .notes-input:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .notes-input:hover {
+            height: auto; /* Just a hint, will be handled by JS for real scrollHeight */
+            border-color: var(--primary);
+            background: white;
+            z-index: 100;
+        }
+        .notes-input:focus { 
+            border-color: var(--primary); 
+            background: white; 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+            cursor: text;
+        }
         .btn-expand-notes { 
             font-size: 0.7rem; color: var(--primary); cursor: pointer; text-decoration: underline; 
             align-self: flex-end; font-weight: 700; border: none; background: none; padding: 0;
@@ -933,7 +946,12 @@
                     <td class="${nextTaskClass}" style="white-space: nowrap;">${nextTaskStr}</td>
                     <td onclick="event.stopPropagation()">
                         <div class="notes-wrapper">
-                            <textarea class="notes-input" placeholder="הערה קצרה..." oninput="autoGrow(this); updateLead('${l.id}','notes',this.value, true)" onblur="saveData()">${l.notes||''}</textarea>
+                            <textarea class="notes-input" placeholder="הערה קצרה..." 
+                                oninput="autoGrow(this); updateLead('${l.id}','notes',this.value, true)" 
+                                onfocus="autoGrow(this)" 
+                                onblur="autoGrow(this); saveData()"
+                                onmouseenter="autoGrow(this)"
+                                onmouseleave="autoGrow(this)">${l.notes||''}</textarea>
                             <button class="btn-expand-notes" onclick="openLeadCard('${l.id}')">הרחב</button>
                         </div>
                     </td>
@@ -946,11 +964,18 @@
                     </td>
                 </tr>`}).join('');
             
-            document.querySelectorAll('.notes-input').forEach(el => autoGrow(el));
+            // document.querySelectorAll('.notes-input').forEach(el => autoGrow(el));
             renderGlobalTasks();
             updateSelectedLabel();
         }
-        function autoGrow(el) { el.style.height = '44px'; el.style.height = (el.scrollHeight) + 'px'; }
+        function autoGrow(el) { 
+            if (el.matches(':focus') || el.matches(':hover')) {
+                el.style.height = '60px';
+                el.style.height = (el.scrollHeight) + 'px';
+            } else {
+                el.style.height = '60px';
+            }
+        }
         function selectLead(id) { selectedLeadId = id; render(); }
         function updateSelectedLabel() {
             const l = leadsData.find(x=>x.id===selectedLeadId);
