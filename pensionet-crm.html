@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" href="favicon.png">
     <script src="js/config.js"></script>
     <script type="module">
-        import { supabase } from './supabaseClient.js';
+        import { supabase } from './js/supabaseClient.js';
         window.supabase = supabase;
     </script>
     <style>
@@ -189,7 +189,7 @@
         .log-actions, .task-actions { display: flex; gap: 8px; margin-top: 8px; }
         .btn-inline-action { border: none; background: none; font-size: 0.75rem; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
         .btn-edit { color: var(--primary); background: #eef2ff; }
-        .btn-delete { color: var(--danger); background: #fef2f2; }
+        .btn-delete { color: var(--danger); background: #fef2f2; border: none; }
         .btn-delete.confirm { background: var(--danger); color: white; }
         .mini-btn.btn-done { background: var(--success); color: white; border: none; }
         .mini-btn.btn-undo { background: var(--warning); color: white; border: none; }
@@ -415,13 +415,26 @@
                         <label>תאריך יעד </label>
                         <input type="text" id="bulkTaskDateGlobal" class="filter-input due-date-input" placeholder="בחר תאריך יעד" readonly data-date-value="" onclick="openCalendar(this)">
                     </div>
-                    <div class="card-section" style="background:white; border:1px solid #e2e8f0;"><input type="text" id="bulkLeadSearch" class="filter-input" style="width:100%; font-size:0.8rem;" placeholder="חפש פנסיון..." oninput="renderBulkChecklist()"><div id="bulkLeadChecklist" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;"><button class="mini-btn" onclick="bulkSelectFiltered()">בחר הכל מהטבלה</button><button class="mini-btn" style="background:#fef2f2; color:var(--danger);" onclick="bulkSelectNoTasks()">בחר רק לידים ללא משימה</button><button class="mini-btn" onclick="bulkClearSelection()">נקה</button></div></div>
+                    <div class="card-section" style="background:white; border:1px solid #e2e8f0;">
+                        <input type="text" id="bulkLeadSearch" class="filter-input" style="width:100%; font-size:0.8rem;" placeholder="חפש פנסיון..." oninput="renderBulkChecklist()">
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:5px; font-weight:700;">* השאר ריק ליצירת משימה גלובלית (ללא שיוך לפנסיון)</p>
+                        <div id="bulkLeadChecklist" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div>
+                        <div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;">
+                            <button class="mini-btn" onclick="bulkSelectFiltered()">בחר הכל מהטבלה</button>
+                            <button class="mini-btn" style="background:#fef2f2; color:var(--danger);" onclick="bulkSelectNoTasks()">בחר רק לידים ללא משימה</button>
+                            <button class="mini-btn" onclick="bulkClearSelection()">נקה</button>
+                        </div>
+                    </div>
                 </div>
                 <div style="display:flex; gap:10px;"><button class="btn-primary" onclick="bulkAddTask()">הוסף משימה</button><button class="mini-btn" onclick="toggleBulkPanel(false)">ביטול</button></div>
             </div>
 
             <div class="tasks-controls">
                 <div class="tasks-tabs"><button class="tab-btn active" onclick="setGlobalTaskFilter('open')">פתוחות</button><button class="tab-btn" onclick="setGlobalTaskFilter('done')">בוצעו</button><button class="tab-btn" onclick="setGlobalTaskFilter('all')">הכל</button></div>
+                <button class="mini-btn" onclick="toggleGlobalSortUrgency()" title="מיון לפי תאריך יעד" style="display:flex; align-items:center; gap:5px; padding: 8px 12px; border-radius: 12px;">
+                    <i class="fas fa-sort-numeric-down" id="globalSortIcon"></i>
+                    <span style="font-weight:700;">מיון תאריך</span>
+                </button>
                 <div class="days-filter-tabs">
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('all')">הכל</button>
                     <button class="tab-btn day-tab" onclick="setGlobalDaysFilter('yesterday')">אתמול</button>
@@ -454,6 +467,7 @@
         <div class="table-container"><table><thead id="mainTableHead"></thead><tbody id="tableBody"></tbody></table></div>
     </div>
     <div id="modalOverlay" class="modal-overlay"><div class="lead-card" id="leadCard"></div></div>
+    <div id="globalTaskModalOverlay" class="modal-overlay"><div class="lead-card" id="globalTaskCard" style="max-width: 500px;"></div></div>
     <div id="addLeadsModal" class="modal-overlay">
         <div class="lead-card" style="max-width:900px;">
             <div class="card-header">
@@ -529,6 +543,7 @@
         const getSupabase = () => window.supabase;
 
         let leadsData = [], globalTaskFilter = 'open', globalDaysFilter = '0', bulkIds = new Set(), bulkDraft = [], selectedLeadId = null;
+        let globalTaskSortDir = 'asc';
         let editingLogId = null, editingTaskId = null, deleteConfirmLogId = null, deleteConfirmTaskId = null;
         let isLeadEditingHeader = false, deleteConfirmLeadId = null;
         let sortCol = null, sortDir = 'asc';
@@ -682,16 +697,30 @@
         }
         
         async function loadLeads() {
-            const { data, error } = await getSupabase()
+            // Fetch leads and their logs (logs are always lead-specific)
+            const { data: leads, error: lErr } = await getSupabase()
                 .from('pension_leads')
-                .select('*, logs:pension_lead_logs(*), tasks:pension_lead_tasks(*)');
+                .select('*, logs:pension_lead_logs(*)');
             
-            if (error) {
-                console.error("Error loading leads:", error);
+            // Fetch ALL tasks (including those with lead_id = null)
+            const { data: tasks, error: tErr } = await getSupabase()
+                .from('pension_lead_tasks')
+                .select('*');
+            
+            if (lErr || tErr) {
+                console.error("Error loading leads/tasks:", lErr || tErr);
                 showToast("שגיאה בטעינת נתונים");
                 return;
             }
-            leadsData = data || [];
+
+            // Distribute tasks to leads
+            leads.forEach(l => {
+                l.tasks = tasks.filter(t => t.lead_id === l.id);
+            });
+            
+            // Store tasks that have no lead_id as global/orphan tasks
+            window.globalOrphanTasks = tasks.filter(t => !t.lead_id);
+            leadsData = leads;
         }
 
         function setup() { initMultiSelects(); populateCity(); setupEvents(); loadDraft(); }
@@ -1205,13 +1234,23 @@
             renderLeadCard(lid); renderGlobalTasks(); showToast("משימה נוספה");
         }
         async function toggleTaskDone(lid, tid) {
-            const l = leadsData.find(x=>x.id===lid), t = l.tasks.find(x=>x.id===tid);
+            let t;
+            if (lid && lid !== 'null') {
+                const l = leadsData.find(x=>x.id===lid);
+                if (l) t = l.tasks.find(x=>x.id===tid);
+            } else {
+                t = (window.globalOrphanTasks || []).find(x=>x.id===tid);
+            }
+            if (!t) return;
+
             const newStatus = t.status === 'open' ? 'done' : 'open';
             const doneAt = newStatus === 'done' ? new Date().toISOString() : null;
             const { error } = await getSupabase().from('pension_lead_tasks').update({ status: newStatus, done_at: doneAt }).eq('id', tid);
             if(error) return showToast("שגיאה בעדכון המשימה");
             t.status = newStatus; t.done_at = doneAt;
-            renderLeadCard(lid); renderGlobalTasks(); showToast(t.status==='done'?"בוצע!":"הוחזר לפתוח");
+            if (lid && lid !== 'null') renderLeadCard(lid); 
+            renderGlobalTasks(); 
+            showToast(t.status==='done'?"בוצע!":"הוחזר לפתוח");
         }
         function startEditTask(lid, tid) { editingTaskId = tid; renderLeadCard(lid); }
         function cancelEditTask(lid) { editingTaskId = null; renderLeadCard(lid); }
@@ -1308,6 +1347,7 @@
 
         function renderGlobalTasks() {
             const grid = document.getElementById('globalTasksGrid');
+            if (!grid) return;
             const isCollapsed = localStorage.getItem('tasks_collapsed') === 'true';
             const btn = document.getElementById('tasksCollapseToggle');
             const txt = document.getElementById('collapseText');
@@ -1320,7 +1360,30 @@
                 if (btn) btn.classList.remove('collapsed');
                 if (txt) txt.innerText = 'קפל';
             }
-            const g = document.getElementById('globalTasksGrid'); let tks = []; leadsData.forEach(l=>l.tasks.forEach(t=>tks.push({...t,leadId:l.id,leadName:l.name})));
+
+            let tks = []; 
+            // Only show tasks from leads that match the current filters
+            const filteredLeads = getFiltered();
+            filteredLeads.forEach(l => {
+                if (l.tasks) {
+                    l.tasks.forEach(t => tks.push({...t, leadId: l.id, leadName: l.name}));
+                }
+            });
+
+            if (window.globalOrphanTasks) {
+                window.globalOrphanTasks.forEach(t => tks.push({...t, leadId: null, leadName: 'משימה גלובלית'}));
+            }
+
+            // Apply search filter from the main panel to tasks as well
+            const fS = document.getElementById('searchFilter').value.toLowerCase();
+            if (fS) {
+                tks = tks.filter(t => 
+                    t.text.toLowerCase().includes(fS) || 
+                    (t.description && t.description.toLowerCase().includes(fS)) ||
+                    t.leadName.toLowerCase().includes(fS)
+                );
+            }
+
             if(globalTaskFilter!=='all') tks = tks.filter(t=>t.status===globalTaskFilter);
             const now = new Date(), startDay = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
             if(globalDaysFilter==='late') tks=tks.filter(t=>t.status==='open' && new Date(t.due_at).getTime()<startDay);
@@ -1339,19 +1402,36 @@
                     return d >= startDay && d < end;
                 });
             }
-            if(!tks.length) { g.innerHTML='<div class="empty-tasks">אין משימות</div>'; return; }
-            g.innerHTML = tks.map(t=>`
+
+            // Sort tasks by due date
+            tks.sort((a,b) => {
+                const da = a.due_at ? new Date(a.due_at).getTime() : 0;
+                const db = b.due_at ? new Date(b.due_at).getTime() : 0;
+                return globalTaskSortDir === 'asc' ? da - db : db - da;
+            });
+
+            if(!tks.length) { grid.innerHTML='<div class="empty-tasks">אין משימות</div>'; return; }
+            grid.innerHTML = tks.map(t=>`
                 <div class="task-card-global ${new Date(t.due_at).getTime()<startDay && t.status==='open'?'late':''} ${t.status==='done'?'done':''}">
                     <div class="card-pension-name">${t.leadName}</div>
                     <div class="card-task-text" style="margin-bottom:4px;">${t.text}</div>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;"><i class="far fa-calendar-alt"></i> מיועדת ל: ${formatDueLabel(t.due_at)}</div>
                     <div class="card-footer">
-                        <button class="mini-btn" onclick="openLeadCard('${t.leadId}')">פתח</button>
+                        ${t.leadId ? `<button class="mini-btn" onclick="openLeadCard('${t.leadId}')">פתח</button>` : `<button class="mini-btn" onclick="openGlobalTaskCard('${t.id}')">פתח</button>`}
                         <button class="mini-btn ${t.status==='done'?'btn-undo':'btn-done'}" onclick="toggleTaskDone('${t.leadId}','${t.id}')">
                             ${t.status==='done'?'בטל ביצוע':'בוצע'}
                         </button>
                     </div>
                 </div>`).join('');
+        }
+
+        function toggleGlobalSortUrgency() {
+            globalTaskSortDir = globalTaskSortDir === 'asc' ? 'desc' : 'asc';
+            const icon = document.getElementById('globalSortIcon');
+            if (icon) {
+                icon.className = globalTaskSortDir === 'asc' ? 'fas fa-sort-numeric-down' : 'fas fa-sort-numeric-up';
+            }
+            renderGlobalTasks();
         }
         function setGlobalTaskFilter(f) { globalTaskFilter=f; document.querySelectorAll('.tasks-tabs button').forEach(b=>b.classList.toggle('active',b.innerText.includes(f==='open'?'פתוחות':f==='done'?'בוצעו':'הכל'))); renderGlobalTasks(); }
         function setGlobalDaysFilter(v) { 
@@ -1459,7 +1539,12 @@
             showToast(`נוספו ${addCount}`); if(!skip) closeAddLeadsModal(); else renderBulkTable();
         }
         function showToast(m) { const t=document.createElement('div'); t.className='toast'; t.innerText=m; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300)},2000); }
-        function toggleBulkPanel(s) { const p=document.getElementById('bulkAddPanel'); p.style.display=(s===undefined?p.style.display==='none':s)?'flex':'none'; if(p.style.display==='flex') renderBulkChecklist(); }
+        function toggleBulkPanel(s) { 
+            const p = document.getElementById('bulkAddPanel'); 
+            const isHidden = p.style.display === 'none' || p.style.display === '';
+            p.style.display = (s === undefined ? isHidden : s) ? 'flex' : 'none'; 
+            if(p.style.display === 'flex') renderBulkChecklist(); 
+        }
         function toggleId(id) { if(bulkIds.has(id)) bulkIds.delete(id); else bulkIds.add(id); renderBulkChecklist(); }
         function renderBulkChecklist() { 
             const c=document.getElementById('bulkLeadChecklist'), s=document.getElementById('bulkLeadSearch').value.toLowerCase(); 
@@ -1480,9 +1565,41 @@
                   dt = document.getElementById('bulkTaskDateGlobal').dataset.dateValue;
             if(!txt) return showToast("הזן תיאור משימה");
             if(!dt) return showToast("בחר תאריך יעד");
-            if(bulkIds.size === 0) return showToast("לא נבחרו פנסיונים");
             
             const due = new Date(dt + "T12:00:00").toISOString();
+
+            if(bulkIds.size === 0) {
+                // If no leads selected, create one GLOBAL/General task
+                const { data, error } = await getSupabase()
+                    .from('pension_lead_tasks')
+                    .insert({
+                        lead_id: null,
+                        text: txt,
+                        description: desc,
+                        due_at: due,
+                        status: 'open'
+                    })
+                    .select();
+
+                if(error) {
+                    console.error("Error creating global task:", error);
+                    return showToast("שגיאה בהוספת משימה גלובלית (ודא ש lead_id יכול להיות NULL)");
+                }
+
+                if (!window.globalOrphanTasks) window.globalOrphanTasks = [];
+                window.globalOrphanTasks.push(data[0]);
+                
+                toggleBulkPanel(false); 
+                render(); 
+                renderGlobalTasks(); 
+                showToast("משימה גלובלית נוספה");
+                
+                // Clear fields
+                document.getElementById('bulkTaskTextGlobal').value = ''; 
+                const bd = document.getElementById('bulkTaskDateGlobal'); bd.value = ''; bd.dataset.dateValue = '';
+                return;
+            }
+            
             const toInsert = Array.from(bulkIds).map(lid => ({
                 lead_id: lid,
                 text: txt,
@@ -1500,7 +1617,10 @@
 
             data.forEach(task => {
                 const l = leadsData.find(x=>x.id===task.lead_id);
-                if(l) l.tasks.push(task);
+                if(l) {
+                    if (!l.tasks) l.tasks = [];
+                    l.tasks.push(task);
+                }
             });
 
             bulkIds.clear(); toggleBulkPanel(false); render(); renderGlobalTasks(); showToast(`נוספו ${data.length} משימות`);
@@ -1562,6 +1682,140 @@
                 if(!noRender) render();
             }
         }
+
+        // --- Global Task Card Logic ---
+        function openGlobalTaskCard(tid) {
+            const t = (window.globalOrphanTasks || []).find(x=>x.id===tid);
+            if(!t) return;
+            editingTaskId = null;
+            deleteConfirmTaskId = null;
+            renderGlobalTaskCard(t.id);
+            document.getElementById('globalTaskModalOverlay').style.display='flex';
+        }
+
+        function closeGlobalTaskCard() {
+            document.getElementById('globalTaskModalOverlay').style.display='none';
+            editingTaskId = null;
+            deleteConfirmTaskId = null;
+        }
+
+        function renderGlobalTaskCard(tid) {
+            const t = (window.globalOrphanTasks || []).find(x=>x.id===tid);
+            if(!t) return;
+
+            const isEditing = editingTaskId === t.id;
+            const isDeleting = deleteConfirmTaskId === t.id;
+
+            document.getElementById('globalTaskCard').innerHTML = `
+                <div class="card-header">
+                    <h2><i class="fas fa-calendar-check"></i> משימה גלובלית</h2>
+                    <button class="close-btn" onclick="closeGlobalTaskCard()">&times;</button>
+                </div>
+                <div class="card-body" style="grid-template-columns: 1fr; padding: 24px;">
+                    ${isEditing ? `
+                        <div class="form-grid" style="grid-template-columns: 1fr;">
+                            <div class="filter-group">
+                                <label class="modal-label">כותרת המשימה</label>
+                                <input type="text" id="egtText" class="modal-input" value="${t.text}">
+                            </div>
+                            <div class="filter-group">
+                                <label class="modal-label">תיאור (אופציונלי)</label>
+                                <textarea id="egtDesc" class="modal-input" style="min-height:100px; resize:vertical;">${t.description||''}</textarea>
+                            </div>
+                            <div class="filter-group">
+                                <label class="modal-label">תאריך יעד</label>
+                                <input type="text" id="egtDate" class="modal-input due-date-input" 
+                                       value="${t.due_at ? new Date(t.due_at).toLocaleDateString('he-IL') : ''}" 
+                                       data-date-value="${t.due_at ? new Date(t.due_at).toISOString().split('T')[0] : ''}" 
+                                       readonly onclick="openCalendar(this)">
+                            </div>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button class="btn-primary" style="flex:1;" onclick="saveEditGlobalTask('${t.id}')"><i class="fas fa-save"></i> שמור</button>
+                                <button class="mini-btn" style="flex:1;" onclick="editingTaskId=null; renderGlobalTaskCard('${t.id}')">בטל</button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="display:flex; flex-direction:column; gap:15px;">
+                            <div>
+                                <label class="detail-label">כותרת</label>
+                                <div class="detail-value" style="font-size:1.2rem;">${t.text}</div>
+                            </div>
+                            ${t.description ? `
+                            <div>
+                                <label class="detail-label">תיאור</label>
+                                <div style="white-space: pre-wrap; font-weight: 400; color: var(--text-main);">${t.description}</div>
+                            </div>` : ''}
+                            <div>
+                                <label class="detail-label">תאריך יעד</label>
+                                <div class="detail-value"><i class="far fa-calendar-alt"></i> ${formatDueLabel(t.due_at)}</div>
+                            </div>
+                            <div>
+                                <label class="detail-label">סטטוס</label>
+                                <div class="detail-value">
+                                    <span class="badge ${t.status==='done'?'badge-done':'badge-upcoming'}">${t.status==='done'?'בוצע':'פתוח'}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; gap:10px; margin-top:20px; border-top: 1px solid #eee; padding-top:20px;">
+                                <button class="btn-primary" style="flex:1;" onclick="editingTaskId='${t.id}'; renderGlobalTaskCard('${t.id}')"><i class="fas fa-edit"></i> ערוך</button>
+                                <button class="btn-delete ${isDeleting?'confirm':''}" style="flex:1; border-radius:10px; border:none;" onclick="requestDeleteGlobalTask('${t.id}')">
+                                    <i class="fas fa-trash"></i> ${isDeleting?'אשר מחיקה':'מחק'}
+                                </button>
+                                <button class="mini-btn ${t.status==='done'?'btn-undo':'btn-done'}" style="flex:1;" onclick="toggleTaskDone(null,'${t.id}'); setTimeout(()=>renderGlobalTaskCard('${t.id}'),100);">
+                                    ${t.status==='done'?'בטל ביצוע':'בוצע'}
+                                </button>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function saveEditGlobalTask(tid) {
+            const txt = document.getElementById('egtText').value, 
+                  desc = document.getElementById('egtDesc').value, 
+                  dt = document.getElementById('egtDate').dataset.dateValue;
+            if(!txt) return showToast("הזן כותרת משימה");
+            if(!dt) return showToast("בחר תאריך יעד");
+            
+            const due = new Date(dt + "T12:00:00").toISOString();
+            const now = new Date().toISOString();
+            
+            const { error } = await getSupabase().from('pension_lead_tasks').update({ 
+                text: txt, 
+                description: desc, 
+                due_at: due, 
+                updated_at: now 
+            }).eq('id', tid);
+            
+            if(error) return showToast("שגיאה בעדכון המשימה");
+            
+            const t = (window.globalOrphanTasks || []).find(x=>x.id===tid);
+            t.text = txt; t.description = desc; t.due_at = due; t.updated_at = now;
+            
+            editingTaskId = null;
+            renderGlobalTaskCard(tid);
+            renderGlobalTasks();
+            showToast("משימה עודכנה");
+        }
+
+        async function requestDeleteGlobalTask(tid) {
+            if(deleteConfirmTaskId === tid) {
+                const { error } = await getSupabase().from('pension_lead_tasks').delete().eq('id', tid);
+                if(error) return showToast("שגיאה במחיקת המשימה");
+                
+                window.globalOrphanTasks = (window.globalOrphanTasks || []).filter(x=>x.id!==tid);
+                deleteConfirmTaskId = null;
+                closeGlobalTaskCard();
+                renderGlobalTasks();
+                showToast("משימה נמחקה");
+            } else {
+                deleteConfirmTaskId = tid;
+                renderGlobalTaskCard(tid);
+                setTimeout(() => { if(deleteConfirmTaskId === tid) { deleteConfirmTaskId = null; renderGlobalTaskCard(tid); } }, 3000);
+            }
+        }
+
         function setGlobalTaskFilter(f) { globalTaskFilter=f; document.querySelectorAll('.tasks-tabs button').forEach(b=>b.classList.toggle('active',b.innerText.includes(f==='open'?'פתוחות':f==='done'?'בוצעו':'הכל'))); renderGlobalTasks(); }
 
         // --- Custom Hebrew Calendar Logic ---

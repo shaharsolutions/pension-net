@@ -3,7 +3,7 @@ const ASSETS = [
     'pensionet-crm.html',
     'favicon.png',
     'js/config.js',
-    'supabaseClient.js'
+    'js/supabaseClient.js'
 ];
 
 self.addEventListener('install', (event) => {
