@@ -1,6 +1,6 @@
 {
-  "name": "ניהול לידים – פנסיון-נט",
-  "short_name": "ניהול לידים",
+  "name": "מערכת CRM – פנסיון-נט",
+  "short_name": "CRM פנסיון-נט",
   "description": "מערכת ניהול ומעקב אחרי פנייה לפנסיוני כלבים",
   "start_url": "pensionet-crm.html",
   "display": "standalone",
