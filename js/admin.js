@@ -1028,7 +1028,6 @@ async function renderMonthlyCalendar(allOrders) {
 
   const todayStr = new Date().toDateString();
 
-  const holidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
   let calendarHTML = '<table class="calendar-table"><thead><tr>';
   const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
@@ -1043,14 +1042,16 @@ async function renderMonthlyCalendar(allOrders) {
     calendarHTML += '<td class="empty-day"></td>';
   }
 
-  dayCounter = 1;
-  currentDayOfWeek = firstDayIndex;
+  let dayCounter = 1;
+  let currentDayOfWeek = firstDayIndex;
   
   const monthHolidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
   while (dayCounter <= lastDayOfMonth.getDate()) {
+    const currentDate = new Date(date.getFullYear(), date.getMonth(), dayCounter);
+    currentDate.setHours(0,0,0,0);
     const dogsToday = dogsByDayMap[dayCounter] || [];
-    const currentDateTimestamp = new Date(date.getFullYear(), date.getMonth(), dayCounter).toDateString();
+    const currentDateTimestamp = currentDate.toDateString();
     
     let classes = "calendar-day";
     if (currentDateTimestamp === todayStr) classes += " today";
