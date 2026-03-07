@@ -162,13 +162,13 @@ async function loadAdminPanelData() {
     showLoadingState();
 
     try {
-        const [sessions, orders, profiles, activityLogs, userPlans, announcement, feedback] = await Promise.all([
+        const [sessions, orders, profiles, activityLogs, userPlans, announcements, feedback] = await Promise.all([
             loadAllSessions(),
             loadAllOrders(),
             loadAllProfiles(),
             loadAllActivityLogs(),
             loadAllUserPlans(),
-            loadLatestAnnouncement(),
+            loadAnnouncements(),
             loadUserFeedback()
         ]);
 
@@ -255,43 +255,122 @@ async function loadAllUserPlans() {
     return data || [];
 }
 
-async function loadLatestAnnouncement() {
+async function loadAnnouncements() {
     try {
         const { data, error } = await supabaseClient
             .from('system_announcements')
             .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+            .order('created_at', { ascending: false });
 
+        if (error) throw error;
+        
+        const tbody = document.getElementById('announcementsListBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                const date = new Date(item.created_at).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' });
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>
+                        <span class="admin-status-badge ${item.is_active ? 'status-active' : 'status-inactive'}" style="background: ${item.is_active ? '#dcfce7' : '#fee2e2'}; color: ${item.is_active ? '#15803d' : '#b91c1c'}; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                            ${item.is_active ? 'פעיל' : 'כבוי'}
+                        </span>
+                    </td>
+                    <td>${item.created_by || 'מנהל'}</td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="editAnnouncement('${item.id}')" class="admin-action-btn" style="background: #eff6ff; color: #2563eb; padding: 6px 10px; font-size: 12px;">
+                                <i class="fas fa-edit"></i> ערוך
+                            </button>
+                            <button onclick="viewAnnouncementById('${item.id}')" class="admin-action-btn" style="background: #f8fafc; color: #64748b; padding: 6px 10px; font-size: 12px;">
+                                <i class="fas fa-eye"></i> צפה
+                            </button>
+                            <button onclick="deleteAnnouncement('${item.id}')" class="admin-action-btn" style="background: #fee2e2; color: #dc2626; padding: 6px 10px; font-size: 12px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">אין היסטוריית עדכונים</td></tr>';
+        }
+        return data;
+    } catch (err) {
+        console.warn('Error loading announcements:', err);
+        return [];
+    }
+}
+
+async function editAnnouncement(id) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('system_announcements')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
         if (error) throw error;
         
         if (data) {
             document.getElementById('announcementContent').value = data.content;
             document.getElementById('announcementActive').checked = data.is_active;
+            document.getElementById('editingAnnouncementId').value = data.id;
+            document.getElementById('cancelEditBtn').style.display = 'inline-flex';
             
-            const infoDiv = document.getElementById('lastAnnouncementInfo');
-            if (infoDiv) {
-                const date = new Date(data.created_at).toLocaleString('he-IL');
-                infoDiv.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 10px 15px; border-radius: 8px; border: 1px solid #dbeafe; color: #1e40af;">
-                        <span><i class="fas fa-info-circle"></i> עדכון אחרון פורסם ב-${date} על ידי ${data.created_by || 'מנהל'}</span>
-                        <button onclick='viewAnnouncementById("${data.id}")' class="admin-nav-btn" style="background: white; border: 1px solid #bfdbfe; color: #2563eb; padding: 4px 12px; font-size: 12px; font-weight: 600;">
-                            <i class="fas fa-eye"></i> צפה בתוכן שפורסם
-                        </button>
-                    </div>`;
+            // Scroll to form
+            document.getElementById('announcementContent').focus();
+            showToast('מצב עריכה הופעל', 'info');
+        }
+    } catch (err) {
+        console.error('Edit announcement error:', err);
+        showToast('שגיאה בטעינת העדכון לעריכה', 'error');
+    }
+}
+
+async function deleteAnnouncement(id) {
+    showConfirmModal(
+        'מחיקת עדכון',
+        '<div style="text-align:center;"><i class="fas fa-trash-alt" style="font-size: 40px; color: #ef4444; margin-bottom: 15px; display: block;"></i> האם אתה בטוח שברצונך למחוק עדכון זה? <br><small style="color: #64748b;">פעולה זו אינה ניתנת לביטול.</small></div>',
+        async () => {
+            try {
+                const { error } = await supabaseClient
+                    .from('system_announcements')
+                    .delete()
+                    .eq('id', id);
+                    
+                if (error) throw error;
+                
+                showToast('העדכון נמחק בהצלחה', 'success');
+                loadAnnouncements();
+                
+                // If we were editing this one, reset form
+                if (document.getElementById('editingAnnouncementId').value === id) {
+                    resetAnnouncementForm();
+                }
+            } catch (err) {
+                console.error('Delete announcement error:', err);
+                showToast('שגיאה במחיקת העדכון', 'error');
             }
         }
-        return data;
-    } catch (err) {
-        console.warn('Error loading announcement:', err);
-        return null;
-    }
+    );
+}
+
+function resetAnnouncementForm() {
+    document.getElementById('announcementContent').value = '';
+    document.getElementById('announcementActive').checked = true;
+    document.getElementById('editingAnnouncementId').value = '';
+    document.getElementById('cancelEditBtn').style.display = 'none';
 }
 
 async function saveAnnouncement() {
     const content = document.getElementById('announcementContent').value.trim();
     const isActive = document.getElementById('announcementActive').checked;
+    const editingId = document.getElementById('editingAnnouncementId').value;
     
     if (!content) {
         showToast('נא להזין תוכן להודעה', 'error');
@@ -300,19 +379,36 @@ async function saveAnnouncement() {
     
     try {
         const session = await Auth.getSession();
-        const { error } = await supabaseClient
-            .from('system_announcements')
-            .insert([{
-                content: content,
-                is_active: isActive,
-                created_by: session?.user?.email || ADMIN_EMAIL,
-                created_at: new Date().toISOString()
-            }]);
-            
-        if (error) throw error;
+        const userEmail = session?.user?.email || ADMIN_EMAIL;
         
-        showToast('העדכון פורסם בהצלחה!', 'success');
-        loadLatestAnnouncement(); // Refresh info
+        let result;
+        if (editingId) {
+            // Update existing
+            result = await supabaseClient
+                .from('system_announcements')
+                .update({
+                    content: content,
+                    is_active: isActive,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', editingId);
+        } else {
+            // New insert
+            result = await supabaseClient
+                .from('system_announcements')
+                .insert([{
+                    content: content,
+                    is_active: isActive,
+                    created_by: userEmail,
+                    created_at: new Date().toISOString()
+                }]);
+        }
+            
+        if (result.error) throw result.error;
+        
+        showToast(editingId ? 'העדכון עודכן בהצלחה!' : 'העדכון פורסם בהצלחה!', 'success');
+        resetAnnouncementForm();
+        loadAnnouncements(); // Refresh list
     } catch (err) {
         console.error('Save announcement error:', err);
         showToast('שגיאה בשמירת העדכון', 'error');

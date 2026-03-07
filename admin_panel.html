@@ -311,9 +311,9 @@
                                 <textarea id="announcementContent" style="width: 100%; min-height: 150px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none;" placeholder="הזן את פרטי העדכון כאן..."></textarea>
                             </div>
                             
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
                                 <input type="checkbox" id="announcementActive" style="width: 18px; height: 18px; cursor: pointer;" checked>
                                 <label for="announcementActive" style="font-weight: 600; cursor: pointer;">הודעה פעילה (תוצג למשתמשים)</label>
+                                <input type="hidden" id="editingAnnouncementId" value="">
                             </div>
                             
                             <div style="display: flex; gap: 12px;">
@@ -323,11 +323,30 @@
                                 <button onclick="previewAnnouncement()" class="admin-nav-btn" style="background: white;">
                                     <i class="fas fa-eye"></i> תצוגה מקדימה
                                 </button>
+                                <button id="cancelEditBtn" onclick="resetAnnouncementForm()" class="admin-nav-btn" style="background: white; border-color: #ef4444; color: #ef4444; display: none;">
+                                    <i class="fas fa-times"></i> ביטול עריכה
+                                </button>
+                            </div>
                             </div>
                         </div>
 
-                        <div id="lastAnnouncementInfo" style="font-size: 13px; color: var(--admin-text-muted); margin-bottom: 30px;">
-                            <!-- Info about last update will be loaded here -->
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="margin-bottom: 15px; font-size: 16px;"><i class="fas fa-history"></i> היסטוריית עדכונים</h3>
+                            <div class="admin-table-container">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>תאריך</th>
+                                            <th>פעיל</th>
+                                            <th>יוצר</th>
+                                            <th>פעולות</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="announcementsListBody">
+                                        <!-- announcements will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <div style="border-top: 2px solid #f1f5f9; padding-top: 30px;">
