@@ -177,6 +177,7 @@ async function loadAdminPanelData() {
 
         renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
+        renderSessionHistory(sessions);
         renderActivityFeed(activityLogs, profiles);
         renderUserFeedback(feedback);
     } catch (err) {
@@ -1002,6 +1003,7 @@ function filterByUser(userId) {
         const { sessions, orders, profiles, userPlans } = window._cachedAdminData;
         renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
+        renderSessionHistory(sessions);
     }
 }
 
@@ -1105,6 +1107,7 @@ function filterOrdersTable() {
         const { sessions, orders, profiles, userPlans } = window._cachedAdminData;
         renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
+        renderSessionHistory(sessions);
     }
 }
 
