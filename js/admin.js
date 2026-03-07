@@ -298,6 +298,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         this.textContent = 'עדכן סיסמת כניסה';
       }
     });
+
+    // Check for announcements after data is loaded
+    setTimeout(() => checkForAnnouncements(), 1500); 
   }
 
   
@@ -616,7 +619,158 @@ async function resetConfirmationState(orderId) {
   await loadData();
 }
 
-// Event delegation for WhatsApp confirmation buttons
+// --- System Announcements (What's New) ---
+async function checkForAnnouncements() {
+    // Only show to authenticated users, not in demo mode or impersonation mode
+    const impersonating = sessionStorage.getItem('pensionet_impersonate_user_id');
+    if (window.isDemoMode || !window.currentUserSession || impersonating) return;
+    
+    try {
+        // 1. Fetch latest active announcement
+        const { data: announcement, error } = await pensionNetSupabase
+            .from('system_announcements')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+            
+        if (error || !announcement) return;
+        
+        // 2. Check if user has seen this specific announcement
+        const userId = window.currentUserSession.user.id;
+        const { data: profile } = await pensionNetSupabase
+            .from('profiles')
+            .select('last_seen_announcement_id')
+            .eq('user_id', userId)
+            .maybeSingle();
+            
+        if (profile && profile.last_seen_announcement_id === announcement.id) {
+            // User already saw this one
+            return;
+        }
+        
+        // 3. Show the popup
+        showAnnouncementModal(announcement);
+        
+    } catch (err) {
+        console.warn('Announcement check failed:', err);
+    }
+}
+
+function showAnnouncementModal(announcement) {
+    const overlay = document.createElement('div');
+    overlay.id = 'announcement-overlay';
+    overlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 20000; direction: rtl; font-family: 'Heebo', sans-serif;
+        animation: fadeIn 0.4s ease;
+    `;
+    
+    const card = document.createElement('div');
+    card.style = `
+        background: white; width: 90%; max-width: 500px; 
+        border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        position: relative; text-align: right; overflow: hidden;
+        animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    `;
+    
+    card.innerHTML = `
+        <div style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 30px; color: white; text-align: center;">
+            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fas fa-rocket" style="font-size: 28px;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800;">מה חדש ב-Pension-Net?</h2>
+            <p style="margin: 5px 0 0; opacity: 0.9; font-size: 14px;">עדכונים ושיפורים אחרונים למערכת</p>
+        </div>
+        <div style="padding: 30px;">
+            <div style="font-size: 16px; line-height: 1.7; color: #334155; margin-bottom: 25px; max-height: 250px; overflow-y: auto; padding-left: 10px;">
+                ${announcement.content}
+            </div>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 8px;">יש לך הערות או הצעות לשיפור?</label>
+                <textarea id="announcementFeedback" style="width: 100%; min-height: 80px; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s;" placeholder="נשמח לשמוע את דעתך..."></textarea>
+            </div>
+
+            <button id="closeAnnouncementBtn" style="
+                width: 100%; padding: 16px; background: #6366f1; color: white;
+                border: none; border-radius: 16px; font-weight: 700; font-size: 16px;
+                cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+                margin-top: 20px;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(99, 102, 241, 0.4)';" 
+               onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.3)';">
+                הבנתי, תודה!
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    // Focus textarea logic
+    const textarea = document.getElementById('announcementFeedback');
+    textarea.onfocus = () => textarea.style.borderColor = '#6366f1';
+    textarea.onblur = () => textarea.style.borderColor = '#e2e8f0';
+    
+    // Auto-scroll styles to head
+    if (!document.getElementById('announcement-styles')) {
+        const style = document.createElement('style');
+        style.id = 'announcement-styles';
+        style.innerHTML = `
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+            #announcement-overlay div::-webkit-scrollbar { width: 6px; }
+            #announcement-overlay div::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.getElementById('closeAnnouncementBtn').onclick = async () => {
+        const feedback = textarea.value.trim();
+        const userId = window.currentUserSession.user.id;
+        const userEmail = window.currentUserSession.user.email;
+
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 400);
+        
+        try {
+            const promises = [
+                // 1. Mark as seen
+                pensionNetSupabase
+                    .from('profiles')
+                    .update({ 
+                        last_seen_announcement_id: announcement.id,
+                        seen_announcement_at: new Date().toISOString()
+                    })
+                    .eq('user_id', userId)
+            ];
+
+            // 2. Save feedback if exists
+            if (feedback) {
+                promises.push(
+                    pensionNetSupabase
+                        .from('system_feedback')
+                        .insert([{
+                            user_id: userId,
+                            user_email: userEmail,
+                            content: feedback,
+                            announcement_id: announcement.id
+                        }])
+                );
+            }
+
+            await Promise.all(promises);
+            if (feedback && typeof showToast === 'function') {
+                showToast('תודה על המשוב! ההערה נשלחה למנהל המערכת.', 'success');
+            }
+        } catch (e) {
+            console.warn('Failed to update announcement status or save feedback:', e);
+        }
+    };
+}
 document.addEventListener('click', function(e) {
   // Handle send confirmation click
   const confirmBtn = e.target.closest('.whatsapp-confirm-btn[data-order-id]');
@@ -637,6 +791,57 @@ document.addEventListener('click', function(e) {
     }
   }
 });
+
+function assignDogTracks(orders, startDate, endDate) {
+  // Filter confirmed orders that overlap with the range
+  const monthOrders = orders.filter(ord => {
+    if (ord.status !== 'מאושר') return false;
+    const start = new Date(ord.check_in);
+    start.setHours(0,0,0,0);
+    const end = new Date(ord.check_out);
+    end.setHours(23,59,59,999);
+    return start <= endDate && end >= startDate;
+  });
+
+  // Sort by start date, then end date
+  monthOrders.sort((a, b) => new Date(a.check_in) - new Date(b.check_in) || new Date(a.check_out) - new Date(b.check_out));
+
+  const tracks = []; // Array of arrays (each sub-array is a track)
+  const orderToTrack = {};
+
+  monthOrders.forEach(ord => {
+    const ordStart = new Date(ord.check_in);
+    ordStart.setHours(0,0,0,0);
+    const ordEnd = new Date(ord.check_out);
+    ordEnd.setHours(23,59,59,999);
+
+    let assigned = false;
+    for (let i = 0; i < tracks.length; i++) {
+        // Check if overlaps with any order already in this track
+        const overlaps = tracks[i].some(existing => {
+            const exStart = new Date(existing.check_in);
+            exStart.setHours(0,0,0,0);
+            const exEnd = new Date(existing.check_out);
+            exEnd.setHours(23,59,59,999);
+            return ordStart.getTime() <= exEnd.getTime() && ordEnd.getTime() >= exStart.getTime();
+        });
+
+        if (!overlaps) {
+            tracks[i].push(ord);
+            orderToTrack[ord.id] = i;
+            assigned = true;
+            break;
+        }
+    }
+
+    if (!assigned) {
+        tracks.push([ord]);
+        orderToTrack[ord.id] = tracks.length - 1;
+    }
+  });
+
+  return { orderToTrack, numTracks: tracks.length, monthOrders };
+}
 
 function getDogsForDay(data, date) {
   const targetDate = new Date(
@@ -753,7 +958,6 @@ async function renderMonthlyCalendar(allOrders) {
   if (monthSelect) monthSelect.value = date.getMonth();
   
   if (yearSelect) {
-    // Populate years if empty
     if (yearSelect.options.length === 0) {
       const currentYear = new Date().getFullYear();
       for (let y = currentYear - 2; y <= currentYear + 5; y++) {
@@ -766,24 +970,23 @@ async function renderMonthlyCalendar(allOrders) {
     yearSelect.value = date.getFullYear();
   }
 
-  // Calculate calendar start/end
-  const firstDayOfMonth = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    1
-  );
-  const lastDayOfMonth = new Date(
-    date.getFullYear(),
-    date.getMonth() + 1,
-    0
-  );
+  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  
+  const calendarRangeStart = new Date(firstDayOfMonth);
+  calendarRangeStart.setDate(calendarRangeStart.getDate() - firstDayOfMonth.getDay());
+  
+  const calendarRangeEnd = new Date(lastDayOfMonth);
+  calendarRangeEnd.setDate(calendarRangeEnd.getDate() + (6 - lastDayOfMonth.getDay()));
+
+  const { orderToTrack, numTracks, monthOrders } = assignDogTracks(allOrders, firstDayOfMonth, lastDayOfMonth);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const holidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
   let calendarHTML = '<table class="calendar-table"><thead><tr>';
-  // ימי השבוע ב-JavaScript מתחילים מ-0 (ראשון)
   const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
   const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
   dayNames.forEach((day) => {
@@ -791,111 +994,137 @@ async function renderMonthlyCalendar(allOrders) {
   });
   calendarHTML += "</tr></thead><tbody><tr>";
 
-  // Fill initial empty cells
-  const firstDayIndex = firstDayOfMonth.getDay(); // 0 (Sunday) to 6 (Saturday)
+  const firstDayIndex = firstDayOfMonth.getDay();
   for (let i = 0; i < firstDayIndex; i++) {
     calendarHTML += '<td class="empty-day"></td>';
   }
 
   let dayCounter = 1;
   let currentDayOfWeek = firstDayIndex;
-  let rowCounter = 0;
 
   while (dayCounter <= lastDayOfMonth.getDate()) {
-    const currentDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      dayCounter
-    );
+    const currentDate = new Date(date.getFullYear(), date.getMonth(), dayCounter);
+    currentDate.setHours(0,0,0,0);
     const dayName = dayLabels[currentDate.getDay()];
-    const dogsBySize = getDogsForDay(allOrders, currentDate);
+    
+    // Active dogs for today
+    const dogsToday = monthOrders.filter(ord => {
+        const start = new Date(ord.check_in);
+        start.setHours(0,0,0,0);
+        const end = new Date(ord.check_out);
+        end.setHours(23,59,59,999);
+        return start <= currentDate && end >= currentDate;
+    });
 
     const isToday = currentDate.toDateString() === today.toDateString();
     let classes = "calendar-day";
     if (isToday) classes += " today";
+    if (dogsToday.length > 0) classes += " busy";
 
-    // Build the dog list content
     let dogsContentHTML = "";
-    const sizeOrder = { 'קטן': 1, 'בינוני': 2, 'גדול': 3 };
-    const sizes = Object.keys(dogsBySize).sort((a, b) => (sizeOrder[a] || 99) - (sizeOrder[b] || 99));
+    
+    // Render tracks
+    for (let i = 0; i < numTracks; i++) {
+        const dogInTrack = dogsToday.find(d => orderToTrack[d.id] === i);
+        if (dogInTrack) {
+            const start = new Date(dogInTrack.check_in);
+            start.setHours(0,0,0,0);
+            const end = new Date(dogInTrack.check_out);
+            end.setHours(23,59,59,999);
 
-    sizes.forEach((size) => {
-      const dogCount = dogsBySize[size].length;
+            const startOfCurrentDate = new Date(currentDate);
+            startOfCurrentDate.setHours(0,0,0,0);
 
-      // --- הוספת שם הבעלים בסוגריים ---
-      const dogEntriesHTML = dogsBySize[size]
-        .map((d) => {
-          const dogName = d.dog_name || "ללא שם";
-          const ownerName = d.owner_name ? ` (${d.owner_name})` : "";
-          return `<div class="dog-tooltip-item"><strong>${dogName}</strong>${ownerName}</div>`;
-        })
-        .join("");
-      // ---------------------------------
+            const stayStart = new Date(dogInTrack.check_in);
+            stayStart.setHours(0,0,0,0);
+            const stayEnd = new Date(dogInTrack.check_out);
+            stayEnd.setHours(0,0,0,0);
 
-      // בודק אם זה יום שבת (עמודה אחרונה, יום 6) כדי להפוך את כיוון ה-tooltip
-      const reverseClass =
-        currentDayOfWeek === 6 ? " reverse-tooltip" : "";
+            const isStartOfStay = stayStart.getTime() === startOfCurrentDate.getTime();
+            const isEndOfStay = stayEnd.getTime() === startOfCurrentDate.getTime();
+            
+            const isFirstDayOfMonth = currentDate.getDate() === 1;
+            const isSunday = currentDate.getDay() === 0;
+            const isSaturday = currentDate.getDay() === 6;
 
-      dogsContentHTML += `
-              <div class="dog-size-label${reverseClass}" >
-                  ${size} (${dogCount})
-                  <div class="dog-tooltip"><div class="dog-tooltip-content">${dogEntriesHTML}</div></div>
-              </div>
-          `;
-    });
+            const canBridgeLeft = !isEndOfStay && !isSaturday;
+            const canBridgeRight = !isStartOfStay && !isSunday;
 
-    const dogsInDay = Object.values(dogsBySize).flat().length;
-    if (dogsInDay > 0) {
-      classes += " busy";
+            let trackClasses = ["dog-label-unified"];
+            if (canBridgeLeft) trackClasses.push("bridge-left");
+            if (canBridgeRight) trackClasses.push("bridge-right");
+            
+            // RTL Rounding: Start (right) is rounded, End (left) is rounded.
+            if (isStartOfStay) trackClasses.push("round-right");
+            if (isEndOfStay) trackClasses.push("round-left");
+            if (isStartOfStay && isEndOfStay) trackClasses.push("single-day");
+
+            // Extension indicators (Cross-month logic remains same)
+            const isLastDayOfMonth = (new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)).getDate() === currentDate.getDate();
+            if (isLastDayOfMonth && !isEndOfStay) trackClasses.push("continues-next");
+            if (isFirstDayOfMonth && !isStartOfStay) trackClasses.push("starts-prev");
+
+            const dogName = dogInTrack.dog_name || "ללא שם";
+            const ownerName = dogInTrack.owner_name ? ` (${dogInTrack.owner_name})` : "";
+            
+            // Show text on every day as requested
+            const showText = true;
+
+            const reverseClass = currentDayOfWeek === 6 ? " reverse-tooltip" : "";
+            dogsContentHTML += `
+                <div class="${trackClasses.join(" ")}${reverseClass}" data-order-id="${dogInTrack.id}">
+                    <div class="dog-label-name">${dogName}${ownerName}</div>
+                    <div class="dog-tooltip"><div class="dog-tooltip-content">
+                        <div class="dog-tooltip-item"><strong>${dogName}</strong>${ownerName}</div>
+                    </div></div>
+                </div>
+            `;
+        } else {
+            dogsContentHTML += `<div class="dog-label-spacer"></div>`;
+        }
     }
 
     const pD = (n) => String(n).padStart(2, '0');
     const formattedDate = `${date.getFullYear()}-${pD(date.getMonth() + 1)}-${pD(dayCounter)}`;
     const holidayHebrew = holidays[formattedDate];
     
-    // Find all custom events that overlap with this date
     let customEventsHTML = '';
-    const currentDayTime = new Date(formattedDate).getTime();
+    const currentDayTime = currentDate.getTime();
     if (window.pensionCustomEvents) {
-        const todaysCustomEvents = window.pensionCustomEvents.filter(ev => {
-           let eStart = new Date(ev.start_date).getTime();
-           let eEnd = new Date(ev.end_date).getTime();
-           return currentDayTime >= eStart && currentDayTime <= eEnd;
-        });
-        
-        todaysCustomEvents.forEach(ev => {
-            customEventsHTML += `<div class="holiday-label custom-evt" style="font-size: 11px; color: #fff; background: ${ev.color || '#60a5fa'}; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; cursor: pointer;" onclick="promptDeleteCustomEvent('${ev.id}')">${ev.title}</div>`;
+        window.pensionCustomEvents.forEach(ev => {
+           let eStart = new Date(ev.start_date); eStart.setHours(0,0,0,0);
+           let eEnd = new Date(ev.end_date); eEnd.setHours(23,59,59,999);
+           if (currentDayTime >= eStart.getTime() && currentDayTime <= eEnd.getTime()) {
+               customEventsHTML += `<div class="holiday-label custom-evt" style="font-size: 11px; color: #fff; background: ${ev.color || '#60a5fa'}; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; cursor: pointer;" onclick="promptDeleteCustomEvent('${ev.id}')">${ev.title}</div>`;
+           }
         });
     }
 
     calendarHTML += `<td class="${classes}">
-          <div class="day-number">${dayCounter} (${dayName})</div>
-          ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
-          ${customEventsHTML}
-          ${dogsInDay > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsInDay} כלבים</div>` : ''}
-          <div class="day-content">${dogsContentHTML}</div>
+          <div class="calendar-cell-header">
+            <div class="day-number">${dayCounter} (${dayName})</div>
+            ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
+            ${customEventsHTML}
+            ${dogsToday.length > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsToday.length} כלבים</div>` : ''}
+          </div>
+          <div class="day-content" style="padding: 0;">${dogsContentHTML}</div>
       </td>`;
 
-    // Start new row every Saturday
     currentDayOfWeek++;
     if (currentDayOfWeek > 6) {
       calendarHTML += "</tr><tr>";
       currentDayOfWeek = 0;
-      rowCounter++;
     }
-
     dayCounter++;
   }
 
-  // Fill remaining empty cells
   while (currentDayOfWeek > 0 && currentDayOfWeek <= 6) {
     calendarHTML += '<td class="empty-day"></td>';
     currentDayOfWeek++;
   }
 
-  // Close the table
   if (calendarHTML.endsWith("<tr>")) {
-    calendarHTML = calendarHTML.substring(0, calendarHTML.length - 4); // Remove last empty <tr>
+    calendarHTML = calendarHTML.substring(0, calendarHTML.length - 4);
   }
   calendarHTML += "</tr></tbody></table>";
 

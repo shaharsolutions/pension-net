@@ -162,23 +162,23 @@ async function loadAdminPanelData() {
     showLoadingState();
 
     try {
-        const [sessions, orders, profiles, activityLogs, userPlans] = await Promise.all([
+        const [sessions, orders, profiles, activityLogs, userPlans, announcement, feedback] = await Promise.all([
             loadAllSessions(),
             loadAllOrders(),
             loadAllProfiles(),
             loadAllActivityLogs(),
-            loadAllUserPlans()
+            loadAllUserPlans(),
+            loadLatestAnnouncement(),
+            loadUserFeedback()
         ]);
 
         renderSummaryCards(sessions, orders, profiles);
-        renderSessionHistory(sessions);
-
-        // Cache data for re-renders (filtering)
         window._cachedAdminData = { sessions, orders, profiles, userPlans };
 
         renderUsersTable(sessions, orders, profiles, userPlans);
         renderOrdersTable(orders, profiles);
         renderActivityFeed(activityLogs, profiles);
+        renderUserFeedback(feedback);
     } catch (err) {
         console.error('Admin panel data load error:', err);
         showToast('שגיאה בטעינת נתוני פאנל ניהול', 'error');
@@ -253,6 +253,207 @@ async function loadAllUserPlans() {
         return [];
     }
     return data || [];
+}
+
+async function loadLatestAnnouncement() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('system_announcements')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data) {
+            document.getElementById('announcementContent').value = data.content;
+            document.getElementById('announcementActive').checked = data.is_active;
+            
+            const infoDiv = document.getElementById('lastAnnouncementInfo');
+            if (infoDiv) {
+                const date = new Date(data.created_at).toLocaleString('he-IL');
+                infoDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 10px 15px; border-radius: 8px; border: 1px solid #dbeafe; color: #1e40af;">
+                        <span><i class="fas fa-info-circle"></i> עדכון אחרון פורסם ב-${date} על ידי ${data.created_by || 'מנהל'}</span>
+                        <button onclick='viewAnnouncementById("${data.id}")' class="admin-nav-btn" style="background: white; border: 1px solid #bfdbfe; color: #2563eb; padding: 4px 12px; font-size: 12px; font-weight: 600;">
+                            <i class="fas fa-eye"></i> צפה בתוכן שפורסם
+                        </button>
+                    </div>`;
+            }
+        }
+        return data;
+    } catch (err) {
+        console.warn('Error loading announcement:', err);
+        return null;
+    }
+}
+
+async function saveAnnouncement() {
+    const content = document.getElementById('announcementContent').value.trim();
+    const isActive = document.getElementById('announcementActive').checked;
+    
+    if (!content) {
+        showToast('נא להזין תוכן להודעה', 'error');
+        return;
+    }
+    
+    try {
+        const session = await Auth.getSession();
+        const { error } = await supabaseClient
+            .from('system_announcements')
+            .insert([{
+                content: content,
+                is_active: isActive,
+                created_by: session?.user?.email || ADMIN_EMAIL,
+                created_at: new Date().toISOString()
+            }]);
+            
+        if (error) throw error;
+        
+        showToast('העדכון פורסם בהצלחה!', 'success');
+        loadLatestAnnouncement(); // Refresh info
+    } catch (err) {
+        console.error('Save announcement error:', err);
+        showToast('שגיאה בשמירת העדכון', 'error');
+    }
+}
+
+function previewAnnouncement() {
+    const content = document.getElementById('announcementContent').value.trim();
+    if (!content) {
+        showToast('נא להזין תוכן לתצוגה מקדימה', 'error');
+        return;
+    }
+    
+    // Create a temporary overlay for preview
+    const overlay = document.createElement('div');
+    overlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; direction: rtl;
+    `;
+    
+    const card = document.createElement('div');
+    card.style = `
+        background: white; width: 90%; max-width: 500px; padding: 32px;
+        border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        position: relative; text-align: right;
+    `;
+    
+    card.innerHTML = `
+        <h2 style="margin-top: 0; margin-bottom: 20px; color: #1e293b; font-size: 24px; font-weight: 800;">🔍 תצוגה מקדימה</h2>
+        <div style="font-size: 16px; line-height: 1.6; color: #334155; margin-bottom: 30px; max-height: 400px; overflow-y: auto;">
+            ${content}
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" style="
+            width: 100%; padding: 14px; background: #6366f1; color: white;
+            border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+        ">סגור תצוגה מקדימה</button>
+    `;
+    
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+}
+
+async function viewAnnouncementById(id) {
+    if (!id) return;
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('system_announcements')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+            
+        if (error) throw error;
+        if (!data) {
+            showToast('העדכון לא נמצא במערכת', 'error');
+            return;
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.style = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000; direction: rtl;
+        `;
+        
+        const card = document.createElement('div');
+        card.style = `
+            background: white; width: 90%; max-width: 500px; padding: 32px;
+            border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative; text-align: right;
+        `;
+        
+        const date = new Date(data.created_at).toLocaleString('he-IL');
+        
+        card.innerHTML = `
+            <h2 style="margin-top: 0; margin-bottom: 5px; color: #1e293b; font-size: 22px; font-weight: 800;">הודעת העדכון שפורסמה</h2>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">תאריך פרסום: ${date}</p>
+            <div style="font-size: 16px; line-height: 1.6; color: #334155; margin-bottom: 30px; max-height: 400px; overflow-y: auto; padding-left: 10px; border: 1px solid #f1f5f9; padding: 15px; border-radius: 12px; background: #fafafa;">
+                ${data.content}
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+                width: 100%; padding: 14px; background: #6366f1; color: white;
+                border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+            ">סגור</button>
+        `;
+        
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+    } catch (err) {
+        console.error('Error viewing announcement:', err);
+        showToast('שגיאה בטעינת תוכן העדכון', 'error');
+    }
+}
+
+async function loadUserFeedback() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('system_feedback')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('Error loading feedback:', err);
+        return [];
+    }
+}
+
+function renderUserFeedback(feedback) {
+    const list = document.getElementById('userFeedbackList');
+    if (!list) return;
+
+    if (!feedback || feedback.length === 0) {
+        list.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--admin-text-muted);">טרם התקבל משוב ממשתמשים</td></tr>';
+        return;
+    }
+
+    list.innerHTML = feedback.map(item => {
+        const date = new Date(item.created_at).toLocaleString('he-IL', {
+            day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
+        });
+        
+        return `
+            <tr>
+                <td style="white-space: nowrap;">${date}</td>
+                <td style="font-weight: 600;">${item.user_email}</td>
+                <td style="max-width: 400px; word-wrap: break-word;">${item.content}</td>
+                <td>
+                    ${item.announcement_id ? `
+                        <button onclick='viewAnnouncementById("${item.announcement_id}")' class="admin-nav-btn" style="padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; color: #6366f1; border: 1px solid #e2e8f0;">
+                            <i class="fas fa-bullhorn"></i> צפה בעדכון
+                        </button>
+                    ` : '<span style="color: #94a3b8;">כללי</span>'}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // ============================================
@@ -371,7 +572,9 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
             totalOrders: 0,
             totalMinutes: 0,
             loginCount: 0,
-            lastLogin: null
+            lastLogin: null,
+            lastSeenAnnouncementId: p.last_seen_announcement_id || null,
+            seenAnnouncementAt: p.seen_announcement_at || null
         };
     });
 
@@ -386,7 +589,9 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
                 totalOrders: 0,
                 totalMinutes: 0,
                 loginCount: 0,
-                lastLogin: null
+                lastLogin: null,
+                lastSeenAnnouncementId: null,
+                seenAnnouncementAt: null
             };
         }
         const user = usersMap[s.user_id];
@@ -443,6 +648,16 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
                 </td>
                 <td onclick="event.stopPropagation()">
                     ${renderPlanBadge(plansMap[user.user_id], user.email)}
+                </td>
+                <td style="font-size: 11px;" onclick="event.stopPropagation()">
+                    ${user.seenAnnouncementAt ? `
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span style="color: #10b981; font-weight: 600;"><i class="fas fa-check-circle"></i> ראה/תה ב-${new Date(user.seenAnnouncementAt).toLocaleDateString('he-IL')}</span>
+                            <button onclick='viewAnnouncementById("${user.lastSeenAnnouncementId}")' style="background: none; border: none; color: #6366f1; cursor: pointer; text-decoration: underline; font-size: 10px; padding: 0; text-align: right;">
+                                צפה בהודעה שראה/תה
+                            </button>
+                        </div>
+                    ` : '<span style="color: #94a3b8;"><i class="fas fa-times-circle"></i> טרם נחשף</span>'}
                 </td>
                 <td style="text-align: center;" onclick="event.stopPropagation()">
                     <button class="impersonate-btn" onclick="startImpersonation('${user.user_id}', '${(user.businessName || user.fullName || user.email || '').replace(/'/g, "\\'")}')" title="צפה כמשתמש זה">

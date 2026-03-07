@@ -143,6 +143,10 @@
                     <i class="fas fa-stream"></i>
                     פעילות אחרונה
                 </button>
+                <button class="admin-tab-btn" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    הגדרות מערכת
+                </button>
             </div>
 
             <!-- Tab: Users -->
@@ -166,6 +170,7 @@
                                         <th>זמן שימוש</th>
                                         <th>כניסה אחרונה</th>
                                         <th>חבילה / תוכנית</th>
+                                        <th>סטטוס עדכון</th>
                                         <th>פעולות</th>
                                     </tr>
                                 </thead>
@@ -284,6 +289,65 @@
                             </div>
                         </div>
                         <div id="activityPagination" class="activity-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: System Settings -->
+            <div id="adminTab-settings" class="admin-tab-content">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fas fa-bullhorn"></i> ניהול עדכוני מערכת (What's New)</h3>
+                    </div>
+                    <div class="admin-card-body" style="padding: 24px;">
+                        <p style="font-size: 14px; color: var(--admin-text-muted); margin-bottom: 20px;">
+                            כאן ניתן להגדיר את ההודעה שתוצג למשתמשים כאשר הם נכנסים למערכת. 
+                            ההודעה תוצג כפופ-אפ חד פעמי עבור כל עדכון חדש שתפרסם.
+                        </p>
+                        
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-weight: 700; margin-bottom: 8px;">תוכן ההודעה (HTML נתמך):</label>
+                                <textarea id="announcementContent" style="width: 100%; min-height: 150px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none;" placeholder="הזן את פרטי העדכון כאן..."></textarea>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                                <input type="checkbox" id="announcementActive" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                                <label for="announcementActive" style="font-weight: 600; cursor: pointer;">הודעה פעילה (תוצג למשתמשים)</label>
+                            </div>
+                            
+                            <div style="display: flex; gap: 12px;">
+                                <button onclick="saveAnnouncement()" class="admin-action-btn" style="background: var(--admin-primary); padding: 10px 24px;">
+                                    <i class="fas fa-save"></i> שמור ופרסם עדכון
+                                </button>
+                                <button onclick="previewAnnouncement()" class="admin-nav-btn" style="background: white;">
+                                    <i class="fas fa-eye"></i> תצוגה מקדימה
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="lastAnnouncementInfo" style="font-size: 13px; color: var(--admin-text-muted); margin-bottom: 30px;">
+                            <!-- Info about last update will be loaded here -->
+                        </div>
+
+                        <div style="border-top: 2px solid #f1f5f9; padding-top: 30px;">
+                            <h3 style="margin-bottom: 20px;"><i class="fas fa-comments"></i> משוב והערות משתמשים</h3>
+                            <div id="userFeedbackContainer" class="admin-table-container">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>תאריך</th>
+                                            <th>משתמש</th>
+                                            <th>תוכן ההערה</th>
+                                            <th>מקור</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="userFeedbackList">
+                                        <!-- Feedback rows will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

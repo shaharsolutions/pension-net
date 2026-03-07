@@ -427,22 +427,40 @@ header h1 {
 }
 
 .calendar-table td {
-  height: 130px;
+  min-height: 130px;
+  height: auto;
   background: #ffffff;
   border: 1px solid #f1f5f9;
   border-radius: 12px;
   vertical-align: top;
-  padding: 10px;
+  padding: 8px; /* Slightly tighter padding */
+  overflow: visible !important;
   position: relative;
   transition: all 0.2s;
   box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02);
 }
 
+.calendar-cell-header {
+  height: 80px; /* Fixed height to ensure dog bars ALWAYS start at the same vertical position */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #f1f5f9;
+  margin-bottom: 5px;
+}
+
+/* Ensure the total number of dogs text doesn't push bars further */
+.calendar-cell-header > div:last-child {
+    margin-top: auto;
+    padding-bottom: 2px;
+}
+
 .calendar-table td:hover {
   border-color: var(--primary);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-  z-index: 1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  z-index: 1000 !important;
 }
 
 .calendar-table td.today {
@@ -485,7 +503,7 @@ header h1 {
   padding: 5px 8px;
   margin-bottom: 5px;
   border-radius: 6px;
-  cursor: pointer;
+  cursor: default;
   font-weight: 600;
   text-align: center;
   position: relative;
@@ -504,64 +522,129 @@ header h1 {
   color: white;
 }
 
-/* Tooltip */
-.dog-tooltip {
-  display: none;
-  position: absolute;
-  top: -5px;
-  right: 105%;
-  left: auto;
-  transform: translateX(0);
-  background: #1e293b;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  white-space: normal;
-  width: 220px;
-  z-index: 100;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-  line-height: 1.5;
-  text-align: right;
-  margin-left: 12px;
-  font-size: 13px;
+/* Unified Dog Labels - Gantt Style (RTL Corrected) */
+.dog-label-unified {
+  background: #dbeafe !important; /* Forces solid light blue base */
+  color: #1e40af;
+  padding: 4px 10px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: visible;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s;
+  border: 1px solid #93c5fd;
+  height: 28px;
+  line-height: 1;
+  z-index: 10;
+  box-sizing: border-box;
 }
 
-@media (max-width: 600px) {
-  .dog-tooltip {
-    width: 160px;
-    padding: 8px 10px;
-    font-size: 11px;
-    right: 102%;
-  }
+.dog-label-name {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 0 15px; /* Extra padding for continuation arrows */
+    font-size: 10px;
+    line-height: 20px;
 }
 
-.dog-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 12px;
-  right: -6px;
-  border: 6px solid transparent;
-  border-left-color: #1e293b;
+/* RTL Bridging - Sunday to Saturday */
+.dog-label-unified.bridge-left {
+  margin-left: -17px !important; /* Bridges standard cell spacing */
+  border-left: none !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
-.dog-size-label.reverse-tooltip .dog-tooltip {
-  right: auto;
-  left: 100%;
-  margin-right: 12px;
-  margin-left: 0;
+.dog-label-unified.bridge-right {
+  margin-right: -17px !important;
+  border-right: none !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
-.dog-size-label.reverse-tooltip .dog-tooltip::after {
-  right: auto;
-  left: -6px;
-  border-left-color: transparent;
-  border-right-color: #1f2937;
+.dog-label-unified.round-right {
+  border-top-right-radius: 14px !important;
+  border-bottom-right-radius: 14px !important;
+}
+
+.dog-label-unified.round-left {
+  border-top-left-radius: 14px !important;
+  border-bottom-left-radius: 14px !important;
+}
+
+.dog-label-unified.single-day {
+  border-radius: 14px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Hover effect - REMOVED AS REQUESTED */
+.dog-label-unified:hover {
+  z-index: 50 !important;
+}
+
+/* Cross-Month / Extension Indicators */
+.dog-label-unified.continues-next::after {
+    content: "◀";
+    position: absolute;
+    left: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1e40af;
+    animation: pulseArrowNext 1.5s infinite;
+    z-index: 5;
+}
+
+.dog-label-unified.starts-prev::before {
+    content: "▶";
+    position: absolute;
+    right: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1e40af;
+    animation: pulseArrowPrev 1.5s infinite;
+    z-index: 5;
+}
+
+@keyframes pulseArrowNext {
+    0%, 100% { transform: translateX(0); opacity: 0.5; }
+    50% { transform: translateX(-4px); opacity: 1; }
+}
+
+@keyframes pulseArrowPrev {
+    0%, 100% { transform: translateX(0); opacity: 0.5; }
+    50% { transform: translateX(4px); opacity: 1; }
+}
+
+/* Hover indicators - REMOVED as color doesn't change anymore */
+
+.dog-label-spacer {
+    height: 28px;
+    margin-bottom: 2px;
+    visibility: hidden;
+}
+
+/* Base Tooltip Trigger - DISABLED AS REQUESTED */
+.dog-label-unified:hover .dog-tooltip {
+  display: none !important;
 }
 
 .dog-size-label:hover .dog-tooltip {
-  display: block;
-  animation: fadeIn 0.2s ease-in-out;
+    display: none !important;
 }
+
+/* Legacy Tooltip removal or simplification would go here, but let's just ensure its definition doesn't conflict */
 
 /* --- CSS לכלבים הנוכחיים (תצוגת עמודות) --- */
 #currentDogsColumnView {
@@ -2591,14 +2674,23 @@ body.demo-read-only #pastOrdersTableWrapper {
 
 /* Enhancing Dog Tooltip to look like a real "window" */
 .dog-tooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   background: white !important;
   color: #1e293b !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
   padding: 0 !important;
-  width: 240px !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 10000 !important; /* Ensure it's at the very top */
+  margin-top: 8px;
+  pointer-events: none;
+  text-align: right;
 }
 
 .dog-tooltip::before {
