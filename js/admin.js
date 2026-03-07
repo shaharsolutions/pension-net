@@ -2083,6 +2083,8 @@ document
       }
     }
 
+    let clientsDataUpdated = false;
+
     try {
       const rows = document.querySelectorAll(
         "#futureOrdersTable tbody tr, #pastOrdersTable tbody tr"
@@ -2138,6 +2140,19 @@ document
             console.error("Error updating row:", id, error);
             throw error;
           }
+          
+          // --- סינכרון מחיר ברירת מחדל ללקוח ---
+          if (updateData.price_per_day) {
+            const order = window.allOrdersCache.find(o => String(o.id) === String(id));
+            if (order && order.phone) {
+              const phoneKey = formatPhoneKey(order.phone);
+              if (!window.clientsData) window.clientsData = {};
+              if (!window.clientsData[phoneKey]) window.clientsData[phoneKey] = {};
+              window.clientsData[phoneKey].default_price = updateData.price_per_day;
+              clientsDataUpdated = true;
+            }
+          }
+          // ------------------------------------
 
           if (select) {
             select.classList.remove(
@@ -2151,6 +2166,17 @@ document
           }
         }
       }
+
+      // --- שמירת שינויי נתוני לקוחות (מחיר ברירת מחדל) למסד הנתונים ---
+      if (clientsDataUpdated) {
+        const { error: profileError } = await pensionNetSupabase
+          .from('profiles')
+          .update({ clients_data: window.clientsData })
+          .eq('user_id', window.currentUserSession.user.id);
+          
+        if (profileError) console.warn('Note: Could not sync clients_data:', profileError);
+      }
+      // ------------------------------------------------------------
 
       await createAuditLog('UPDATE', 'ביצוע שמירה גורפת של שינויים בטבלאות הניהול');
 
@@ -3849,6 +3875,22 @@ async function updatePricePerDay(orderId, newPrice) {
         const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
         if (order) {
             order.price_per_day = price;
+            
+            // --- סינכרון מחיר ברירת מחדל ללקוח ---
+            if (order.phone) {
+                const phoneKey = formatPhoneKey(order.phone);
+                if (!window.clientsData) window.clientsData = {};
+                if (!window.clientsData[phoneKey]) window.clientsData[phoneKey] = {};
+                window.clientsData[phoneKey].default_price = price;
+                
+                // עדכון במסד הנתונים
+                await pensionNetSupabase
+                    .from('profiles')
+                    .update({ clients_data: window.clientsData })
+                    .eq('user_id', window.currentUserSession.user.id);
+            }
+            // ------------------------------------
+
             createAuditLog('UPDATE', `עדכון מחיר ליום ל-${price}₪ עבור ${order.dog_name}`, orderId);
             renderPaymentsTable(); // Refresh to recalculate total
         }
