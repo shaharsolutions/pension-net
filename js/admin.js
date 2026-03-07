@@ -620,7 +620,7 @@ async function resetConfirmationState(orderId) {
 }
 
 // --- System Announcements (What's New) ---
-async function checkForAnnouncements() {
+async function checkForAnnouncements(force = false) {
     // Only show to authenticated users, not in demo mode or impersonation mode
     const impersonating = sessionStorage.getItem('pensionet_impersonate_user_id');
     if (window.isDemoMode || !window.currentUserSession || impersonating) return;
@@ -635,7 +635,10 @@ async function checkForAnnouncements() {
             .limit(1)
             .maybeSingle();
             
-        if (error || !announcement) return;
+        if (error || !announcement) {
+            if (force) showToast('לא נמצאו עדכונים חדשים כעת.', 'info');
+            return;
+        }
         
         // 2. Check if user has seen this specific announcement
         const userId = window.currentUserSession.user.id;
@@ -645,7 +648,7 @@ async function checkForAnnouncements() {
             .eq('user_id', userId)
             .maybeSingle();
             
-        if (profile && profile.last_seen_announcement_id === announcement.id) {
+        if (!force && profile && profile.last_seen_announcement_id === announcement.id) {
             // User already saw this one
             return;
         }
@@ -678,6 +681,17 @@ function showAnnouncementModal(announcement) {
     `;
     
     card.innerHTML = `
+        <button id="announcementCloseX" style="
+            position: absolute; top: 15px; right: 15px; 
+            background: rgba(255,255,255,0.2); border: none; 
+            color: white; font-size: 20px; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; z-index: 10;
+        " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='scale(1.1)';" 
+           onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1)';">
+            <i class="fas fa-times"></i>
+        </button>
         <div style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 30px; color: white; text-align: center;">
             <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                 <i class="fas fa-rocket" style="font-size: 28px;"></i>
@@ -727,6 +741,20 @@ function showAnnouncementModal(announcement) {
         `;
         document.head.appendChild(style);
     }
+
+    document.getElementById('announcementCloseX').onclick = () => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 400);
+        // Mark as seen anyway so it doesn't pop up again
+        pensionNetSupabase
+            .from('profiles')
+            .update({ 
+                last_seen_announcement_id: announcement.id,
+                seen_announcement_at: new Date().toISOString()
+            })
+            .eq('user_id', window.currentUserSession.user.id)
+            .then(({error}) => { if (error) console.warn('Seen mark failed', error); });
+    };
 
     document.getElementById('closeAnnouncementBtn').onclick = async () => {
         const feedback = textarea.value.trim();
