@@ -208,7 +208,7 @@ function showLoadingState() {
 async function loadAllSessions() {
     const { data, error } = await supabaseClient
         .from('user_sessions')
-        .select('*')
+        .select('id, user_id, user_email, login_time, duration_minutes, last_active')
         .order('login_time', { ascending: false });
 
     if (error) {
@@ -221,7 +221,7 @@ async function loadAllSessions() {
 async function loadAllOrders() {
     const { data, error } = await supabaseClient
         .from('orders')
-        .select('*')
+        .select('id, user_id, dog_name, owner_name, check_in, check_out, status, created_at, price_per_day')
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -234,7 +234,7 @@ async function loadAllOrders() {
 async function loadAllProfiles() {
     const { data, error } = await supabaseClient
         .from('profiles')
-        .select('*');
+        .select('user_id, email, business_name, full_name, last_seen_announcement_id, seen_announcement_at');
 
     if (error) {
         console.error('Error loading profiles:', error);
@@ -246,7 +246,7 @@ async function loadAllProfiles() {
 async function loadAllUserPlans() {
     const { data, error } = await supabaseClient
         .from('user_plan')
-        .select('*');
+        .select('user_id, plan_id, founder_price_locked');
 
     if (error) {
         console.error('Error loading user plans:', error);
@@ -674,7 +674,10 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
         };
     });
 
-    // Enrich from sessions
+    // Enrich from sessions - cache now to avoid multiple Date object creations
+    const now = Date.now();
+    const dayAgo = now - 24 * 60 * 60 * 1000;
+    
     sessions.forEach(s => {
         if (!usersMap[s.user_id]) {
             usersMap[s.user_id] = {
@@ -694,7 +697,11 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
         user.email = s.user_email;
         user.loginCount++;
         user.totalMinutes += (s.duration_minutes || 0);
-        if (!user.lastLogin || new Date(s.login_time) > new Date(user.lastLogin)) {
+        
+        const sessionTime = new Date(s.login_time).getTime();
+        const userLastTime = user.lastLogin ? new Date(user.lastLogin).getTime() : 0;
+        
+        if (sessionTime > userLastTime) {
             user.lastLogin = s.login_time;
         }
     });
@@ -724,10 +731,14 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
         return;
     }
 
+    const nowTime = Date.now();
+    const dayAgoTime = nowTime - 24 * 60 * 60 * 1000;
+
     tbody.innerHTML = usersArray.map(user => {
         const hours = (user.totalMinutes / 60).toFixed(1);
+        const lastLoginTime = user.lastLogin ? new Date(user.lastLogin).getTime() : 0;
         const lastLoginFormatted = user.lastLogin ? formatAdminDate(user.lastLogin) : '---';
-        const isActive = user.lastLogin && (new Date(user.lastLogin) > new Date(Date.now() - 24 * 60 * 60 * 1000));
+        const isActive = lastLoginTime > dayAgoTime;
         const isSelected = adminSelectedUserId === user.user_id;
         const displayEmail = user.email || user.businessName || user.fullName || 'ללא אימייל';
 
@@ -1005,20 +1016,22 @@ function renderOrdersTable(orders, profiles) {
         userMap[p.user_id] = p.business_name || p.full_name || p.user_id;
     });
 
-    // Populate filter dropdown
+    // Populate filter dropdown efficiently
     const filterSelect = document.getElementById('ordersUserFilter');
     if (filterSelect) {
         const currentVal = filterSelect.value;
-        filterSelect.innerHTML = '<option value="">כל המשתמשים</option>';
         const uniqueUsers = new Set();
+        let optionsHtml = '<option value="">כל המשתמשים</option>';
 
         orders.forEach(o => {
             if (o.user_id && !uniqueUsers.has(o.user_id)) {
                 uniqueUsers.add(o.user_id);
                 const label = userMap[o.user_id] || o.user_id;
-                filterSelect.innerHTML += `<option value="${o.user_id}">${label}</option>`;
+                optionsHtml += `<option value="${o.user_id}">${label}</option>`;
             }
         });
+        
+        filterSelect.innerHTML = optionsHtml;
 
         // Restore filter
         if (adminSelectedUserId) {

@@ -176,7 +176,7 @@ async function loadAnalytics() {
 
         const { data: allOrders, error } = await pNetSupabase
             .from("orders")
-            .select("*")
+            .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed")
             .eq("user_id", session.user.id)
             .eq("status", "מאושר")
             .order("check_in", { ascending: true });
@@ -210,8 +210,14 @@ async function loadAnalytics() {
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
-        const thisMonthOrders = allOrders.filter((order) => {
-            const checkIn = new Date(order.check_in);
+        const ordersWithDates = allOrders.map(o => ({
+            ...o,
+            _check_in: new Date(o.check_in + 'T00:00:00'),
+            _check_out: new Date(o.check_out + 'T00:00:00')
+        }));
+
+        const thisMonthOrders = ordersWithDates.filter((order) => {
+            const checkIn = order._check_in;
             return (checkIn.getMonth() === currentMonth && checkIn.getFullYear() === currentYear);
         });
 
@@ -224,8 +230,8 @@ async function loadAnalytics() {
         const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
         const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-        const lastMonthOrders = allOrders.filter((order) => {
-            const checkIn = new Date(order.check_in);
+        const lastMonthOrders = ordersWithDates.filter((order) => {
+            const checkIn = order._check_in;
             return (checkIn.getMonth() === lastMonth && checkIn.getFullYear() === lastMonthYear);
         });
 
@@ -265,17 +271,20 @@ async function loadAnalytics() {
             dogsChangeEl.className = `stat-change ${dogsChangeNum > 0 ? "positive" : "negative"}`;
         }
 
+        // Efficient Occupancy Calculation
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        let totalOccupancy = 0;
-        for (let day = 1; day <= daysInMonth; day++) {
-            const currentDate = new Date(currentYear, currentMonth, day);
-            const dogsOnDay = thisMonthOrders.filter((order) => {
-                const checkIn = new Date(order.check_in);
-                const checkOut = new Date(order.check_out);
-                return currentDate >= checkIn && currentDate <= checkOut;
-            }).length;
-            totalOccupancy += dogsOnDay;
-        }
+        const monthOccupancyMap = new Array(daysInMonth + 1).fill(0);
+        
+        thisMonthOrders.forEach(order => {
+            const start = order._check_in.getDate();
+            const end = order._check_out.getDate();
+            // Simplify: assume order is within this month for this calculation if month matches
+            for (let d = start; d <= Math.min(end, daysInMonth); d++) {
+                monthOccupancyMap[d]++;
+            }
+        });
+
+        const totalOccupancy = monthOccupancyMap.reduce((a, b) => a + b, 0);
 
         const avgOccupancy = ((totalOccupancy / daysInMonth / PNET_MAX_CAPACITY) * 100).toFixed(1);
         document.getElementById("avgOccupancy").textContent = avgOccupancy + "%";
@@ -355,22 +364,22 @@ async function loadAnalytics() {
         const last6MonthsOccupancy = [];
         for (let i = 5; i >= 0; i--) {
             const monthDate = new Date(currentYear, currentMonth - i, 1);
-            const daysInThisMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-            const monthOrders = allOrders.filter((order) => {
-                const checkIn = new Date(order.check_in);
-                return (checkIn.getMonth() === monthDate.getMonth() && checkIn.getFullYear() === monthDate.getFullYear());
+            const m = monthDate.getMonth();
+            const y = monthDate.getFullYear();
+            const daysInThisMonth = new Date(y, m + 1, 0).getDate();
+            
+            const monthOrders = ordersWithDates.filter(o => o._check_in.getMonth() === m && o._check_in.getFullYear() === y);
+            
+            const map = new Array(daysInThisMonth + 1).fill(0);
+            monthOrders.forEach(order => {
+                const start = order._check_in.getDate();
+                const end = order._check_out.getDate();
+                for (let d = start; d <= Math.min(end, daysInThisMonth); d++) {
+                    map[d]++;
+                }
             });
-
-            let monthTotalOccupancy = 0;
-            for (let day = 1; day <= daysInThisMonth; day++) {
-                const currentDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
-                const dogsOnDay = monthOrders.filter((order) => {
-                    const checkIn = new Date(order.check_in);
-                    const checkOut = new Date(order.check_out);
-                    return currentDate >= checkIn && currentDate <= checkOut;
-                }).length;
-                monthTotalOccupancy += dogsOnDay;
-            }
+            
+            const monthTotalOccupancy = map.reduce((a, b) => a + b, 0);
             const monthAvgOccupancy = ((monthTotalOccupancy / daysInThisMonth / PNET_MAX_CAPACITY) * 100).toFixed(1);
             last6MonthsOccupancy.push(parseFloat(monthAvgOccupancy));
         }

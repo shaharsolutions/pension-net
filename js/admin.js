@@ -1009,8 +1009,24 @@ async function renderMonthlyCalendar(allOrders) {
 
   const { orderToTrack, numTracks, monthOrders } = assignDogTracks(allOrders, firstDayOfMonth, lastDayOfMonth);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // PRE-PROCESS orders by day for O(1) lookup
+  const dogsByDayMap = {};
+  monthOrders.forEach(ord => {
+      const startDay = ord._check_in || new Date(ord.check_in + 'T00:00:00');
+      const endDay = ord._check_out || new Date(ord.check_out + 'T00:00:00');
+      
+      let temp = new Date(Math.max(startDay.getTime(), firstDayOfMonth.getTime()));
+      const loopEnd = new Date(Math.min(endDay.getTime(), lastDayOfMonth.getTime()));
+      
+      while (temp <= loopEnd) {
+          const dateKey = temp.getDate();
+          if (!dogsByDayMap[dateKey]) dogsByDayMap[dateKey] = [];
+          dogsByDayMap[dateKey].push(ord);
+          temp.setDate(temp.getDate() + 1);
+      }
+  });
+
+  const todayStr = new Date().toDateString();
 
   const holidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
@@ -1027,26 +1043,17 @@ async function renderMonthlyCalendar(allOrders) {
     calendarHTML += '<td class="empty-day"></td>';
   }
 
-  let dayCounter = 1;
-  let currentDayOfWeek = firstDayIndex;
+  dayCounter = 1;
+  currentDayOfWeek = firstDayIndex;
+  
+  const monthHolidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
   while (dayCounter <= lastDayOfMonth.getDate()) {
-    const currentDate = new Date(date.getFullYear(), date.getMonth(), dayCounter);
-    currentDate.setHours(0,0,0,0);
-    const dayName = dayLabels[currentDate.getDay()];
+    const dogsToday = dogsByDayMap[dayCounter] || [];
+    const currentDateTimestamp = new Date(date.getFullYear(), date.getMonth(), dayCounter).toDateString();
     
-    // Active dogs for today
-    const dogsToday = monthOrders.filter(ord => {
-        const start = new Date(ord.check_in);
-        start.setHours(0,0,0,0);
-        const end = new Date(ord.check_out);
-        end.setHours(23,59,59,999);
-        return start <= currentDate && end >= currentDate;
-    });
-
-    const isToday = currentDate.toDateString() === today.toDateString();
     let classes = "calendar-day";
-    if (isToday) classes += " today";
+    if (currentDateTimestamp === todayStr) classes += " today";
     if (dogsToday.length > 0) classes += " busy";
 
     let dogsContentHTML = "";
@@ -1055,21 +1062,11 @@ async function renderMonthlyCalendar(allOrders) {
     for (let i = 0; i < numTracks; i++) {
         const dogInTrack = dogsToday.find(d => orderToTrack[d.id] === i);
         if (dogInTrack) {
-            const start = new Date(dogInTrack.check_in);
-            start.setHours(0,0,0,0);
-            const end = new Date(dogInTrack.check_out);
-            end.setHours(23,59,59,999);
+            const stayStart = dogInTrack._check_in || new Date(dogInTrack.check_in + 'T00:00:00');
+            const stayEnd = dogInTrack._check_out || new Date(dogInTrack.check_out + 'T00:00:00');
 
-            const startOfCurrentDate = new Date(currentDate);
-            startOfCurrentDate.setHours(0,0,0,0);
-
-            const stayStart = new Date(dogInTrack.check_in);
-            stayStart.setHours(0,0,0,0);
-            const stayEnd = new Date(dogInTrack.check_out);
-            stayEnd.setHours(0,0,0,0);
-
-            const isStartOfStay = stayStart.getTime() === startOfCurrentDate.getTime();
-            const isEndOfStay = stayEnd.getTime() === startOfCurrentDate.getTime();
+            const isStartOfStay = stayStart.getDate() === dayCounter && stayStart.getMonth() === date.getMonth();
+            const isEndOfStay = stayEnd.getDate() === dayCounter && stayEnd.getMonth() === date.getMonth();
             
             const isFirstDayOfMonth = currentDate.getDate() === 1;
             const isSunday = currentDate.getDay() === 0;
@@ -1112,9 +1109,11 @@ async function renderMonthlyCalendar(allOrders) {
         }
     }
 
-    const pD = (n) => String(n).padStart(2, '0');
-    const formattedDate = `${date.getFullYear()}-${pD(date.getMonth() + 1)}-${pD(dayCounter)}`;
-    const holidayHebrew = holidays[formattedDate];
+    const dayName = dayLabels[currentDayOfWeek];
+    const pD = (n) => n < 10 ? '0'+n : n;
+    const dateFormattedPart = `${date.getFullYear()}-${pD(date.getMonth() + 1)}`;
+    const holidayFormattedDate = `${dateFormattedPart}-${pD(dayCounter)}`;
+    const holidayHebrew = monthHolidays[holidayFormattedDate];
     
     let customEventsHTML = '';
     const currentDayTime = currentDate.getTime();
@@ -1565,11 +1564,12 @@ function renderPastOrdersPagination(totalRows, currentPage, maxPage) {
 
 const searchInput = document.getElementById("historySearchInput");
 if (searchInput) {
-  searchInput.addEventListener("input", function () {
+  const debouncedSearch = debounce(() => {
     window.pastOrdersSearchTerm = searchInput.value;
     window.pastOrdersCurrentPage = 1;
     renderPastOrdersTable();
-  });
+  }, 300);
+  searchInput.addEventListener("input", debouncedSearch);
 }
 
 // --- לוגיקת סטטיסטיקת תנועות (נכנסים/יוצאים) ---
@@ -1760,7 +1760,7 @@ async function loadData() {
   try {
     const { data, error } = await pensionNetSupabase
       .from("orders")
-      .select("*")
+      .select("id, dog_name, owner_name, check_in, check_out, status, created_at, phone, price_per_day, is_arrived, is_departed, admin_note, dog_photo, dog_breed, dog_age, neutered")
       .eq("user_id", session.user.id) // חיפוש רק של המשתמש הנוכחי
       .order("check_out", { ascending: true });
 
@@ -1768,16 +1768,18 @@ async function loadData() {
 
     console.log("Data loaded:", data.length, "rows");
 
-    window.allOrdersCache = data;
+    window.allOrdersCache = data.map(o => ({
+      ...o,
+      _check_in: new Date(o.check_in + 'T00:00:00'),
+      _check_out: new Date(o.check_out + 'T00:00:00')
+    }));
 
     if (window.currentView === "calendar") {
-      renderMonthlyCalendar(data);
+      renderMonthlyCalendar(window.allOrdersCache);
     } else {
-      renderCurrentDogsColumnView(data);
+      renderCurrentDogsColumnView(window.allOrdersCache);
     }
-
-    // Render daily stats
-    renderMovementStats(data);
+    renderMovementStats(window.allOrdersCache);
 
     if (data.length > 0) {
       console.log("Sample data:", {
@@ -3952,6 +3954,8 @@ function formatPhoneKey(phone) {
 function processClientsData() {
   const clientsMap = {};
   const cache = window.allOrdersCache || [];
+  const defaultPriceInput = document.getElementById('settings-default-price');
+  const systemDefaultPrice = defaultPriceInput ? parseInt(defaultPriceInput.value) : 130;
   
   cache.forEach(order => {
     if (!order.phone) return;
@@ -4002,11 +4006,13 @@ function processClientsData() {
     if (order.status !== 'בוטל') {
        c.totalOrders++;
        const days = calculateDays(order.check_in, order.check_out);
-       c.totalRevenue += days * (order.price_per_day || parseInt(document.getElementById('settings-default-price')?.value) || 130);
+       c.totalRevenue += days * (order.price_per_day || systemDefaultPrice);
     }
     
-    // Track the actual order creation date for "Last Order"
-    const orderCreationDate = new Date(order.order_date || order.created_at);
+    // Status should be anything that brought revenue? Or maybe just status !== canceled
+    const orderCreationDate = order._creationDate || new Date(order.order_date || order.created_at);
+    if (!order._creationDate) order._creationDate = orderCreationDate; // cache it
+
     if (orderCreationDate > c.lastOrderDate) {
        c.lastOrderDate = orderCreationDate;
        // Update name to latest known name
@@ -4233,10 +4239,17 @@ function renderClientsPagination(totalRows, currentPage, maxPage) {
   container.innerHTML = html;
 }
 
-document.getElementById('clientsSearchInput')?.addEventListener('input', () => {
-  window.clientsCurrentPage = 1;
-  renderClientsTable();
-});
+// Debounced search for clients
+const debouncedClientsSearch = debounce(() => {
+    window.clientsCurrentPage = 1;
+    renderClientsTable();
+}, 300);
+
+const clientSearchEl = document.getElementById('clientsSearchInput');
+if (clientSearchEl) {
+    clientSearchEl.removeAttribute('oninput'); // Remove inline handler
+    clientSearchEl.addEventListener('input', debouncedClientsSearch);
+}
 
 async function saveClientData(phoneKey, priceValue, cityValue) {
   if (!window.clientsData) window.clientsData = {};

@@ -155,7 +155,7 @@ async function loadMonthlyCapacity() {
   try {
     const { data: orders, error } = await pensionNetSupabase
       .from('orders')
-      .select('*')
+      .select('id, check_in, check_out')
       .eq('status', 'מאושר')
       .eq('user_id', PENSION_OWNER_ID)
       .gte('check_out', firstDay.toISOString().split('T')[0])
@@ -171,17 +171,20 @@ async function loadMonthlyCapacity() {
         capacityByDate[i] = 0;
     }
 
-    // Process orders
+    // Process orders efficiently
+    const monthStartTimes = firstDay.getTime();
+    const monthEndTimes = lastDay.getTime();
+    
     orders.forEach(order => {
-      const start = new Date(order.check_in);
-      const end = new Date(order.check_out);
+      const start = new Date(order.check_in).getTime();
+      const end = new Date(order.check_out).getTime();
       
-      // Iterate days of order
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-        // Check if d is in current month
-        if (d.getMonth() === month && d.getFullYear() === year) {
-           capacityByDate[d.getDate()]++;
-        }
+      const loopStart = Math.max(start, monthStartTimes);
+      const loopEnd = Math.min(end, monthEndTimes);
+      
+      for (let t = loopStart; t <= loopEnd; t += 86400000) {
+        const d = new Date(t);
+        capacityByDate[d.getDate()]++;
       }
     });
 
@@ -194,24 +197,26 @@ async function loadMonthlyCapacity() {
         html += `<div style="background:transparent;"></div>`;
     }
     
-    // Day cells
+    // Pre-cache selection values and today string
+    const selIn = document.getElementById('checkInDate')?.value || '';
+    const selOut = document.getElementById('checkOutDate')?.value || '';
     const today = new Date();
     today.setHours(0,0,0,0);
-    
+    const todayTimestamp = today.getTime();
+
     for (let day = 1; day <= totalDays; day++) {
         const count = capacityByDate[day];
         const perc = (count / MAX_CAPACITY) * 100;
         
         const currentDate = new Date(year, month, day);
-        const isPast = currentDate < today;
+        const currentTimestamp = currentDate.getTime();
+        const isPast = currentTimestamp < todayTimestamp;
         
         let bgColor = '#4caf50'; // Green
         if (perc >= 80) bgColor = '#ff9800'; 
         if (perc >= 100) bgColor = '#f44336';
         
         // Highlight logic
-        const selIn = document.getElementById('checkInDate').value;
-        const selOut = document.getElementById('checkOutDate').value;
         const dateStr = formatDateToISO(currentDate);
         
         let highlightStyle = '';
@@ -227,7 +232,7 @@ async function loadMonthlyCapacity() {
         }
 
         let opacity = isPast ? '0.3' : '1';
-        let border = (currentDate.getTime() === today.getTime()) ? '2px solid #667eea' : 'none';
+        let border = (currentTimestamp === todayTimestamp) ? '2px solid #667eea' : 'none';
         
         html += `
         <div onclick="${isPast ? '' : `onDateClick(${day}, ${month}, ${year})`}" 
@@ -639,7 +644,7 @@ async function identifyCustomer() {
   try {
     const { data, error } = await client
       .from('orders')
-      .select('*')
+      .select('id, dog_name, dog_breed, dog_age, neutered, owner_name, created_at, phone')
       .eq('phone', phone) // חיפוש עם מספר נקי
       .eq('user_id', PENSION_OWNER_ID)
       .order('created_at', { ascending: false });
