@@ -3937,6 +3937,8 @@ function processClientsData() {
         totalOrders: 0,
         totalRevenue: 0,
         lastOrderDate: new Date('1970-01-01'),
+        latestPriceDate: new Date('1970-01-01'),
+        latestOrderPrice: null,
         orderAdminNotes: []
       };
     }
@@ -3982,13 +3984,21 @@ function processClientsData() {
        // Update name to latest known name
        if (order.owner_name) c.name = order.owner_name;
     }
+
+    // Track latest price from orders
+    if (order.price_per_day && orderCreationDate >= c.latestPriceDate) {
+        c.latestPriceDate = orderCreationDate;
+        c.latestOrderPrice = order.price_per_day;
+    }
   });
 
   // Convert Set to array and calculate stats
   const clientsList = Object.values(clientsMap).map(c => {
     c.dogsArray = Array.from(c.dogs);
-    // Custom price
-    c.customPrice = window.clientsData[c.phoneKey]?.default_price || null;
+    // Custom price: Prefer explicitly set price, then latest from orders, then null
+    c.customPrice = window.clientsData[c.phoneKey]?.default_price || c.latestOrderPrice || null;
+    c.isFromHistory = !window.clientsData[c.phoneKey]?.default_price && c.latestOrderPrice !== null;
+    
     c.city = window.clientsData[c.phoneKey]?.city || '';
     c.orderAdminNotes = c.orderAdminNotes || [];
     return c;
@@ -4011,6 +4021,81 @@ function processClientsData() {
   }
   
   renderClientsTable();
+  checkForUnsyncedPrices();
+}
+
+function checkForUnsyncedPrices() {
+    const unsyncedCount = (window.processedClients || []).filter(c => c.isFromHistory).length;
+    const container = document.getElementById('clientsStatsContainer');
+    if (!container || unsyncedCount === 0) return;
+
+    if (document.getElementById('syncPricesBanner')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'syncPricesBanner';
+    banner.style = `
+        background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;
+        padding: 15px 20px; margin-bottom: 20px; color: #166534;
+        display: flex; align-items: center; justify-content: space-between;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); direction: rtl;
+    `;
+    banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: #dcfce7; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #22c55e;">
+                <i class="fas fa-magic"></i>
+            </div>
+            <div>
+                <strong style="display: block; font-size: 15px;">זיהינו מחירים מיוחדים בהיסטוריה!</strong>
+                <span style="font-size: 13px; opacity: 0.9;">ל-${unsyncedCount} לקוחות יש מחירים מהזמנות קודמות שטרם הוגדרו כברירת מחדל.</span>
+            </div>
+        </div>
+        <button onclick="syncClientsPricesFromHistory()" class="header-btn" style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            <i class="fas fa-sync-alt"></i> סנכרן הכל כעת
+        </button>
+    `;
+    container.parentNode.insertBefore(banner, container.nextSibling);
+}
+
+async function syncClientsPricesFromHistory() {
+    const btn = event.currentTarget;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מסנכרן...';
+    }
+
+    try {
+        const session = window.currentUserSession || await Auth.getSession();
+        if (!session) return;
+        if (!window.clientsData) window.clientsData = {};
+        
+        let updatedCount = 0;
+        window.processedClients.forEach(c => {
+            if (c.isFromHistory && c.latestOrderPrice) {
+                if (!window.clientsData[c.phoneKey]) window.clientsData[c.phoneKey] = {};
+                window.clientsData[c.phoneKey].default_price = c.latestOrderPrice;
+                updatedCount++;
+            }
+        });
+
+        if (updatedCount > 0) {
+            const { error } = await pensionNetSupabase
+                .from('profiles')
+                .update({ clients_data: window.clientsData })
+                .eq('user_id', session.user.id);
+
+            if (error) throw error;
+            showToast(`${updatedCount} מחירים סונכרנו בהצלחה!`, 'success');
+            document.getElementById('syncPricesBanner')?.remove();
+            processClientsData();
+        }
+    } catch (err) {
+        console.error('Sync error:', err);
+        showToast('שגיאה בסנכרון המחירים', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> סנכרן הכל כעת';
+        }
+    }
 }
 
 function filterClientsData(searchTerm) {
@@ -4089,7 +4174,10 @@ function renderClientsTable() {
       <td data-label="סהכ הזמנות">${c.totalOrders}</td>
       <td data-label="הזמנה אחרונה">${lastDateDisplay}</td>
       <td data-label="הכנסה">₪${c.totalRevenue.toLocaleString()}</td>
-      <td data-label="מחיר ברירת מחדל" style="text-align:center;">${currentPriceDisplay}</td>
+      <td data-label="מחיר ברירת מחדל" style="text-align:center;">
+        ${c.isFromHistory ? `<span style="color:#22c55e; font-weight:600; font-size:11px; display:block; margin-bottom:2px;"><i class="fas fa-history"></i> מהיסטוריה</span>` : ''}
+        ${currentPriceDisplay}
+      </td>
       <td data-label="עריכה">
         <button class="header-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; border:none; padding:6px 14px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" 
                 onclick="openEditClientModal('${c.phoneKey}')"
