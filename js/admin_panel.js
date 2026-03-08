@@ -389,8 +389,7 @@ async function saveAnnouncement() {
                 .from('system_announcements')
                 .update({
                     content: content,
-                    is_active: isActive,
-                    updated_at: new Date().toISOString()
+                    is_active: isActive
                 })
                 .eq('id', editingId);
         } else {
