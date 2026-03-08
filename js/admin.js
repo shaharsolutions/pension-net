@@ -1096,9 +1096,23 @@ async function renderMonthlyCalendar(allOrders) {
             // Show text on every day as requested
             const showText = true;
 
+            const trackColors = [
+                { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' }, // Blue
+                { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' }, // Amber
+                { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' }, // Emerald
+                { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' }, // Red
+                { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' }, // Violet
+                { bg: '#fae8ff', border: '#f5d0fe', text: '#86198f' }, // Fuchsia
+                { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' }, // Orange
+                { bg: '#ecfeff', border: '#a5f3fc', text: '#083344' }  // Cyan
+            ];
+            const trackColor = trackColors[i % trackColors.length];
+
             const reverseClass = currentDayOfWeek === 6 ? " reverse-tooltip" : "";
             dogsContentHTML += `
-                <div class="${trackClasses.join(" ")}${reverseClass}" data-order-id="${dogInTrack.id}">
+                <div class="${trackClasses.join(" ")}${reverseClass}" 
+                     data-order-id="${dogInTrack.id}"
+                     style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important;">
                     <div class="dog-label-name">${dogName}${ownerName}</div>
                     <div class="dog-tooltip"><div class="dog-tooltip-content">
                         <div class="dog-tooltip-item"><strong>${dogName}</strong>${ownerName}</div>
@@ -4205,7 +4219,28 @@ function renderClientsTable() {
       <td data-label="שם">${c.name}</td>
       <td data-label="טלפון">${createWhatsAppLink(c.originalPhone)}</td>
       <td data-label="עיר מגורים" style="text-align:center;">${c.city || '<span style="color:#94a3b8;">-</span>'}</td>
-      <td data-label="כלבים">${c.dogsArray.join(', ')}</td>
+      <td data-label="כלבים">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
+          ${c.dogsArray.map(dog => {
+            const photoData = c.dogPhotos && c.dogPhotos[dog] ? c.dogPhotos[dog] : null;
+            const photoUrl = photoData ? photoData.url : null;
+            
+            let imgHtml = '';
+            if (photoUrl) {
+              imgHtml = `<img src="${photoUrl}" class="dog-thumbnail" style="width:28px; height:28px;" onclick="openImagePreview('${photoUrl}', '${dog.replace(/'/g, "\\'")}')" />`;
+            } else {
+              imgHtml = `<div class="dog-thumbnail-placeholder" style="width:28px; height:28px; font-size: 10px;" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('', '${dog.replace(/'/g, "\\'")}', '${c.originalPhone}')"`}>
+                <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
+              </div>`;
+            }
+
+            return `<div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 3px 8px; border-radius: 30px; border: 1px solid #e2e8f0; white-space: nowrap;">
+              ${imgHtml}
+              <span style="color:#1e293b; font-weight:700; font-size:13px;">${dog}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </td>
       <td data-label="סהכ הזמנות">${c.totalOrders}</td>
       <td data-label="הזמנה אחרונה">${lastDateDisplay}</td>
       <td data-label="הכנסה">₪${c.totalRevenue.toLocaleString()}</td>
@@ -4340,15 +4375,22 @@ function openEditClientModal(phoneKey) {
       dogsList.innerHTML = client.dogsArray.map((dog, index) => {
         const photo = client.dogPhotos?.[dog]?.url;
         return `
-        <div class="edit-dog-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <div style="flex-shrink: 0;">
+        <div class="edit-dog-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;">
+          <div style="flex-shrink: 0; position: relative; width: 44px; height: 44px;">
             ${photo ? `
-              <img src="${photo}" class="dog-thumbnail" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}')" />
+              <img src="${photo}" class="dog-thumbnail" style="width: 100%; height: 100%;" />
+              <div style="position: absolute; bottom: -2px; right: -2px; background: #6366f1; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; border: 1.5px solid white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="שנה תמונה" onclick="document.getElementById('adminDogPhotoInput-${index}').click()">
+                <i class="fas fa-camera"></i>
+              </div>
+              <div style="position: absolute; top: -2px; right: -2px; background: rgba(255,255,255,0.9); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; border: 1.5px solid #e2e8f0; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" title="צפה בתמונה" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}')">
+                <i class="fas fa-eye"></i>
+              </div>
             ` : `
-              <div class="dog-thumbnail-placeholder" ${window.isDemoMode ? '' : `onclick="document.getElementById('adminDogPhotoInput-${index}').click()"`}>
+              <div class="dog-thumbnail-placeholder" style="width: 100%; height: 100%; border-style: solid; background: #f8fafc;" ${window.isDemoMode ? '' : `onclick="document.getElementById('adminDogPhotoInput-${index}').click()"`}>
                 <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
               </div>
             `}
+            <input type="file" id="adminDogPhotoInput-${index}" style="display: none;" accept="image/*" onchange="handleAdminDogPhotoUpload(event, '${dog.replace(/'/g, "\\'")}', '${phoneKey}')">
           </div>
           <div style="position: relative; flex: 1;">
             <i class="fas fa-dog" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #f59e0b; font-size: 12px;"></i>
@@ -4357,10 +4399,6 @@ function openEditClientModal(phoneKey) {
                    onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
           </div>
           <div class="edit-dog-actions" style="display: flex; gap: 4px;">
-            <button type="button" class="edit-dog-photo-btn" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : `onclick="document.getElementById('adminDogPhotoInput-${index}').click()"`} title="${window.isDemoMode ? '' : 'העלה תמונה'}">
-              <i class="fas fa-image"></i>
-              <input type="file" id="adminDogPhotoInput-${index}" style="display: none;" accept="image/*" onchange="handleAdminDogPhotoUpload(event, '${dog.replace(/'/g, "\\'")}', '${phoneKey}')">
-            </button>
             <button type="button" onclick="this.parentElement.parentElement.remove()" 
                     style="background: #fee2e2; color: #ef4444; border: none; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
                     onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"

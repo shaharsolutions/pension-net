@@ -689,10 +689,10 @@
 
     <!-- Edit Client Modal -->
     <div id="editClientModal" class="modal">
-      <div class="modal-content" style="max-width: 520px; padding: 0; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); overflow: hidden;">
+      <div class="modal-content" style="max-width: 520px; padding: 0; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; max-height: 90vh;">
         
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div style="width: 42px; height: 42px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
               <i class="fas fa-user-edit" style="color: white; font-size: 18px;"></i>
@@ -706,7 +706,7 @@
         </div>
 
         <!-- Body -->
-        <div style="padding: 24px; direction: rtl;">
+        <div style="padding: 24px; direction: rtl; overflow-y: auto; flex: 1;">
           <input type="hidden" id="editClientPhoneKey" />
           <input type="hidden" id="editClientOriginalPhone" />
           

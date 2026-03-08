@@ -524,7 +524,6 @@ header h1 {
 
 /* Unified Dog Labels - Gantt Style (RTL Corrected) */
 .dog-label-unified {
-  background: #dbeafe !important; /* Forces solid light blue base */
   color: #1e40af;
   padding: 4px 10px;
   margin-bottom: 2px;
@@ -601,7 +600,7 @@ header h1 {
     left: 4px;
     font-size: 10px;
     font-weight: bold;
-    color: #1e40af;
+    color: inherit;
     animation: pulseArrowNext 1.5s infinite;
     z-index: 5;
 }
@@ -612,7 +611,7 @@ header h1 {
     right: 4px;
     font-size: 10px;
     font-weight: bold;
-    color: #1e40af;
+    color: inherit;
     animation: pulseArrowPrev 1.5s infinite;
     z-index: 5;
 }
