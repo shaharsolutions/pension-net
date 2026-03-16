@@ -378,6 +378,10 @@
             <div class="section-tag" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);">הדגמה</div>
             <h2 id="demo-heading" style="font-size: 2.5rem; margin-bottom: 20px;">מעוצב לחוויית עבודה מושלמת</h2>
             <p style="opacity: 0.7; max-width: 700px; margin: 0 auto 50px;">הממשק שלנו נקי, מינימליסטי ומהיר, כדי שתוכלו לעשות יותר בפחות זמן.</p>
+            <button class="start-tour-btn" id="startTourBtn" onclick="startTour()">
+                <i class="fas fa-magic"></i>
+                התחל סיור במערכת
+            </button>
         </div>
         
         <div class="mockup-container scale-reveal">
@@ -392,8 +396,23 @@
 
                 <!-- Browser Tab area removed to let iframe show its own tabs -->
 
-                <div class="mockup-content" style="padding: 0; height: 600px; display: flex; flex-direction: column;">
+                <div class="mockup-content" style="padding: 0; height: 600px; display: flex; flex-direction: column; position: relative;">
                     <iframe src="../admin.html?demo=true" style="width: 100%; height: 100%; border: none; border-radius: 0 0 10px 10px;" loading="lazy" title="הדגמה אינטראקטיבית של מערכת פנסיון-נט"></iframe>
+                    
+                    <!-- System Tour Overlay -->
+                    <div id="demo-tour-overlay" class="tour-overlay">
+                        <div id="tour-spotlight" class="tour-spotlight"></div>
+                        <div class="tour-card" id="tour-step-card" style="display: none;">
+                            <div class="tour-step-indicator">שלב <span id="current-step-num">1</span> מתוך 9</div>
+                            <h3 id="tour-step-title">ברוכים הבאים לדף ההדגמה!</h3>
+                            <p id="tour-step-content">כאן תוכלו להתנסות במערכת לניהול פנסיון כלבים בזמן אמת. בואו נצא לסיור קצר בין הפיצ'רים המובילים שלנו.</p>
+                            <div class="tour-actions">
+                                <button id="tour-next-btn" class="tour-btn primary">הבא</button>
+                                <button id="tour-prev-btn" class="tour-btn secondary" disabled>הקודם</button>
+                            </div>
+                            <button class="tour-close-btn" onclick="closeTour()" aria-label="סגור סיור">&times;</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -764,6 +783,274 @@
             }
         });
     })();
+    </script>
+    <script>
+    // ==============================
+    // System Tour Logic
+    // ==============================
+    const tourOverlay = document.getElementById('demo-tour-overlay');
+    const tourCard = document.getElementById('tour-step-card');
+    const tourSpotlight = document.getElementById('tour-spotlight');
+    const tourTitle = document.getElementById('tour-step-title');
+    const tourContent = document.getElementById('tour-step-content');
+    const tourStepNum = document.getElementById('current-step-num');
+    const tourNextBtn = document.getElementById('tour-next-btn');
+    const tourPrevBtn = document.getElementById('tour-prev-btn');
+    const demoIframe = document.querySelector('#demo iframe');
+
+    let currentStep = 1;
+    const tourSteps = [
+        {
+            title: "ברוכים הבאים לדף ההדגמה!",
+            content: "כאן תוכלו להתנסות במערכת לניהול פנסיון כלבים בזמן אמת. בואו נצא לסיור קצר בין הפיצ'רים המובילים שלנו.",
+            selector: null,
+            url: '../admin.html?demo=true',
+            tab: 'ongoing'
+        },
+        {
+            title: "ניהול שוטף ותנועות יומיות",
+            content: "כאן רואים את כל הכלבים שנכנסים ויוצאים היום מהפנסיון. זה הכלי המרכזי שיוצר לכם סדר בבוקר!",
+            selector: '.movements-container',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing'
+        },
+        {
+            title: "לוח שנה צבעוני",
+            content: "לוח שנה חודשי שמראה תפוסה מלאה של כל הכלבים. תוכלו לראות מתי אתם בתפוסה מלאה ומתי יש מקום פנוי.",
+            selector: '#monthlyCalendarContainer',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing'
+        },
+        {
+            title: "הזמנות עתידיות",
+            content: "כל ההזמנות שמחכות לכם, עם חיפוש וסינון מהיר לפי סטטוסים.",
+            selector: '#futureOrdersTable',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing',
+            scroll: true
+        },
+        {
+            title: "היסטוריית הזמנות",
+            content: "כאן תוכלו למצוא את כל ההזמנות מהעבר, כולל סיכומי תשלום והערות היסטוריות של הלקוחות.",
+            selector: '#historyTableContainer',
+            url: '../admin.html?demo=true',
+            tab: 'history'
+        },
+        {
+            title: "מאגר לקוחות חכם",
+            content: "כל הנתונים של הלקוחות והכלבים שלהם נשמרים כאן, כולל היסטוריית הערות והעדפות מיוחדות.",
+            selector: '#tab-clients',
+            url: '../admin.html?demo=true',
+            tab: 'clients'
+        },
+        {
+            title: "דוחות וניתוחים",
+            content: "נתחו את הרווחיות, התפוסה והצמיחה שלכם לאורך זמן עם דוחות גרפיים מתקדמים.",
+            selector: '.dashboard-grid',
+            url: '../growth.html?demo=true',
+            tab: null
+        },
+        {
+            title: "יומן פעולות (Audit)",
+            content: "שקיפות מלאה! כאן רואים בדיוק מי מהצוות ביצע כל פעולה במערכת ומתי.",
+            selector: '#tab-audit',
+            url: '../admin.html?demo=true',
+            tab: 'audit'
+        },
+        {
+            title: "הגדרות פנסיון",
+            content: "התאמה אישית של שם הפנסיון, הקיבולת והמחירים שלכם במקום אחד.",
+            selector: '#tab-settings',
+            url: '../admin.html?demo=true',
+            tab: 'settings'
+        }
+    ];
+
+    function startTour() {
+        currentStep = 1;
+        tourOverlay.style.display = 'block';
+        tourCard.style.display = 'block';
+        updateTourStep();
+        document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeTour() {
+        tourOverlay.style.display = 'none';
+        tourCard.style.display = 'none';
+        // Reset to home demo page
+        demoIframe.src = '../admin.html?demo=true';
+    }
+
+    async function updateTourStep() {
+        const step = tourSteps[currentStep - 1];
+        if (!step) return;
+
+        console.log(`Tour: Moving to step ${currentStep}`, step);
+
+        // Update Text
+        tourTitle.textContent = step.title;
+        tourContent.textContent = step.content;
+        
+        // Update Step Numbers
+        const totalSteps = tourSteps.length;
+        const indicator = document.querySelector('.tour-step-indicator');
+        if (indicator) {
+            indicator.innerHTML = `שלב <span id="current-step-num">${currentStep}</span> מתוך ${totalSteps}`;
+        }
+        
+        // Navigation buttons state
+        tourPrevBtn.disabled = currentStep === 1;
+        tourNextBtn.textContent = currentStep === totalSteps ? 'סיום' : 'הבא';
+
+        // Check if navigation is needed
+        try {
+            const currentUrl = new URL(demoIframe.contentWindow.location.href);
+            const targetUrl = new URL(step.url, window.location.href);
+
+            // Compare paths (ignoring search/hash for basic routing)
+            if (currentUrl.pathname !== targetUrl.pathname) {
+                demoIframe.src = step.url;
+                demoIframe.onload = () => {
+                    demoIframe.onload = null;
+                    setTimeout(() => applyStepHighlight(step), 400);
+                };
+            } else {
+                applyStepHighlight(step);
+            }
+        } catch (e) {
+            console.warn("Tour navigation check fallback:", e);
+            // Fallback for cross-origin or other errors
+            if (!demoIframe.src.includes(step.url.split('?')[0])) {
+                demoIframe.src = step.url;
+                demoIframe.onload = () => {
+                    demoIframe.onload = null;
+                    setTimeout(() => applyStepHighlight(step), 600);
+                };
+            } else {
+                applyStepHighlight(step);
+            }
+        }
+    }
+
+    function applyStepHighlight(step, retryCount = 0) {
+        try {
+            const iframeDoc = demoIframe.contentDocument || demoIframe.contentWindow.document;
+            
+            // Switch tab if needed
+            if (step.tab && demoIframe.contentWindow.switchTab) {
+                demoIframe.contentWindow.switchTab(step.tab);
+            }
+
+            // Spotlight handling
+            if (step.selector) {
+                const el = iframeDoc.querySelector(step.selector);
+                
+                // Retry if element not ready or zero dimension
+                if ((!el || el.offsetHeight === 0) && retryCount < 8) {
+                    setTimeout(() => applyStepHighlight(step, retryCount + 1), 300);
+                    return;
+                }
+
+                if (el && el.offsetHeight > 0) {
+                    // Scroll it into view - use 'start' for large elements to avoid negative top
+                    const scrollAlign = el.offsetHeight > 550 ? 'start' : 'center';
+                    el.scrollIntoView({ behavior: 'smooth', block: scrollAlign });
+                    
+                    // Allow scroll animation to finish before snapping spotlight
+                    setTimeout(() => {
+                        const rect = el.getBoundingClientRect();
+                        
+                        // We update the spotlight as long as SOME part of it is in the viewport range (0-600)
+                        if (rect.bottom > 0 && rect.top < 600) {
+                            tourSpotlight.style.opacity = '1';
+                            tourSpotlight.style.width = (rect.width + 40) + 'px';
+                            tourSpotlight.style.height = (rect.height + 40) + 'px';
+                            tourSpotlight.style.top = (rect.top - 20) + 'px';
+                            tourSpotlight.style.left = (rect.left - 20) + 'px';
+                            tourSpotlight.style.borderWidth = '3px';
+
+                            positionTourCard(rect);
+                        } else if (retryCount < 5) {
+                            // Elements still moving or off-screen, retry
+                            setTimeout(() => applyStepHighlight(step, retryCount + 1), 200);
+                        }
+                    }, 600);
+                } else {
+                    hideSpotlight();
+                }
+            } else {
+                hideSpotlight();
+            }
+        } catch (e) {
+            console.warn("Tour spotlight error, retrying...", e);
+            if (retryCount < 3) {
+                setTimeout(() => applyStepHighlight(step, retryCount + 1), 500);
+            } else {
+                hideSpotlight();
+            }
+        }
+    }
+
+    function hideSpotlight() {
+        // Full overlay effect (cutout is size 0 at center)
+        tourSpotlight.style.opacity = '1';
+        tourSpotlight.style.width = '0';
+        tourSpotlight.style.height = '0';
+        tourSpotlight.style.top = '50%';
+        tourSpotlight.style.left = '50%';
+        tourSpotlight.style.borderWidth = '0';
+        
+        tourCard.style.top = '50%';
+        tourCard.style.left = '50%';
+        tourCard.style.transform = 'translate(-50%, -50%)';
+        tourCard.style.display = 'block';
+    }
+
+    function positionTourCard(rect) {
+        const cardWidth = 400;
+        const cardHeight = tourCard.offsetHeight || 250;
+
+        // Try placing BELOW first
+        let top = rect.bottom + 40;
+        let left = rect.left + rect.width / 2 - cardWidth / 2;
+
+        // If not enough space below, place ABOVE
+        if (top + cardHeight > 580) {
+            top = rect.top - cardHeight - 40;
+        }
+        
+        // Final boundary checks within iframe container
+        if (top < 10) top = 10;
+        if (left < 10) left = 10;
+        if (left + cardWidth > 990) left = 990 - cardWidth;
+
+        tourCard.style.top = top + 'px';
+        tourCard.style.left = left + 'px';
+        tourCard.style.transform = 'none';
+        tourCard.style.display = 'block';
+    }
+
+    tourNextBtn.addEventListener('click', () => {
+        if (currentStep < tourSteps.length) {
+            currentStep++;
+            updateTourStep();
+        } else {
+            closeTour();
+        }
+    });
+
+    tourPrevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateTourStep();
+        }
+    });
+
+    tourOverlay.addEventListener('click', (e) => {
+        if (e.target === tourOverlay) {
+            closeTour();
+        }
+    });
     </script>
 </body>
 </html>

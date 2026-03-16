@@ -1793,3 +1793,167 @@ nav.scrolled {
         display: none;
     }
 }
+/* ==============================
+   System Tour
+   ============================== */
+.tour-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 100;
+    display: none; /* Controlled by JS */
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0 0 10px 10px;
+}
+
+.tour-spotlight {
+    position: absolute;
+    z-index: 99;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85); /* Darker overlay for better focus */
+    border-radius: 16px;
+    border: 3px solid #6366f1; /* Bright primary border */
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    background: transparent;
+}
+
+.tour-card {
+    background: white;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    z-index: 101;
+    text-align: right;
+    pointer-events: auto;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tour-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes tour-pop {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.tour-step-indicator {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.tour-card h3 {
+    font-size: 1.5rem;
+    color: var(--secondary);
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.tour-card p {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.tour-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+    margin-top: 10px;
+}
+
+.tour-btn {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.tour-btn.primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.tour-btn.primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.tour-btn.secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.tour-btn.secondary:hover:not(:disabled) {
+    background: #f1f5f9;
+}
+
+.tour-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tour-close-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.tour-close-btn:hover {
+    color: var(--primary);
+}
+
+.start-tour-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.start-tour-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(99, 102, 241, 0.3);
+}
+
+/* Tooltip arrow for tour steps (optional enrichment) */
+.tour-card::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    transform: rotate(45deg);
+    bottom: -10px;
+    right: 50px;
+    display: none; /* Can be enabled per step if needed */
+}

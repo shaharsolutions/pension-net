@@ -168,40 +168,65 @@ function generateBusinessInsights(orders, thisMonthRev, lastMonthRev, occupancy,
 
 async function loadAnalytics() {
     try {
-        const session = await Auth.getSession();
-        if (!session) {
-            window.location.href = "login.html";
-            return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const isDemo = urlParams.get('demo') === 'true';
+
+        let session = null;
+        if (!isDemo) {
+            session = await Auth.getSession();
+            if (!session) {
+                window.location.href = "login.html";
+                return;
+            }
         }
 
-        const { data: allOrders, error } = await pNetSupabase
-            .from("orders")
-            .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed")
-            .eq("user_id", session.user.id)
-            .eq("status", "מאושר")
-            .order("check_in", { ascending: true });
+        let allOrders = [];
+        if (isDemo) {
+            // Mock data for demo mode
+            allOrders = [
+                { dog_name: "בוני", check_in: "2026-03-01", check_out: "2026-03-05", status: "מאושר", phone: "0501111111", price_per_day: 130, owner_name: "ישראל ישראלי", dog_breed: "גדול" },
+                { dog_name: "לוקה", check_in: "2026-03-02", check_out: "2026-03-10", status: "מאושר", phone: "0502222222", price_per_day: 150, owner_name: "מיכל כהן", dog_breed: "בינוני" },
+                { dog_name: "מקס", check_in: "2026-03-10", check_out: "2026-03-15", status: "מאושר", phone: "0503333333", price_per_day: 130, owner_name: "דוד לוי", dog_breed: "קטן" },
+                { dog_name: "בלה", check_in: "2026-02-15", check_out: "2026-02-20", status: "מאושר", phone: "0504444444", price_per_day: 140, owner_name: "שרה גולד", dog_breed: "גדול" },
+                { dog_name: "צ'ארלי", check_in: "2026-02-10", check_out: "2026-02-18", status: "מאושר", phone: "0505555555", price_per_day: 130, owner_name: "יוסי כהן", dog_breed: "בינוני" }
+            ];
+        } else {
+            const { data, error } = await pNetSupabase
+                .from("orders")
+                .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed, owner_name")
+                .eq("user_id", session.user.id)
+                .eq("status", "מאושר")
+                .order("check_in", { ascending: true });
 
-        if (error) throw error;
+            if (error) throw error;
+            allOrders = data;
+        }
 
 
 
-        // Fetch owner's profile for max_capacity and business_name
-        const { data: profile } = await pNetSupabase
-            .from("profiles")
-            .select("max_capacity, business_name")
-            .eq("user_id", session.user.id)
-            .single();
-        
-        if (profile) {
-            if (profile.business_name) {
-                const headSub = document.getElementById('header-business-name');
-                if (headSub) headSub.textContent = profile.business_name;
-            }
-            if (profile.max_capacity) {
-                PNET_MAX_CAPACITY = profile.max_capacity;
-                const capLabel = document.querySelector(".stat-label");
-                if (capLabel && capLabel.textContent.includes("קיבולת מקסימלית")) {
-                    capLabel.textContent = `קיבולת מקסימלית: ${PNET_MAX_CAPACITY} כלבים`;
+        if (isDemo) {
+            const headSub = document.getElementById('header-business-name');
+            if (headSub) headSub.textContent = "הפנסיון המדגים";
+            PNET_MAX_CAPACITY = 10;
+        } else if (session) {
+            // Fetch owner's profile for max_capacity and business_name
+            const { data: profile } = await pNetSupabase
+                .from("profiles")
+                .select("max_capacity, business_name")
+                .eq("user_id", session.user.id)
+                .single();
+            
+            if (profile) {
+                if (profile.business_name) {
+                    const headSub = document.getElementById('header-business-name');
+                    if (headSub) headSub.textContent = profile.business_name;
+                }
+                if (profile.max_capacity) {
+                    PNET_MAX_CAPACITY = profile.max_capacity;
+                    const capLabel = document.querySelector(".stat-label");
+                    if (capLabel && capLabel.textContent.includes("קיבולת מקסימלית")) {
+                        capLabel.textContent = `קיבולת מקסימלית: ${PNET_MAX_CAPACITY} כלבים`;
+                    }
                 }
             }
         }
