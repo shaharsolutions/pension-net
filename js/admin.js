@@ -4249,13 +4249,21 @@ function renderClientsTable() {
         ${currentPriceDisplay}
       </td>
       <td data-label="עריכה">
-        <button class="header-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; border:none; padding:6px 14px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" 
-                onclick="openEditClientModal('${c.phoneKey}')"
-                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,0.4)'" 
-                onmouseout="this.style.transform='';this.style.boxShadow='0 2px 6px rgba(99,102,241,0.3)'">
-          <i class="fas fa-pen"></i> עריכה
-        </button>
-        ${hasNotes ? '<i class="fas fa-sticky-note" style="color: #f59e0b; margin-right: 6px;" title="יש הערות"></i>' : ''}
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <button class="header-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; border:none; padding:6px 14px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99,102,241,0.3);" 
+                  onclick="openEditClientModal('${c.phoneKey}')"
+                  onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,0.4)'" 
+                  onmouseout="this.style.transform='';this.style.boxShadow='0 2px 6px rgba(99,102,241,0.3)'">
+            <i class="fas fa-pen"></i> עריכה
+          </button>
+          <button class="header-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:6px 14px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);" 
+                  onclick="showDeleteClientConfirm('${c.phoneKey}', '${c.name.replace(/'/g, "\\'")}')"
+                  onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)'" 
+                  onmouseout="this.style.transform='';this.style.boxShadow='0 2px 6px rgba(239, 68, 68, 0.2)'">
+            <i class="fas fa-trash-alt"></i> מחיקה
+          </button>
+          ${hasNotes ? '<div><i class="fas fa-sticky-note" style="color: #f59e0b; margin-right: 6px;" title="יש הערות"></i> יש הערות</div>' : ''}
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -4347,6 +4355,76 @@ async function saveClientData(phoneKey, priceValue, cityValue) {
     console.error('Error saving client data:', err);
     showToast('שגיאה בשמירת נתוני לקוח', 'error');
   }
+}
+
+function showDeleteClientConfirm(phoneKey, clientName) {
+    showConfirm(
+        '<i class="fas fa-trash-alt" style="color: #ef4444;"></i> מחיקת לקוח',
+        `האם אתה בטוח שברצונך למחוק את הלקוח <b>${clientName}</b>?<br><br>פעולה זו תמחק את <b>כל</b> ההזמנות של הלקוח וכל המידע הקשור אליו מהמערכת לצמיתות.`,
+        () => deleteClient(phoneKey)
+    );
+}
+
+async function deleteClient(phoneKey) {
+    const clientObj = (window.processedClients || []).find(c => c.phoneKey === phoneKey);
+    if (!clientObj) {
+        showToast('לקוח לא נמצא', 'error');
+        return;
+    }
+
+    const session = window.currentUserSession;
+    if (!session) {
+        showToast('יש להתחבר תחילה', 'error');
+        return;
+    }
+
+    try {
+        // 1. Delete all orders for this client
+        const { error: ordersError } = await pensionNetSupabase
+            .from('orders')
+            .delete()
+            .eq('phone', clientObj.originalPhone);
+
+        if (ordersError) throw ordersError;
+
+        // 2. Remove from clients_data in profile
+        if (window.clientsData && window.clientsData[phoneKey]) {
+            delete window.clientsData[phoneKey];
+            const { error: profileError } = await pensionNetSupabase
+                .from('profiles')
+                .update({ clients_data: window.clientsData })
+                .eq('user_id', session.user.id);
+            
+            if (profileError) {
+                // Ignore error if it's just missing column (saved to fallback earlier)
+                if (!profileError.code === 'PGRST204') throw profileError;
+            }
+        }
+
+        // Search and delete in fallback as well
+        const fallbackKey = 'pensionNet_clientsData_fallback_' + session.user.id;
+        const localFallback = localStorage.getItem(fallbackKey);
+        if (localFallback) {
+            try {
+                let data = JSON.parse(localFallback);
+                if (data[phoneKey]) {
+                    delete data[phoneKey];
+                    localStorage.setItem(fallbackKey, JSON.stringify(data));
+                }
+            } catch(e) {}
+        }
+
+        showToast(`הלקוח ${clientObj.name} נמחק בהצלחה`, 'success');
+        
+        // Audit log
+        createAuditLog('DELETE', `מחיקת לקוח לצמיתות: ${clientObj.name} (${clientObj.originalPhone})`, null);
+        
+        // Refresh
+        loadData();
+    } catch (err) {
+        console.error('Error deleting client:', err);
+        showToast('שגיאה במחיקת הלקוח', 'error');
+    }
 }
 
 // --- Edit Client Modal ---
