@@ -1834,6 +1834,55 @@ nav.scrolled {
     pointer-events: auto;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     animation: tour-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: move;
+    user-select: none;
+}
+
+.tour-card.minimized {
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 20px;
+    left: 20px !important;
+    top: auto !important;
+    transform: none !important;
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-card.minimized::after {
+    display: none;
+}
+
+.tour-card.minimized .tour-step-indicator,
+.tour-card.minimized h3,
+.tour-card.minimized p,
+.tour-card.minimized .tour-actions,
+.tour-card.minimized .tour-close-btn {
+    display: none;
+}
+
+.tour-card .restore-icon {
+    display: none;
+    font-size: 1.5rem;
+}
+
+.tour-card.minimized .restore-icon {
+    display: block;
+    animation: tour-wobble 2s infinite;
+}
+
+@keyframes tour-wobble {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
 }
 
 @keyframes tour-pop {
@@ -1956,4 +2005,81 @@ nav.scrolled {
     bottom: -10px;
     right: 50px;
     display: none; /* Can be enabled per step if needed */
+}
+
+/* ==============================
+   Mobile Demo Warning
+   ============================== */
+.mobile-warning-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: none; /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    border-radius: 0 0 10px 10px;
+}
+
+.warning-card {
+    background: white;
+    padding: 35px 25px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 340px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    animation: tour-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.warning-card i {
+    font-size: 3.5rem;
+    color: #6366f1;
+    margin-bottom: 20px;
+    display: block;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.warning-card h3 {
+    color: #1e293b;
+    margin-bottom: 12px;
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.warning-card p {
+    color: #64748b;
+    font-size: 1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.warning-btn {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
+}
+
+.warning-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4);
+    filter: brightness(1.1);
+}
+
+.warning-btn:active {
+    transform: translateY(-1px);
 }

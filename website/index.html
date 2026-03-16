@@ -399,6 +399,16 @@
                 <div class="mockup-content" style="padding: 0; height: 600px; display: flex; flex-direction: column; position: relative;">
                     <iframe src="../admin.html?demo=true" style="width: 100%; height: 100%; border: none; border-radius: 0 0 10px 10px;" loading="lazy" title="הדגמה אינטראקטיבית של מערכת פנסיון-נט"></iframe>
                     
+                    <!-- Mobile Warning Overlay -->
+                    <div id="mobile-demo-warning" class="mobile-warning-overlay">
+                        <div class="warning-card">
+                            <i class="fas fa-desktop"></i>
+                            <h3>חוויית המערכת אופטימלית במחשב</h3>
+                            <p>דף ההדגמה אינו מותאם באופן מלא למובייל. לחוויה מקצועית ומלאה, אנו ממליצים לגלוש מהמחשב.</p>
+                            <button onclick="dismissMobileWarning()" class="warning-btn">המשך בכל זאת</button>
+                        </div>
+                    </div>
+
                     <!-- System Tour Overlay -->
                     <div id="demo-tour-overlay" class="tour-overlay">
                         <div id="tour-spotlight" class="tour-spotlight"></div>
@@ -410,7 +420,10 @@
                                 <button id="tour-next-btn" class="tour-btn primary">הבא</button>
                                 <button id="tour-prev-btn" class="tour-btn secondary" disabled>הקודם</button>
                             </div>
-                            <button class="tour-close-btn" onclick="closeTour()" aria-label="סגור סיור">&times;</button>
+                            <button class="tour-close-btn" onclick="minimizeTour(event)" aria-label="מזער סיור">&times;</button>
+                            <div class="restore-icon" onclick="restoreTour(event)">
+                                <i class="fas fa-magic"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -612,8 +625,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2026 פנסיון-נט. כל הזכויות שמורות.</p>
-            <p style="margin-top: 15px; font-size: 0.85rem; color: #475569; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <p style="margin: 0; font-size: 0.85rem; color: #475569; display: flex; align-items: center; justify-content: center; gap: 5px;">
                 <span>מבית</span>
                 <a href="https://shaharsolutions.github.io/shahardigitalsolutions/" target="_blank" style="color: #4f46e5; text-decoration: none; font-weight: 700; border-bottom: 1.5px solid rgba(79, 70, 229, 0.4); padding-bottom: 2px; transition: all 0.3s ease;">שחר פתרונות דיגיטליים</a>
             </p>
@@ -867,6 +879,12 @@
     ];
 
     function startTour() {
+        // Show mobile warning if needed
+        if (window.innerWidth < 1024 && !localStorage.getItem('pension_demo_warning_dismissed')) {
+            document.getElementById('mobile-demo-warning').style.display = 'flex';
+            return;
+        }
+
         currentStep = 1;
         tourOverlay.style.display = 'block';
         tourCard.style.display = 'block';
@@ -877,11 +895,37 @@
     function closeTour() {
         tourOverlay.style.display = 'none';
         tourCard.style.display = 'none';
+        tourCard.classList.remove('minimized');
+        tourSpotlight.style.display = 'block';
         // Reset to home demo page
         demoIframe.src = '../admin.html?demo=true';
     }
 
+    function minimizeTour(e) {
+        if (e) e.stopPropagation();
+        tourCard.classList.add('minimized');
+        tourSpotlight.style.display = 'none';
+        tourOverlay.style.pointerEvents = 'none'; // Allow interacting with content while minimized
+    }
+
+    function restoreTour(e) {
+        if (e) e.stopPropagation();
+        tourCard.classList.remove('minimized');
+        tourSpotlight.style.display = 'block';
+        tourOverlay.style.pointerEvents = 'auto';
+        updateTourStep(); // Refresh highlight/position
+    }
+
+    // Toggle minimize/restore when clicking the card itself (only if minimized)
+    tourCard.addEventListener('click', (e) => {
+        if (tourCard.classList.contains('minimized')) {
+            restoreTour(e);
+        }
+    });
+
     async function updateTourStep() {
+        // If minimized, don't auto-update position/spotlight as it's hidden anyway
+        if (tourCard.classList.contains('minimized')) return;
         const step = tourSteps[currentStep - 1];
         if (!step) return;
 
@@ -1051,6 +1095,121 @@
             closeTour();
         }
     });
+
+    // ==============================
+    // Draggable Tour Card Logic
+    // ==============================
+    let isDragging = false;
+    let dragStartX, dragStartY, initialCardX, initialCardY;
+
+    tourCard.addEventListener('mousedown', (e) => {
+        // Don't drag if clicking buttons, links or inputs
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        
+        isDragging = true;
+        tourCard.style.transition = 'none'; // Disable transition for smooth dragging
+        
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        const rect = tourCard.getBoundingClientRect();
+        // Use offsetLeft/Top relative to the parent (overlay)
+        initialCardX = tourCard.offsetLeft;
+        initialCardY = tourCard.offsetTop;
+        
+        tourCard.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent text selection
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        let newLeft = initialCardX + dx;
+        let newTop = initialCardY + dy;
+        
+        // Add boundaries to prevent escaping
+        const overlayWidth = tourOverlay.offsetWidth;
+        const overlayHeight = tourOverlay.offsetHeight;
+        const cardWidth = tourCard.offsetWidth;
+        const cardHeight = tourCard.offsetHeight;
+        
+        // Constrain to overlay area
+        newLeft = Math.max(0, Math.min(newLeft, overlayWidth - cardWidth));
+        newTop = Math.max(0, Math.min(newTop, overlayHeight - cardHeight));
+        
+        tourCard.style.left = newLeft + 'px';
+        tourCard.style.top = newTop + 'px';
+        tourCard.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            tourCard.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            tourCard.style.cursor = 'move';
+        }
+    });
+
+    // Handle touch events for mobile draggability
+    tourCard.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        
+        isDragging = true;
+        tourCard.style.transition = 'none';
+        
+        const touch = e.touches[0];
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        
+        initialCardX = tourCard.offsetLeft;
+        initialCardY = tourCard.offsetTop;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragStartX;
+        const dy = touch.clientY - dragStartY;
+        
+        let newLeft = initialCardX + dx;
+        let newTop = initialCardY + dy;
+        
+        // Boundaries for touch as well
+        const overlayWidth = tourOverlay.offsetWidth;
+        const overlayHeight = tourOverlay.offsetHeight;
+        const cardWidth = tourCard.offsetWidth;
+        const cardHeight = tourCard.offsetHeight;
+        
+        newLeft = Math.max(0, Math.min(newLeft, overlayWidth - cardWidth));
+        newTop = Math.max(0, Math.min(newTop, overlayHeight - cardHeight));
+        
+        tourCard.style.left = newLeft + 'px';
+        tourCard.style.top = newTop + 'px';
+        tourCard.style.transform = 'none';
+        
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        tourCard.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    });
+
+    // ==============================
+    // Mobile Warning Logic
+    // ==============================
+    function dismissMobileWarning() {
+        document.getElementById('mobile-demo-warning').style.display = 'none';
+        localStorage.setItem('pension_demo_warning_dismissed', 'true');
+        // If it was called during tour start, actually start the tour now
+        startTour();
+    }
+    // Make global for onclick
+    window.dismissMobileWarning = dismissMobileWarning;
     </script>
 </body>
 </html>
