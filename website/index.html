@@ -831,7 +831,20 @@
             content: "לוח שנה חודשי שמראה תפוסה מלאה של כל הכלבים. תוכלו לראות מתי אתם בתפוסה מלאה ומתי יש מקום פנוי.",
             selector: '#monthlyCalendarContainer',
             url: '../admin.html?demo=true',
-            tab: 'ongoing'
+            tab: 'ongoing',
+            preAction: (win) => {
+                if (win.currentView === 'dogs') win.toggleCalendarView(win.document.getElementById('toggleCalendarViewBtn'));
+            }
+        },
+        {
+            title: "כלבים שכרגע בפנסיון",
+            content: "כאן תוכלו לראות במבט מהיר את כל הכלבים שנמצאים כרגע בפנסיון, בחלוקה לפי גדלים. הדרך הכי קלה לדעת מי נמצא אצלכם בכל רגע נתון.",
+            selector: '#currentDogsColumnView',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing',
+            preAction: (win) => {
+                if (win.currentView !== 'dogs') win.toggleCalendarView(win.document.getElementById('toggleCalendarViewBtn'));
+            }
         },
         {
             title: "הזמנות עתידיות",
@@ -983,6 +996,15 @@
             // Switch tab if needed
             if (step.tab && demoIframe.contentWindow.switchTab) {
                 demoIframe.contentWindow.switchTab(step.tab);
+            }
+
+            // Run preAction if defined
+            if (step.preAction && demoIframe.contentWindow) {
+                try {
+                    step.preAction(demoIframe.contentWindow);
+                } catch (err) {
+                    console.warn("Tour preAction failed:", err);
+                }
             }
 
             // Spotlight handling
