@@ -247,6 +247,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     
     document.getElementById("mainContent").style.display = "block";
+    switchCalendarView(window.currentView);
     await loadSettings(); // Load profile settings & plan first
     loadData(); // Then load data (which will use the resolved plan)
 
@@ -349,7 +350,7 @@ window.pastOrdersRawData = [];
 // --- לוגיקת לוח שנה חדשה ---
 window.currentCalendarDate = new Date();
 window.allOrdersCache = []; // שמירת הנתונים המלאים
-window.currentView = "calendar"; // 'calendar' או 'dogs'
+window.currentView = localStorage.getItem('pensionet_calendar_view') || "calendar"; // 'calendar' או 'dogs' או 'weekly'
 
 function calculateDays(checkIn, checkOut) {
   if (!checkIn || !checkOut) return 0;
@@ -1173,6 +1174,136 @@ async function renderMonthlyCalendar(allOrders) {
   calendarGrid.innerHTML = calendarHTML;
 }
 
+async function renderWeeklyCalendar(allOrders) {
+  const calendarGrid = document.getElementById("monthlyCalendarGrid");
+  const date = new Date(window.currentCalendarDate);
+  
+  const weekStart = new Date(date);
+  weekStart.setDate(date.getDate() - date.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  const { orderToTrack, numTracks, monthOrders } = assignDogTracks(allOrders, weekStart, weekEnd);
+
+  const todayStr = new Date().toDateString();
+  const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+  const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+  let calendarHTML = '<table class="calendar-table weekly-view"><thead><tr>';
+  dayLabels.forEach((day, idx) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + idx);
+    calendarHTML += `<th>${day} (${d.getDate()}/${d.getMonth() + 1})</th>`;
+  });
+  calendarHTML += "</tr></thead><tbody><tr>";
+
+    for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(weekStart);
+        currentDate.setDate(weekStart.getDate() + i);
+        currentDate.setHours(0,0,0,0);
+        
+        const dayHolidays = await getJewishHolidays(currentDate.getFullYear(), currentDate.getMonth());
+        const holidayKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+        const holidayHebrew = dayHolidays[holidayKey];
+
+        const dogsToday = monthOrders.filter(ord => {
+          const start = new Date(ord.check_in + 'T00:00:00');
+          const end = new Date(ord.check_out + 'T00:00:00');
+          return currentDate >= start && currentDate <= end;
+        });
+
+        let classes = "calendar-day";
+        if (currentDate.toDateString() === todayStr) classes += " today";
+        if (dogsToday.length > 0) classes += " busy";
+
+        let dogsContentHTML = "";
+        for (let trackIdx = 0; trackIdx < numTracks; trackIdx++) {
+          const dogInTrack = dogsToday.find(d => orderToTrack[d.id] === trackIdx);
+          if (dogInTrack) {
+            const stayStart = new Date(dogInTrack.check_in + 'T00:00:00');
+            const stayEnd = new Date(dogInTrack.check_out + 'T00:00:00');
+
+            const isStartOfStay = stayStart.getTime() === currentDate.getTime();
+            const isEndOfStay = stayEnd.getTime() === currentDate.getTime();
+            
+            const isSunday = currentDate.getDay() === 0;
+            const isSaturday = currentDate.getDay() === 6;
+
+            const canBridgeLeft = !isEndOfStay && !isSaturday;
+            const canBridgeRight = !isStartOfStay && !isSunday;
+
+            let trackClasses = ["dog-label-unified"];
+            if (canBridgeLeft) trackClasses.push("bridge-left");
+            if (canBridgeRight) trackClasses.push("bridge-right");
+            
+            if (isStartOfStay) trackClasses.push("round-right");
+            if (isEndOfStay) trackClasses.push("round-left");
+            if (isStartOfStay && isEndOfStay) trackClasses.push("single-day");
+
+            const trackColors = [
+                { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' }, 
+                { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' }, 
+                { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' }, 
+                { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' }, 
+                { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' }, 
+                { bg: '#fae8ff', border: '#f5d0fe', text: '#86198f' }, 
+                { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' }, 
+                { bg: '#ecfeff', border: '#a5f3fc', text: '#083344' }
+            ];
+            const trackColor = trackColors[trackIdx % trackColors.length];
+
+            const reverseClass = i === 6 ? " reverse-tooltip" : "";
+            dogsContentHTML += `
+              <div class="${trackClasses.join(" ")}${reverseClass}" 
+                   data-order-id="${dogInTrack.id}"
+                   style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important; height: 32px; font-size: 11px; margin-bottom: 2px;">
+                  <div class="dog-label-name" style="line-height: 24px;">${dogInTrack.dog_name} (${dogInTrack.owner_name})</div>
+              </div>
+            `;
+          } else {
+            dogsContentHTML += `<div class="dog-label-spacer" style="height: 32px; margin-bottom: 2px; visibility: hidden;"></div>`;
+          }
+        }
+
+        let customEventsHTML = '';
+        if (window.pensionCustomEvents) {
+            window.pensionCustomEvents.forEach(ev => {
+               let eStart = new Date(ev.start_date); eStart.setHours(0,0,0,0);
+               let eEnd = new Date(ev.end_date); eEnd.setHours(23,59,59,999);
+               if (currentDate >= eStart && currentDate <= eEnd) {
+                   customEventsHTML += `<div class="holiday-label custom-evt" style="font-size: 11px; color: #fff; background: ${ev.color || '#60a5fa'}; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; cursor: pointer;" onclick="promptDeleteCustomEvent('${ev.id}')">${ev.title}</div>`;
+               }
+            });
+        }
+
+        calendarHTML += `<td class="${classes}" style="min-height: 300px;">
+              <div class="calendar-cell-header" style="height: 100px !important; margin-bottom: 10px; border-bottom: 1px dashed #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                <div class="day-number" style="font-size: 22px; margin-bottom: 4px;">${currentDate.getDate()}</div>
+                ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
+                ${customEventsHTML}
+                <div style="margin-top: auto; text-align: center; font-size: 0.9em; font-weight: bold; color: #555; padding-bottom: 2px;">
+                  ${dogsToday.length > 0 ? `${dogsToday.length} כלבים` : ''}
+                </div>
+              </div>
+              <div class="day-content" style="padding: 0;">${dogsContentHTML}</div>
+          </td>`;
+    }
+
+
+  calendarHTML += "</tr></tbody></table>";
+  calendarGrid.innerHTML = calendarHTML;
+  
+  const viewTitle = document.getElementById("viewTitle");
+  if (viewTitle) {
+    const options = { day: 'numeric', month: 'long' };
+    viewTitle.textContent = `תצוגה שבועית: ${weekStart.toLocaleDateString('he-IL', options)} - ${weekEnd.toLocaleDateString('he-IL', options)}`;
+  }
+}
+
+
 function renderCurrentDogsColumnView(allOrders) {
   const dogsView = document.getElementById("currentDogsColumnView");
   const title = document.getElementById("viewTitle");
@@ -1228,13 +1359,25 @@ function renderCurrentDogsColumnView(allOrders) {
 }
 
 function changeMonth(delta) {
-  if (window.currentView !== "calendar") return;
+  if (window.currentView === "calendar") {
+    window.currentCalendarDate.setMonth(
+      window.currentCalendarDate.getMonth() + delta
+    );
+  } else if (window.currentView === "weekly") {
+    window.currentCalendarDate.setDate(
+      window.currentCalendarDate.getDate() + (delta * 7)
+    );
+  } else {
+    // Navigate by day for 'dogs' view? Usually better to just skip
+    return;
+  }
 
-  window.currentCalendarDate.setMonth(
-    window.currentCalendarDate.getMonth() + delta
-  );
   if (window.allOrdersCache.length > 0) {
-    renderMonthlyCalendar(window.allOrdersCache);
+    if (window.currentView === "weekly") {
+      renderWeeklyCalendar(window.allOrdersCache);
+    } else {
+      renderMonthlyCalendar(window.allOrdersCache);
+    }
   } else {
     loadData();
   }
@@ -1251,7 +1394,11 @@ function jumpToDate() {
     window.currentCalendarDate = new Date(year, month, 1);
     
     if (window.allOrdersCache.length > 0) {
-        renderMonthlyCalendar(window.allOrdersCache);
+        if (window.currentView === "weekly") {
+            renderWeeklyCalendar(window.allOrdersCache);
+        } else {
+            renderMonthlyCalendar(window.allOrdersCache);
+        }
     } else {
         loadData();
     }
@@ -1271,38 +1418,53 @@ function toggleCalendarCollapse(button) {
   }
 }
 
-function toggleCalendarView(button) {
-  const calendarView = document.getElementById("calendarViewContent");
+function switchCalendarView(newView) {
+  const calendarContent = document.getElementById("calendarViewContent");
+  const monthlyGrid = document.getElementById("monthlyCalendarGrid");
   const dogsView = document.getElementById("currentDogsColumnView");
   const title = document.getElementById("viewTitle");
-  const collapseBtn = document.getElementById(
-    "toggleCalendarCollapseBtn"
-  );
+  const collapseBtn = document.getElementById("toggleCalendarCollapseBtn");
+  const monthHeader = document.getElementById("calendarHeader");
 
-  if (window.currentView === "calendar") {
-    calendarView.style.display = "none";
-    dogsView.style.display = "flex";
-    title.textContent = "כלבים בפנסיון היום";
-    button.innerHTML = '<i class="fas fa-calendar-alt"></i> הצג לוח שנה';
-    collapseBtn.style.display = "none";
-    window.currentView = "dogs";
-    renderCurrentDogsColumnView(window.allOrdersCache);
-  } else {
-    dogsView.style.display = "none";
-    calendarView.style.display = "block";
+  // Reset all buttons
+  document.querySelectorAll('.view-switch-btn').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(`viewBtn-${newView}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  window.currentView = newView;
+  localStorage.setItem('pensionet_calendar_view', newView);
+
+  // Defaults
+  calendarContent.style.display = "block";
+  dogsView.style.display = "none";
+  collapseBtn.style.display = "block";
+  monthHeader.style.display = "block";
+
+  const prevBtn = document.getElementById("prevMonth");
+  const nextBtn = document.getElementById("nextMonth");
+
+  if (newView === "calendar") {
     title.textContent = "לוח זמנים חודשי (נוכחות כלבים)";
-    button.innerHTML = 'הצג כלבים שכרגע בפנסיון <i class="fas fa-paw"></i>';
-    collapseBtn.style.display = "block";
-    window.currentView = "calendar";
+    if (prevBtn) prevBtn.innerHTML = "&lt; חודש קודם";
+    if (nextBtn) nextBtn.innerHTML = "חודש הבא &gt;";
     renderMonthlyCalendar(window.allOrdersCache);
-
-    if (calendarView.classList.contains("collapsed")) {
-      collapseBtn.innerHTML = 'פתח <i class="fas fa-chevron-down"></i>';
-    } else {
-      collapseBtn.innerHTML = 'כווץ <i class="fas fa-chevron-up"></i>';
-    }
+  } else if (newView === "weekly") {
+    if (prevBtn) prevBtn.innerHTML = "&lt; שבוע קודם";
+    if (nextBtn) nextBtn.innerHTML = "שבוע הבא &gt;";
+    renderWeeklyCalendar(window.allOrdersCache);
+  } else if (newView === "dogs") {
+    calendarContent.style.display = "none";
+    dogsView.style.display = "flex";
+    collapseBtn.style.display = "none";
+    renderCurrentDogsColumnView(window.allOrdersCache);
   }
 }
+
+// Keep old function for compatibility during transition
+window.toggleCalendarView = function(btn) {
+    if (window.currentView === "calendar") switchCalendarView("dogs");
+    else switchCalendarView("calendar");
+};
 
 function updatePriceWithButtons(input, delta) {
   const currentValue = parseInt(input.value) || 0;
@@ -1313,10 +1475,12 @@ function updatePriceWithButtons(input, delta) {
   const daysInput = row.querySelector(".days-input");
   const tooltip = row.querySelector(".tooltip");
 
-  if (tooltip && daysInput) {
+  if (daysInput) {
     const days = parseInt(daysInput.value) || 0;
     const total = newValue * days;
-    tooltip.textContent = `עלות שהייה: ${total}₪`;
+    if (tooltip) tooltip.textContent = `עלות שהייה: ${formatNumber(total)}₪`;
+    const totalLabel = row.querySelector(".total-price-display");
+    if (totalLabel) totalLabel.textContent = `סה"כ: ${formatNumber(total)}₪`;
   }
 }
 
@@ -1331,10 +1495,12 @@ function updateDaysWithButtons(input, delta) {
   const priceInput = row.querySelector(".price-input");
   const tooltip = row.querySelector(".tooltip");
 
-  if (tooltip && priceInput) {
+  if (priceInput) {
     const price = parseInt(priceInput.value) || 0;
     const total = newValue * price;
-    tooltip.textContent = `עלות שהייה: ${total}₪`;
+    if (tooltip) tooltip.textContent = `עלות שהייה: ${formatNumber(total)}₪`;
+    const totalLabel = row.querySelector(".total-price-display");
+    if (totalLabel) totalLabel.textContent = `סה"כ: ${formatNumber(total)}₪`;
   }
 }
 
@@ -1448,7 +1614,8 @@ function renderPastOrdersTable() {
           }" value="${pricePerDay}" min="0" step="10" />
         </div>
       </div>
-      <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
+      <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
+      <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
     </td>
     <td data-label="ימים">
       <div class="days-wrapper">
@@ -1515,17 +1682,16 @@ function renderPastOrdersTable() {
         const priceInput = row.querySelector(".price-input");
         const daysInput = row.querySelector(".days-input");
         const priceCell = row.querySelector(".price-cell");
-        const tooltip = priceCell
-          ? priceCell.querySelector(".tooltip")
-          : null;
+        const tooltip = priceCell ? priceCell.querySelector(".tooltip") : null;
+        const totalLabel = row.querySelector(".total-price-display");
 
-        if (tooltip) {
-          const price = parseInt(priceInput.value) || 0;
-          const days = parseInt(daysInput.value) || 0;
-          const total = price * days;
+        const price = parseInt(priceInput.value) || 0;
+        const days = parseInt(daysInput.value) || 0;
+        const total = price * days;
 
-          tooltip.textContent = `עלות שהייה: ${total}₪`;
-        }
+        const text = `עלות שהייה: ${formatNumber(total)}₪`;
+        if (tooltip) tooltip.textContent = text;
+        if (totalLabel) totalLabel.textContent = `סה"כ: ${formatNumber(total)}₪`;
       });
     });
 
@@ -1763,7 +1929,13 @@ async function loadData() {
     // Process clients for clients tab
     processClientsData();
     
-    renderMonthlyCalendar(demoData);
+    if (window.currentView === "calendar") {
+      renderMonthlyCalendar(demoData);
+    } else if (window.currentView === "weekly") {
+      renderWeeklyCalendar(demoData);
+    } else {
+      renderCurrentDogsColumnView(demoData);
+    }
     
     // Enforce read-only UI
     document.body.classList.add('demo-read-only');
@@ -1791,6 +1963,8 @@ async function loadData() {
 
     if (window.currentView === "calendar") {
       renderMonthlyCalendar(window.allOrdersCache);
+    } else if (window.currentView === "weekly") {
+      renderWeeklyCalendar(window.allOrdersCache);
     } else {
       renderCurrentDogsColumnView(window.allOrdersCache);
     }
@@ -1963,7 +2137,8 @@ function renderFutureOrdersTable() {
             }" value="${pricePerDay}" min="0" step="10" />
           </div>
         </div>
-        <div class="tooltip">עלות שהייה: ${totalPrice}₪</div>
+        <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
+        <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
       </td>
       <td data-label="ימים">
         <div class="days-wrapper">
@@ -2021,17 +2196,16 @@ function renderFutureOrdersTable() {
           const priceInput = row.querySelector(".price-input");
           const daysInput = row.querySelector(".days-input");
           const priceCell = row.querySelector(".price-cell");
-          const tooltip = priceCell
-            ? priceCell.querySelector(".tooltip")
-            : null;
+          const tooltip = priceCell ? priceCell.querySelector(".tooltip") : null;
+          const totalLabel = row.querySelector(".total-price-display");
 
-          if (tooltip) {
-            const price = parseInt(priceInput.value) || 0;
-            const days = parseInt(daysInput.value) || 0;
-            const total = price * days;
+          const price = parseInt(priceInput.value) || 0;
+          const days = parseInt(daysInput.value) || 0;
+          const total = price * days;
 
-            tooltip.textContent = `עלות שהייה: ${total}₪`;
-          }
+          const text = `עלות שהייה: ${formatNumber(total)}₪`;
+          if (tooltip) tooltip.textContent = text;
+          if (totalLabel) totalLabel.textContent = `סה"כ: ${formatNumber(total)}₪`;
         });
       });
 

@@ -192,15 +192,12 @@
         <div id="monthlyCalendarContainer" class="container" data-feature="calendar_view">
           <div class="container-header-row">
             <h3 id="viewTitle">לוח זמנים חודשי (נוכחות כלבים)</h3>
-            <div id="calendarViewControls">
-              <button
-                id="toggleCalendarViewBtn"
-                class="calendar-toggle-btn"
-                onclick="toggleCalendarView(this)"
-                data-feature="occupancy_view"
-              >
-                הצג כלבים שכרגע בפנסיון <i class="fas fa-paw"></i>
-              </button>
+            <div id="calendarViewControls" style="display: flex; gap: 12px; align-items: center;">
+              <div class="view-switch-group" style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; gap: 4px;">
+                <button id="viewBtn-calendar" class="view-switch-btn active" onclick="switchCalendarView('calendar')">חודשי</button>
+                <button id="viewBtn-weekly" class="view-switch-btn" onclick="switchCalendarView('weekly')">שבועי</button>
+                <button id="viewBtn-dogs" class="view-switch-btn" onclick="switchCalendarView('dogs')" data-feature="occupancy_view">נוכחות היום</button>
+              </div>
               <button
                 id="toggleCalendarCollapseBtn"
                 class="calendar-toggle-btn"

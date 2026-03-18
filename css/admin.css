@@ -388,6 +388,38 @@ header h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* --- View Switch Group Styles --- */
+.view-switch-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.23s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-switch-btn.active {
+  background: white;
+  color: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
+}
+
+.view-switch-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.6);
+  color: #1e293b;
+}
+
+.view-switch-btn i {
+  font-size: 13px;
+}
+
 /* --- לוגיקת כיווץ לוח השנה --- */
 #calendarViewContent.collapsed #calendarHeader,
 #calendarViewContent.collapsed #monthlyCalendarGrid {

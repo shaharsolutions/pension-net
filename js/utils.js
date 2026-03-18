@@ -50,6 +50,10 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+function formatNumber(num) {
+  return new Intl.NumberFormat('he-IL').format(num);
+}
+
 // --- Phone Utils ---
 
 function cleanPhoneNumber(phone) {
