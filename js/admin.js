@@ -1655,7 +1655,7 @@ function renderPastOrdersTable() {
     <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
       ${formatOrderNotes(row.notes)}
     </td>
-    <td data-label="מחיר" class="price-cell">
+    <td data-label="מחיר" class="price-cell" style="vertical-align: top;">
       <div class="price-wrapper">
         <div class="price-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
           <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
@@ -1670,7 +1670,7 @@ function renderPastOrdersTable() {
       <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
       <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
     </td>
-    <td data-label="ימים">
+    <td data-label="ימים" style="vertical-align: top;">
       <div class="days-wrapper">
         <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
           <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
@@ -2195,7 +2195,7 @@ function renderFutureOrdersTable() {
       <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
         ${formatOrderNotes(row.notes)}
       </td>
-      <td data-label="מחיר" class="price-cell">
+      <td data-label="מחיר" class="price-cell" style="vertical-align: top;">
         <div class="price-wrapper">
           <div class="price-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
             <button class="price-btn" ${detailsDisabled} onclick="updatePriceWithButtons(this.closest('.price-wrapper').querySelector('.price-input'), 10)">▲</button>
@@ -2210,7 +2210,7 @@ function renderFutureOrdersTable() {
         <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
         <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
       </td>
-      <td data-label="ימים">
+      <td data-label="ימים" style="vertical-align: top;">
         <div class="days-wrapper">
           <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
             <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
