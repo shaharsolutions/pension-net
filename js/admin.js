@@ -2032,7 +2032,7 @@ async function loadData() {
   try {
     const { data, error } = await pensionNetSupabase
       .from("orders")
-      .select("id, dog_name, owner_name, check_in, check_out, status, created_at, phone, price_per_day, is_arrived, is_departed, admin_note, dog_photo, dog_breed, dog_age, neutered")
+      .select("id, dog_name, owner_name, check_in, check_out, status, created_at, phone, price_per_day, is_arrived, is_departed, admin_note, dog_photo, dog_breed, dog_age, neutered, is_seen")
       .eq("user_id", session.user.id) // חיפוש רק של המשתמש הנוכחי
       .order("check_out", { ascending: true });
 
@@ -2088,6 +2088,9 @@ async function loadData() {
     renderPastOrdersTable();
     processClientsData();
 
+    // Check for unseen new orders
+    checkAndShowNewOrders();
+
     document
       .querySelectorAll("textarea.admin-note")
       .forEach((textarea) => {
@@ -2102,6 +2105,241 @@ async function loadData() {
   } catch (error) {
     console.error("Error loading data:", error);
     showToast("שגיאה בטעינת הנתונים", 'error');
+  }
+}
+
+// ==========================================
+// --- New / Unseen Orders Feature ---
+// ==========================================
+
+window._newOrdersModalShownThisSession = false;
+
+function getUnseenOrders() {
+  if (!window.allOrdersCache) return [];
+  return window.allOrdersCache.filter(o => o.is_seen === false);
+}
+
+function updateNewOrdersBadge() {
+  const unseenOrders = getUnseenOrders();
+  const badge = document.getElementById('newOrdersBadge');
+  const bellBtn = document.getElementById('newOrdersBellBtn');
+  
+  if (!badge || !bellBtn) return;
+  
+  if (unseenOrders.length > 0) {
+    badge.textContent = unseenOrders.length;
+    bellBtn.style.display = 'inline-flex';
+    // Add animation pulse
+    bellBtn.classList.add('bell-animate');
+    setTimeout(() => bellBtn.classList.remove('bell-animate'), 1000);
+  } else {
+    bellBtn.style.display = 'none';
+  }
+}
+
+function checkAndShowNewOrders() {
+  updateNewOrdersBadge();
+  
+  const unseenOrders = getUnseenOrders();
+  if (unseenOrders.length === 0) return;
+  
+  // Only auto-show modal once per page load session
+  if (window._newOrdersModalShownThisSession) return;
+  window._newOrdersModalShownThisSession = true;
+  
+  // Slight delay so the page finishes rendering first
+  setTimeout(() => showNewOrdersModal(), 800);
+}
+
+function showNewOrdersModal() {
+  const unseenOrders = getUnseenOrders();
+  if (unseenOrders.length === 0) {
+    showToast('אין הזמנות חדשות שלא נצפו 👍', 'info');
+    return;
+  }
+  
+  const listContainer = document.getElementById('newOrdersList');
+  if (!listContainer) return;
+  
+  // Sort by created_at descending (newest first)
+  const sorted = [...unseenOrders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  
+  listContainer.innerHTML = sorted.map(order => {
+    const checkIn = formatDateSimple(order.check_in);
+    const checkOut = formatDateSimple(order.check_out);
+    const createdAt = formatDateTimeShort(order.created_at);
+    const days = calculateDays(order.check_in, order.check_out);
+    
+    const statusClass = order.status === 'מאושר' ? 'status-approved' :
+                        order.status === 'בוטל' ? 'status-cancelled' : 'status-pending';
+    const statusLabel = order.status || 'ממתין';
+    
+    const dogPhotoHTML = order.dog_photo 
+      ? `<img src="${order.dog_photo}" alt="${order.dog_name}" class="new-order-dog-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div class="new-order-dog-icon" style="display: none;"><i class="fas fa-paw"></i></div>`
+      : `<div class="new-order-dog-icon"><i class="fas fa-paw"></i></div>`;
+    
+    return `
+      <div class="new-order-card" data-order-id="${order.id}">
+        <div class="new-order-card-right">
+          ${dogPhotoHTML}
+        </div>
+        <div class="new-order-card-center">
+          <div class="new-order-card-title">
+            <strong>${order.dog_name || 'לא צוין'}</strong>
+            <span class="new-order-status ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="new-order-card-details">
+            <span><i class="fas fa-user"></i> ${order.owner_name || 'לא צוין'}</span>
+            <span><i class="fas fa-calendar-alt"></i> ${checkIn} → ${checkOut} (${days} ימים)</span>
+            <span class="new-order-created"><i class="fas fa-clock"></i> הוזמן: ${createdAt}</span>
+          </div>
+        </div>
+        <div class="new-order-card-actions">
+          <button type="button" class="new-order-view-btn" onclick="scrollToOrder('${order.id}')" title="צפייה בפרטים">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  document.getElementById('newOrdersModal').style.display = 'flex';
+}
+
+function formatDateSimple(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+function formatDateTimeShort(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function markOrderAsSeen(orderId, btnElement) {
+  const finalId = /^\d+$/.test(orderId) ? parseInt(orderId, 10) : orderId;
+  
+  try {
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ is_seen: true })
+      .eq('id', finalId);
+    
+    if (error) throw error;
+    
+    // Update local cache
+    const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+    if (order) order.is_seen = true;
+    
+    // Animate and remove card
+    const card = btnElement?.closest('.new-order-card');
+    if (card) {
+      card.style.transition = 'all 0.4s ease';
+      card.style.transform = 'translateX(100%)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        card.remove();
+        // Just Toast, don't auto-close modal
+        const remainingCards = document.querySelectorAll('#newOrdersList .new-order-card');
+        if (remainingCards.length === 0) {
+          showToast('כל ההזמנות סומנו כנקראו ✓', 'success');
+        }
+      }, 400);
+    }
+    
+    updateNewOrdersBadge();
+    
+  } catch (err) {
+    console.error('Error marking order as seen:', err);
+    showToast('שגיאה בעדכון ההזמנה', 'error');
+  }
+}
+
+async function markAllOrdersAsSeen() {
+  const unseenOrders = getUnseenOrders();
+  if (unseenOrders.length === 0) return;
+  
+  const btn = document.querySelector('.new-orders-mark-all-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מעדכן...';
+  }
+  
+  try {
+    const ids = unseenOrders.map(o => o.id);
+    
+    const { error } = await pensionNetSupabase
+      .from('orders')
+      .update({ is_seen: true })
+      .in('id', ids);
+    
+    if (error) throw error;
+    
+    // Update local cache
+    unseenOrders.forEach(o => o.is_seen = true);
+    
+    // Clear the list UI
+    const listContainer = document.getElementById('newOrdersList');
+    if (listContainer) listContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #64748b;">אין הזמנות חדשות שלא נצפו 👍</div>';
+    
+    updateNewOrdersBadge();
+    showToast(`${ids.length} הזמנות סומנו כנקראו ✓`, 'success');
+    
+  } catch (err) {
+    console.error('Error marking all orders as seen:', err);
+    showToast('שגיאה בעדכון ההזמנות', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check-double"></i> סמן הכל כנקרא';
+    }
+  }
+}
+
+function closeNewOrdersModal() {
+  const modal = document.getElementById('newOrdersModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function scrollToOrder(orderId) {
+  // 1. Mark as seen first (UI will update badge)
+  const card = document.querySelector(`.new-order-card[data-order-id="${orderId}"]`);
+  const viewBtn = card ? card.querySelector('.new-order-view-btn') : null;
+  
+  // We mark it as seen - this will also trigger the removal animation of the card
+  markOrderAsSeen(orderId, viewBtn);
+  
+  // 2. Find row in future table (most new orders are future)
+  let row = document.querySelector(`#futureOrdersTable tr[data-id="${orderId}"]`);
+  let targetTab = 'ongoing';
+  
+  if (!row) {
+    // Check history table
+    row = document.querySelector(`#pastOrdersTable tr[data-id="${orderId}"]`);
+    targetTab = 'history';
+  }
+  
+  if (row) {
+    // 3. Switch tab if needed
+    if (typeof switchTab === 'function') switchTab(targetTab);
+    
+    // 4. Scroll and highlight
+    setTimeout(() => {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('highlight-order-row');
+      setTimeout(() => row.classList.remove('highlight-order-row'), 3000);
+    }, 100);
+  } else {
+    showToast('ההזמנה סומנה כנקראה, אך לא נמצאה בטבלה הנוכחית (נסה לרענן)', 'info');
   }
 }
 
@@ -3260,6 +3498,10 @@ window.onclick = function(event) {
   const modal = document.getElementById('notesModal');
   if (event.target == modal) {
     closeNotesModal();
+  }
+  const newOrdersModal = document.getElementById('newOrdersModal');
+  if (event.target == newOrdersModal) {
+    closeNewOrdersModal();
   }
 }
 
