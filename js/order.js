@@ -891,8 +891,7 @@ async function submitForm() {
     notes: (formData.notes ? formData.notes + '\n\n' : '') + '✅ הלקוח/ה אישר/ה תנאי שימוש',
     user_id: PENSION_OWNER_ID,
     price_per_day: priceToSave,
-    dog_photo: photoUrl,
-    is_seen: false
+    dog_photo: photoUrl
   };
   
   const client = getSupabase();

@@ -123,10 +123,6 @@
     <div id="mainContent">
       <header>
         <div class="header-actions">
-          <button class="header-btn new-orders-bell" type="button" id="newOrdersBellBtn" onclick="showNewOrdersModal()" title="הזמנות חדשות" style="display: none; position: relative;">
-            <i class="fas fa-bell" style="color: #f59e0b;"></i>
-            <span id="newOrdersBadge" class="new-orders-badge">0</span>
-          </button>
           <button class="header-btn" type="button" onclick="checkForAnnouncements(true)" title="מה חדש במערכת?">
             <i class="fas fa-bullhorn" style="color: #f59e0b;"></i> מה חדש?
           </button>
@@ -563,40 +559,6 @@
               <a href="https://shaharsolutions.github.io/shahardigitalsolutions/" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 700; border-bottom: 1.5px solid rgba(99, 102, 241, 0.4); padding-bottom: 2px; transition: all 0.3s ease;">שחר פתרונות דיגיטליים</a>
           </p>
       </footer>
-    </div>
-
-    <!-- New Orders Modal -->
-    <div id="newOrdersModal" class="modal" style="z-index: 25000;">
-      <div class="modal-content new-orders-modal-content">
-        <!-- Header -->
-        <div class="new-orders-modal-header">
-          <button class="new-orders-close-x" onclick="closeNewOrdersModal()">
-            <i class="fas fa-times"></i>
-          </button>
-          <div class="new-orders-header-icon">
-            <i class="fas fa-bell"></i>
-          </div>
-          <h2>🔔 יש לך הזמנות חדשות!</h2>
-          <p>ההזמנות הבאות נכנסו למערכת ועדיין לא נצפו</p>
-        </div>
-
-        <!-- Body -->
-        <div class="new-orders-modal-body">
-          <div id="newOrdersList" class="new-orders-list">
-            <!-- Orders will be populated by JS -->
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="new-orders-modal-footer">
-          <button type="button" class="new-orders-mark-all-btn" onclick="markAllOrdersAsSeen()">
-            <i class="fas fa-check-double"></i> סמן הכל כנקרא
-          </button>
-          <button type="button" class="new-orders-close-btn" onclick="closeNewOrdersModal()">
-            סגור
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Notes Modal -->

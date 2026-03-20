@@ -182,11 +182,11 @@
             <span>פנסיון-נט</span>
         </a>
         <ul class="nav-links">
-            <li><a href="#problem">הבעיה</a></li>
-            <li><a href="#solution">הפתרון</a></li>
-            <li><a href="#features">יתרונות</a></li>
-            <li><a href="#trust">המלצות</a></li>
-            <li><a href="#contact">הצטרפות</a></li>
+            <li><a href="#features">פיצ'רים</a></li>
+            <li><a href="#how-it-works">איך זה עובד</a></li>
+            <li><a href="../pensions.html">חיפוש פנסיון</a></li>
+            <li><a href="#demo">הדגמה</a></li>
+            <li><a href="#contact">השאירו פרטים</a></li>
         </ul>
         <a href="../login.html" class="cta-btn">כניסת מנהל</a>
     </nav>
@@ -194,207 +194,372 @@
     <main id="main-content">
     <!-- Hero Section -->
     <header class="hero">
+        <!-- Animated Background Particles -->
         <div class="hero-particles">
             <div class="particle" style="--x: 10%; --y: 20%; --delay: 0s; --size: 6px;"></div>
             <div class="particle" style="--x: 80%; --y: 10%; --delay: 1s; --size: 4px;"></div>
             <div class="particle" style="--x: 50%; --y: 70%; --delay: 2s; --size: 8px;"></div>
             <div class="particle" style="--x: 20%; --y: 80%; --delay: 3s; --size: 5px;"></div>
+            <div class="particle" style="--x: 90%; --y: 60%; --delay: 0.5s; --size: 7px;"></div>
+            <div class="particle" style="--x: 70%; --y: 30%; --delay: 1.5s; --size: 3px;"></div>
+            <div class="particle" style="--x: 35%; --y: 50%; --delay: 2.5s; --size: 6px;"></div>
+            <div class="particle" style="--x: 60%; --y: 90%; --delay: 4s; --size: 4px;"></div>
         </div>
 
         <div class="hero-content">
             <div class="hero-badge reveal">
-                <i class="fas fa-exclamation-circle"></i>
-                מפסיקים לנהל פנסיון בבלאגן
+                <i class="fas fa-rocket"></i>
+                מנהלים את הפנסיון בדיגיטל בגרסת פיילוט
             </div>
-            <h1 class="reveal">מנהלים את הפנסיון בוואטסאפ ובדפים? <span>הגיע הזמן לעשות סדר.</span></h1>
-            <p class="reveal">פנסיון-נט מרכזת עבורכם את כל ההזמנות, הלקוחות והתשלומים במקום אחד חכם – כדי שתפסיקו לרדוף אחרי הודעות ותתחילו להרוויח יותר.</p>
+            <h1 class="reveal">מרכזים את כל ההזמנות במקום אחד ומתחילים <span>לנהל את הפנסיון </span>כמו מקצוענים</h1>
+            <!-- Secondary keyword reinforcement for SEO (visually hidden) -->
+            <p class="sr-only">פנסיון-נט – תוכנת ניהול פנסיון כלבים מתקדמת: לוח הזמנות דיגיטלי, ניהול לקוחות, סנכרון צוות עובדים, דוחות הכנסות ותפוסה.</p>
+            <p class="reveal">פנסיון-נט מרכזת עבורכם את כל ההזמנות, הלקוחות והמשימות במקום אחד חכם, כדי שתוכלו ליהנות מסדר מושלם ולהשקיע את הזמן שלכם במה שחשוב באמת, הכלבים.</p>
             <div class="hero-buttons reveal">
-                <a href="#contact" class="cta-btn pulse-btn">הצטרפו לפיילוט בחינם</a>
+                <a href="#features" class="cta-btn pulse-btn" title="קרא עוד על הפיצ'רים של פנסיון-נט">גלו עוד</a>
+                <a href="../presentation.html" class="cta-btn cta-outline" target="_blank" title="צפה במצגת העסקית של פנסיון-נט"><i class="fas fa-play-circle"></i> המצגת העסקית</a>
+                <a href="../login.html" class="cta-btn" style="background: var(--primary); color: white;" title="כניסה למערכת הניהול">נסו עכשיו</a>
             </div>
         </div>
         <div class="hero-image">
-            <img src="images/mockups/booking_board.png" alt="לוח הזמנות חכם" id="heroImg" class="reveal-left" width="600" fetchpriority="high">
+            <img src="images/hero.png" alt="לוח בקרה של מערכת פנסיון-נט לניהול פנסיון כלבים – הזמנות, תפוסה והכנסות" id="heroImg" class="reveal-left" width="600" height="400" fetchpriority="high">
+            <div class="floating-card card-1">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-check-circle" style="color: var(--accent); font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">הזמנה אושרה</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">בוני (גדול)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="floating-card card-2">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-calendar-alt" style="color: var(--primary); font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">8 כלבים היום</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">תפוסה: 85%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="floating-card card-3">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-shekel-sign" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                    <div>
+                        <div style="font-weight: 700;">₪2,400</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">הכנסות החודש</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>גלול מטה</span>
         </div>
     </header>
 
-    <!-- Problem Section -->
-    <section class="problem-section" id="problem">
-        <div class="section-header reveal">
-            <div class="section-tag">המצב הקיים</div>
-            <h2>נמאס לכם מהבלאגן הקבוע?</h2>
-            <p>אנחנו יודעים כמה קשה לנהל פנסיון כשהכל קורה בו זמנית.</p>
-        </div>
-        <div class="problem-grid">
-            <div class="problem-card reveal">
-                <i class="fab fa-whatsapp"></i>
-                <h3>עשרות הודעות בוואטסאפ</h3>
-                <p>הזמנות שהולכות לאיבוד בין אינספור הודעות ושיחות טלפון.</p>
+    <!-- Stats Counter Section -->
+    <section class="stats-section" aria-label="נתונים על המערכת">
+        <div class="stats-grid">
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="100" data-suffix="%">0</div>
+                <div class="stat-label">ניהול דיגיטלי מלא</div>
+                <div class="stat-icon"><i class="fas fa-mobile-alt"></i></div>
             </div>
-            <div class="problem-card reveal">
-                <i class="fas fa-book"></i>
-                <h3>רישומים ידניים ודפים</h3>
-                <p>מחברות מלאות במידע שקשה למצוא כשבאמת צריך אותו (אוכל, תרופות).</p>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="0" data-suffix="₪">0</div>
+                <div class="stat-label">עלות למצטרפי הפיילוט</div>
+                <div class="stat-icon"><i class="fas fa-tags"></i></div>
             </div>
-            <div class="problem-card reveal">
-                <i class="fas fa-frown"></i>
-                <h3>טעויות וביטולים</h3>
-                <p>הזמנות כפולות, לקוחות ששוכחים להגיע ואיבוד הכנסות יקרות.</p>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="5" data-suffix=" דק'">0</div>
+                <div class="stat-label">זמן הגדרה מהיר</div>
+                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
             </div>
-            <div class="problem-card reveal">
-                <i class="fas fa-bed"></i>
-                <h3>חוסר שקט בלילה</h3>
-                <p>התחושה התמידית שמשהו התפספס או נשכח בתוך הלחץ.</p>
+            <div class="stat-item reveal">
+                <div class="stat-number" data-target="1" data-suffix=" על 1">0</div>
+                <div class="stat-label">ליווי ומענה אישי</div>
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
             </div>
         </div>
     </section>
 
-    <!-- Solution Section -->
-    <section class="section" id="solution">
+    <!-- Features Section -->
+    <section id="features" class="section" aria-labelledby="features-heading">
         <div class="section-header reveal">
-            <div class="section-tag">הפתרון שלנו</div>
-            <h2>פנסיון-נט עושה לכם סדר מהיום הראשון</h2>
-            <p>כל מה שאתם צריכים כדי לנהל פנסיון מצליח, בפשטות ובלי צורך בידע טכני.</p>
-        </div>
-        
-        <div class="visuals-grid">
-            <div class="visual-item reveal">
-                <div class="visual-img-wrapper">
-                    <img src="images/mockups/booking_board.png" alt="לוח הזמנות">
-                </div>
-                <div class="visual-content">
-                    <h3>לוח הזמנות חכם</h3>
-                    <p>כל ההזמנות מול העיניים, בצורה ברורה וצבעונית. תפוסה מלאה במינימום מאמץ.</p>
-                </div>
-            </div>
-            <div class="visual-item reveal">
-                <div class="visual-img-wrapper">
-                    <img src="images/mockups/dog_card.png" alt="כרטיס כלב">
-                </div>
-                <div class="visual-content">
-                    <h3>כרטיס כלב ולקוח</h3>
-                    <p>כל המידע החשוב - אוכל, תרופות והסטוריה - במרחק נגיעה. הכל מתועד ומסודר.</p>
-                </div>
-            </div>
-            <div class="visual-item reveal">
-                <div class="visual-img-wrapper">
-                    <img src="images/mockups/add_ons.png" alt="תוספות לשירות">
-                </div>
-                <div class="visual-content">
-                    <h3>הוספת תוספות והגדלת רווח</h3>
-                    <p>מגדילים הכנסות בקלות עם מכירת שירותים נוספים (מקלחת, טיול, אילוף) ישירות בהזמנה.</p>
-                </div>
-            </div>
-            <div class="visual-item reveal">
-                <div class="visual-img-wrapper">
-                    <img src="images/mockups/photo_update.png" alt="עדכון תמונה">
-                </div>
-                <div class="visual-content">
-                    <h3>עדכון מהיר ללקוח</h3>
-                    <p>שולחים ללקוח תמונה או סרטון שמרגיע אותו ומשדר מקצועיות יוצאת דופן.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Benefits Section -->
-    <section class="section" id="features">
-        <div class="section-header reveal">
-            <div class="section-tag">יתרונות עסקיים</div>
-            <h2>מה יוצא לכם מזה?</h2>
-            <p>אנחנו לא מוכרים פיצ'רים, אנחנו מוכרים תוצאות לעסק שלכם.</p>
+            <div class="section-tag">פיצ'רים</div>
+            <h2 id="features-heading">עוברים לניהול מקצועי ומסודר</h2>
+            <p>בנינו את התוכנה שתעזור לכם לרכז את כל המידע במערכת אחת חכמה, מקצועית וקלה לתפעול.</p>
         </div>
         
         <div class="features-grid">
-            <div class="feature-card reveal">
-                <div class="feature-icon"><i class="fas fa-heart"></i></div>
-                <h3>שקט נפשי</h3>
-                <p>כל המידע שמור ומאובטח. לא מפספסים אף הזמנה ולא דואגים שמשהו ילך לאיבוד.</p>
+            <div class="feature-card stagger-reveal" data-delay="0">
+                <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+                <h3>עוברים לניהול דיגיטלי חכם</h3>
+                <p>לוח שנה צבעוני וברור שמציג לכם את כל מה שקורה בפנסיון בצורה ויזואלית, נעימה וקלה לתפעול.</p>
             </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon" style="background: #10b981;"><i class="fas fa-clock"></i></div>
-                <h3>חיסכון אדיר בזמן</h3>
-                <p>פחות שיחות טלפון, פחות הודעות בוואטסאפ, ויותר זמן פנוי לטפל בכלבים (או לעצמכם).</p>
+            
+
+            
+            <div class="feature-card stagger-reveal" data-delay="2">
+                <div class="feature-icon" style="background: #10b981;"><i class="fas fa-clipboard-list"></i></div>
+                <h3>סנכרון מלא לצוות</h3>
+                <p>לא עוד קבוצות וואטסאפ רועשות עם מאות הודעות. תיעוד שוטף של כל מה שקורה בפנסיון הכולל אוכל תרופות והתנהגות כשהכל מסודר ביומן.</p>
             </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon" style="background: #f59e0b;"><i class="fas fa-star"></i></div>
-                <h3>חוויית שירות יוקרתית</h3>
-                <p>לקוחות מרוצים שחוזרים וממליצים בזכות עדכונים מקצועיים וסדר מופתי.</p>
+
+            <div class="feature-card stagger-reveal" data-delay="3">
+                <div class="feature-icon" style="background: #ef4444;"><i class="fas fa-chart-line"></i></div>
+                <h3>דוחות ותובנות</h3>
+                <p>נתחו את צמיחת העסק שלכם עם דוחות גרפיים מפורטים על הכנסות ותפוסה לאורך זמן.</p>
             </div>
-            <div class="feature-card reveal">
-                <div class="feature-icon" style="background: #6366f1;"><i class="fas fa-chart-line"></i></div>
-                <h3>שליטה מלאה בכסף</h3>
-                <p>מעקב אחרי תשלומים, מקדמות ורווחים בכל רגע. אתם יודעים בדיוק כמה אתם מרוויחים.</p>
+
+            <div class="feature-card stagger-reveal" data-delay="4">
+                <div class="feature-icon" style="background: #8b5cf6;"><i class="fas fa-users-cog"></i></div>
+                <h3>ניהול צוות עובדים</h3>
+                <p>הרשאות מנוהלות, מעקב אחרי מי ביצע כל פעולה וסנכרון מלא בין חברי הצוות.</p>
+            </div>
+
+            <div class="feature-card stagger-reveal" data-delay="5">
+                <div class="feature-icon" style="background: #06b6d4;"><i class="fas fa-mobile-alt"></i></div>
+                <h3>הלקוחות ממלאים, אתם מאשרים</h3>
+                <p>במקום לרדוף אחרי לקוחות בוואטסאפ, שלחו להם קישור אישי ומקצועי למילוי פרטי ההזמנה והכלב ישירות מהסמארטפון.</p>
             </div>
         </div>
     </section>
 
-    <!-- Customer Updates Highlight -->
-    <section class="section" style="background: #eef2ff;">
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section how-it-works-section" aria-labelledby="how-it-works-heading">
         <div class="section-header reveal">
-            <div class="section-tag">היתרון הייחודי</div>
-            <h2>הלקוחות שלכם רגועים יותר</h2>
-            <p>שירות כזה עושה את ההבדל בין פנסיון "בסדר" לפנסיון מוביל.</p>
+            <div class="section-tag">איך זה עובד</div>
+            <h2 id="how-it-works-heading">איך זה עובד? 3 צעדים פשוטים להתחלה</h2>
+            <p>תוך דקות ספורות, הפנסיון שלכם עובר לניהול דיגיטלי חכם ומקצועי.</p>
         </div>
-        <div style="max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 50px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 300px;" class="reveal">
-                <h3 style="font-size: 2rem; margin-bottom: 20px;">נראים מקצוענים בכל עדכון</h3>
-                <p style="font-size: 1.2rem; color: var(--text-muted); line-height: 1.8;">בעלי כלבים מרגישים חרדה כשהם משאירים את הכלב. עם פנסיון-נט המערכת מאפשרת לכם לשלוח עדכונים חיים עם תמונות וסרטונים מהיום של הכלב בקלות. זה מה שגורם להם לבטוח בכם ולחזור שוב ושוב.</p>
+
+        <div class="timeline">
+            <div class="timeline-line">
+                <div class="timeline-line-fill" id="timelineFill"></div>
             </div>
-            <div style="flex: 1; min-width: 300px;" class="reveal-left">
-                <img src="images/mockups/photo_update.png" alt="חווית לקוח רגועה" style="width: 100%; border-radius: 30px; box-shadow: var(--shadow-lg);">
+
+            <div class="timeline-item reveal-right">
+                <div class="timeline-number">1</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>הרשמו בחינם</h3>
+                    <p>צרו חשבון חדש תוך שניות ספורות. לא נדרש כרטיס אשראי, רק כתובת אימייל.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item reveal-left">
+                <div class="timeline-number">2</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-cogs"></i></div>
+                    <h3>הגדירו את הפנסיון</h3>
+                    <p>הוסיפו את פרטי העסק, קבעו קיבולת, בנו את צוות העובדים שלכם ותתחילו לקבל הזמנות.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item reveal-right">
+                <div class="timeline-number">3</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon"><i class="fas fa-rocket"></i></div>
+                    <h3>נהלו הכל ממקום אחד</h3>
+                    <p>צפו בלוח הבקרה, נהלו הזמנות, קבלו תשלומים ועקבו אחרי הצמיחה שלכם.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Business Profit Section -->
-    <section class="section">
-        <div class="section-header reveal">
-            <div class="section-tag">רווחיות</div>
-            <h2>המערכת שעובדת בשביל להגדיל לכם את הרווחים</h2>
-            <p>כי בסוף, אתם מנהלים עסק וחשוב שהוא ירוויח יותר.</p>
+    <!-- Dashboard Mockup Section -->
+    <section id="demo" class="mockup-section" aria-labelledby="demo-heading">
+        <div class="reveal">
+            <div class="section-tag" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);">הדגמה</div>
+            <h2 id="demo-heading" style="font-size: 2.5rem; margin-bottom: 20px;">מעוצב לחוויית עבודה מושלמת</h2>
+            <p style="opacity: 0.7; max-width: 700px; margin: 0 auto 50px;">הממשק שלנו נקי, מינימליסטי ומהיר, כדי שתוכלו לעשות יותר בפחות זמן.</p>
+            <button class="start-tour-btn" id="startTourBtn" onclick="startTour()">
+                <i class="fas fa-magic"></i>
+                התחל סיור במערכת
+            </button>
         </div>
-        <div class="features-grid">
-            <div class="feature-card reveal">
-                <h3>מגדילים כל הזמנה</h3>
-                <p>הוספת תוספות (מקלחת, טיול, אילוף) בלחיצת כפתור מעלה את הרווח הממוצע מכל לקוח.</p>
+        
+        <div class="mockup-container scale-reveal">
+            <div class="mockup-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+                <div style="margin-right: 20px; font-size: 0.8rem; opacity: 0.5;">app.pensionet.co.il</div>
             </div>
-            <div class="feature-card reveal">
-                <h3>נפרדים מהביטולים</h3>
-                <p>תזכורות אוטומטיות ללקוחות מוודאות שהם יגיעו בזמן, וחוסכות לכם הפסד כספי של "נו שואו".</p>
-            </div>
-            <div class="feature-card reveal">
-                <h3>מקסימום תפוסה</h3>
-                <p>לוח שנה חכם שמראה לכם בדיוק איפה אפשר להכניס עוד הזמנה ולנצל את המקום עד הסוף.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Trust Section -->
-    <section class="trust-section" id="trust">
-        <div class="section-header reveal">
-            <div class="section-tag">אמון</div>
-            <h2>פנסיונים מובילים כבר עוברים לדיגיטל</h2>
-            <p>הצטרפו לקהילה של בעלי פנסיונים שבחרו להתקדם לשנת 2026.</p>
-        </div>
-        <div class="testimonials-grid">
-            <div class="testimonial-card reveal">
-                <p>"בעבר הייתי מבלה שעות בניהול וואטסאפ ושיחות. היום הכל בתוך המערכת ויש לי סופסוף שקט לעשות את מה שאני אוהבת - לטפל בכלבים."</p>
-                <div class="testimonial-author">
-                    <div class="author-img">מב</div>
-                    <div class="author-info">
-                        <h4>מיכל בן דור</h4>
-                        <p>בעלת פנסיון "הבית של בלה"</p>
+            <div class="mockup-body">
+                <div class="mockup-content" style="padding: 0; height: 600px; display: flex; flex-direction: column; position: relative;">
+                    <iframe src="../admin.html?demo=true" style="width: 100%; height: 100%; border: none; border-radius: 0 0 10px 10px;" loading="lazy" title="הדגמה אינטראקטיבית של מערכת פנסיון-נט"></iframe>
+                    
+                    <!-- Mobile Warning Overlay -->
+                    <div id="mobile-demo-warning" class="mobile-warning-overlay">
+                        <div class="warning-card">
+                            <i class="fas fa-desktop"></i>
+                            <h3>חוויית המערכת אופטימלית במחשב</h3>
+                            <p>דף ההדגמה אינו מותאם באופן מלא למובייל. לחוויה מקצועית ומלאה, אנו ממליצים לגלוש מהמחשב.</p>
+                            <button onclick="dismissMobileWarning()" class="warning-btn">המשך בכל זאת</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="testimonial-card reveal">
-                <p>"המערכת הכי פשוטה שיצא לי לעבוד איתה. לא צריך להיות טכנולוגי כדי להבין איך הכל עובד. תוך 5 דקות כבר הכל היה מוכן."</p>
-                <div class="testimonial-author">
-                    <div class="author-img">אג</div>
-                    <div class="author-info">
-                        <h4>אבי גולן</h4>
-                        <p>מנהל פנסיון "הכפר של ג'ו"</p>
+        </div>
+
+        <!-- System Tour Overlay (Moved outside to cover entire section) -->
+        <div id="demo-tour-overlay" class="tour-overlay">
+            <div id="tour-spotlight" class="tour-spotlight"></div>
+            <div class="tour-card" id="tour-step-card" style="display: none;">
+                <div class="tour-step-indicator">שלב <span id="current-step-num">1</span> מתוך 9</div>
+                <h3 id="tour-step-title">ברוכים הבאים לדף ההדגמה!</h3>
+                <p id="tour-step-content">כאן תוכלו להתנסות במערכת לניהול פנסיון כלבים בזמן אמת. בואו נצא לסיור קצר בין הפיצ'רים המובילים שלנו.</p>
+                <div class="tour-actions">
+                    <button id="tour-next-btn" class="tour-btn primary">הבא</button>
+                    <button id="tour-prev-btn" class="tour-btn secondary" disabled>הקודם</button>
+                </div>
+                <button class="tour-close-btn" onclick="minimizeTour(event)" aria-label="מזער סיור">&times;</button>
+                <div class="restore-icon" onclick="restoreTour(event)">
+                    <i class="fas fa-magic"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join the Pilot? -->
+    <section id="pilot-program" class="section pilot-section" aria-labelledby="pilot-heading">
+        <div class="section-header reveal">
+            <div class="section-tag">תוכנית הפיילוט</div>
+            <h2 id="pilot-heading">למה להצטרף אלינו עכשיו?</h2>
+            <p>אנחנו בונים את המערכת יחד איתכם. הצטרפות לפיילוט היא הזדמנות לקבל פתרון שמותאם בדיוק לצרכים שלכם.</p>
+        </div>
+
+        <div class="pilot-benefits-grid">
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-magic"></i></div>
+                <h3>השפעה על הפיתוח</h3>
+                <p>הפיצ'רים שחשובים לכם נכנסים לסדרי העדיפויות שלנו. אתם אלו שמכתיבים איך המערכת תיראה.</p>
+            </div>
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                <h3>ליווי אישי צמוד</h3>
+                <p>אנחנו כאן כדי לוודא שהמעבר לדיגיטל עובר חלק. הדרכה אישית ומענה מהיר לכל שאלה.</p>
+            </div>
+
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-sync-alt"></i></div>
+                <h3>שיפור ועדכון מתמיד</h3>
+                <p>המערכת מתפתחת מדי יום. אנחנו משחררים עדכונים ושיפורים במהירות כדי להבטיח לכם את חוויית הניהול הטובה ביותר.</p>
+            </div>
+
+            <div class="pilot-benefit-card reveal">
+                <div class="benefit-icon"><i class="fas fa-search-location"></i></div>
+                <h3>חשיפה ללקוחות חדשים</h3>
+                <p>כל פנסיון שמצטרף למערכת מקבל דף עסקי ונוסף אוטומטית למאגר הפנסיונים הארצי שלנו, מה שמאפשר לבעלי כלבים למצוא אתכם בקלות.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section id="contact" class="section contact-section" aria-labelledby="contact-heading">
+        <div class="section-header reveal">
+            <div class="section-tag">השאירו פרטים</div>
+            <h2 id="contact-heading">רוצים לשמוע עוד? דברו איתנו</h2>
+            <p>מלאו את הטופס ונחזור אליכם בהקדם עם כל המידע שתצטרכו להתחיל.</p>
+        </div>
+
+        <div class="contact-form-wrapper reveal">
+            <div class="contact-form-card">
+                <div class="form-decoration">
+                    <div class="form-deco-circle"></div>
+                    <div class="form-deco-circle small"></div>
+                </div>
+                
+                <div class="form-icon-header">
+                    <div class="form-main-icon">
+                        <i class="fas fa-paw"></i>
                     </div>
+                    <h3>טופס השארת פרטים</h3>
+                    <p>נשמח לספר לכם עוד על המערכת</p>
+                </div>
+
+                <form id="leadForm" novalidate>
+                    <div class="form-group">
+                        <label for="leadFullName">
+                            <i class="fas fa-user"></i>
+                            שם מלא
+                        </label>
+                        <input type="text" id="leadFullName" name="full_name" placeholder="הזינו את שמכם המלא" required autocomplete="name">
+                        <span class="field-error" id="errorFullName"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="leadEmail">
+                                <i class="fas fa-envelope"></i>
+                                אימייל
+                            </label>
+                            <input type="email" id="leadEmail" name="email" placeholder="your@email.com" required dir="ltr" autocomplete="email">
+                            <span class="field-error" id="errorEmail"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="leadPhone">
+                                <i class="fas fa-phone-alt"></i>
+                                טלפון
+                            </label>
+                            <input type="tel" id="leadPhone" name="phone" placeholder="050-0000000" required dir="ltr" autocomplete="tel">
+                            <span class="field-error" id="errorPhone"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="leadPensionSize">
+                            <i class="fas fa-dog"></i>
+                            גודל הפנסיון
+                        </label>
+                        <select id="leadPensionSize" name="pension_size" required>
+                            <option value="" disabled selected>בחרו את גודל הפנסיון שלכם</option>
+                            <option value="small">קטן (עד 10 כלבים)</option>
+                            <option value="medium">בינוני (10-30 כלבים)</option>
+                            <option value="large">גדול (30+ כלבים)</option>
+                        </select>
+                        <span class="field-error" id="errorPensionSize"></span>
+                    </div>
+
+                    <button type="submit" class="form-submit-btn" id="leadSubmitBtn">
+                        <span class="btn-text">שלחו פרטים</span>
+                        <span class="btn-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> שולח...
+                        </span>
+                        <span class="btn-success" style="display: none;">
+                            <i class="fas fa-check"></i> נשלח בהצלחה!
+                        </span>
+                    </button>
+                </form>
+
+                <div class="form-footer-note">
+                    <i class="fas fa-lock"></i>
+                    הפרטים שלכם מאובטחים ולא יועברו לצד שלישי
+                </div>
+            </div>
+
+            <div class="contact-info-side">
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-comments"></i></div>
+                    <h4>ליווי אישי</h4>
+                    <p>נחזור אליכם תוך 24 שעות לשיחת היכרות קצרה.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-gift"></i></div>
+                    <h4>ללא עלות</h4>
+                    <p>הצטרפות לפיילוט היא בחינם לחלוטין. ללא התחייבות וללא כרטיס אשראי.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h4>פרטיות מוגנת</h4>
+                    <p>הפרטים שלכם מאובטחים ומשמשים אותנו ליצירת קשר בלבד.</p>
                 </div>
             </div>
         </div>
@@ -408,11 +573,11 @@
                 <div class="shape shape-2"></div>
                 <div class="shape shape-3"></div>
             </div>
-            <h2>מוכנים לעשות סדר בבלאגן?</h2>
+            <h2 id="cta-heading">מוכנים לעשות סדר בבלאגן?</h2>
             <p>הצטרפו לנבחרת הפיילוט שלנו ותתחילו לנהל את הפנסיון בדיוק כמו שחלמתם.</p>
             <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px;">
-                <a href="#contact" class="cta-btn pulse-btn" style="font-size: 1.25rem; padding: 18px 55px;">הצטרפו לפיילוט בחינם</a>
-                <a href="tel:052-8366744" class="cta-btn cta-outline" style="background: white;"><i class="fas fa-phone-alt"></i> דברו איתנו ליעוץ</a>
+                <a href="../login.html" class="cta-btn pulse-btn" style="font-size: 1.25rem; padding: 18px 55px;" title="הצטרף לפיילוט פנסיון-נט בחינם">התחילו עכשיו בחינם</a>
+                <a href="tel:052-8366744" class="cta-btn cta-outline" style="font-size: 1.25rem; padding: 18px 40px; background: white;" title="התקשר לייעוץ אישי"><i class="fas fa-phone-alt"></i> דברו איתנו</a>
             </div>
         </div>
     </section>
@@ -627,6 +792,535 @@
         });
     })();
     </script>
+    <script>
+    // ==============================
+    // System Tour Logic
+    // ==============================
+    const tourOverlay = document.getElementById('demo-tour-overlay');
+    const tourCard = document.getElementById('tour-step-card');
+    const tourSpotlight = document.getElementById('tour-spotlight');
+    const tourTitle = document.getElementById('tour-step-title');
+    const tourContent = document.getElementById('tour-step-content');
+    const tourStepNum = document.getElementById('current-step-num');
+    const tourNextBtn = document.getElementById('tour-next-btn');
+    const tourPrevBtn = document.getElementById('tour-prev-btn');
+    const demoIframe = document.querySelector('#demo iframe');
 
+    let currentStep = 1;
+    const tourSteps = [
+        {
+            title: "ברוכים הבאים לדף ההדגמה!",
+            content: "כאן תוכלו להתנסות במערכת לניהול פנסיון כלבים בזמן אמת. בואו נצא לסיור קצר בין הפיצ'רים המובילים שלנו.",
+            selector: null,
+            url: '../admin.html?demo=true',
+            tab: 'ongoing'
+        },
+        {
+            title: "ניהול שוטף ותנועות יומיות",
+            content: "כאן רואים את כל הכלבים שנכנסים ויוצאים היום מהפנסיון. זה הכלי המרכזי שיוצר לכם סדר בבוקר!",
+            selector: '.movements-container',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing'
+        },
+        {
+            title: "לוח שנה צבעוני",
+            content: "לוח שנה חודשי שמראה תפוסה מלאה של כל הכלבים. תוכלו לראות מתי אתם בתפוסה מלאה ומתי יש מקום פנוי.",
+            selector: '#monthlyCalendarContainer',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing',
+            preAction: (win) => {
+                // Force calendar view if it was switched to dogs view
+                if (win.currentView !== 'calendar') {
+                    const toggleBtn = win.document.getElementById('toggleCalendarViewBtn');
+                    if (toggleBtn) win.toggleCalendarView(toggleBtn);
+                }
+                // Ensure the calendar is not collapsed
+                const container = win.document.getElementById('monthlyCalendarContainer');
+                if (container && container.classList.contains('collapsed')) {
+                    const collapseBtn = win.document.getElementById('toggleCalendarCollapseBtn');
+                    if (collapseBtn) win.toggleCalendarCollapse(collapseBtn);
+                }
+            }
+        },
+        {
+            title: "כלבים שכרגע בפנסיון",
+            content: "כאן תוכלו לראות במבט מהיר את כל הכלבים שנמצאים כרגע בפנסיון, בחלוקה לפי גדלים. הדרך הכי קלה לדעת מי נמצא אצלכם בכל רגע נתון.",
+            selector: '#currentDogsColumnView',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing',
+            preAction: (win) => {
+                if (win.currentView !== 'dogs') win.toggleCalendarView(win.document.getElementById('toggleCalendarViewBtn'));
+            }
+        },
+        {
+            title: "הזמנות עתידיות",
+            content: "כל ההזמנות שמחכות לכם, עם חיפוש וסינון מהיר לפי סטטוסים.",
+            selector: '#futureOrdersTable',
+            url: '../admin.html?demo=true',
+            tab: 'ongoing',
+            scroll: true
+        },
+        {
+            title: "היסטוריית הזמנות",
+            content: "כאן תוכלו למצוא את כל ההזמנות מהעבר, כולל סיכומי תשלום והערות היסטוריות של הלקוחות.",
+            selector: '#historyTableContainer',
+            url: '../admin.html?demo=true',
+            tab: 'history'
+        },
+        {
+            title: "מאגר לקוחות חכם",
+            content: "כל הנתונים של הלקוחות והכלבים שלהם נשמרים כאן, כולל היסטוריית הערות והעדפות מיוחדות.",
+            selector: '#tab-clients',
+            url: '../admin.html?demo=true',
+            tab: 'clients'
+        },
+        {
+            title: "דוחות וניתוחים",
+            content: "נתחו את הרווחיות, התפוסה והצמיחה שלכם לאורך זמן עם דוחות גרפיים מתקדמים.",
+            selector: '.dashboard-grid',
+            url: '../growth.html?demo=true',
+            tab: null
+        },
+        {
+            title: "יומן פעולות (Audit)",
+            content: "שקיפות מלאה! כאן רואים בדיוק מי מהצוות ביצע כל פעולה במערכת ומתי.",
+            selector: '#tab-audit',
+            url: '../admin.html?demo=true',
+            tab: 'audit'
+        },
+        {
+            title: "הגדרות פנסיון",
+            content: "התאמה אישית של שם הפנסיון, הקיבולת והמחירים שלכם במקום אחד.",
+            selector: '#tab-settings',
+            url: '../admin.html?demo=true',
+            tab: 'settings'
+        }
+    ];
+
+    function startTour() {
+        // Show mobile warning if needed
+        if (window.innerWidth < 1024 && !localStorage.getItem('pension_demo_warning_dismissed')) {
+            document.getElementById('mobile-demo-warning').style.display = 'flex';
+            return;
+        }
+
+        // Reset tour state to start from the beginning
+        currentStep = 1;
+        
+        // Ensure UI is fully reset (in case it was minimized or previously closed)
+        tourCard.classList.remove('minimized');
+        tourSpotlight.style.display = 'block';
+        tourOverlay.style.pointerEvents = 'auto';
+
+        // Reset demo window to initial state (force reload of first step URL)
+        const firstStep = tourSteps[0];
+        demoIframe.src = firstStep.url;
+
+        tourOverlay.style.display = 'block';
+        tourCard.style.display = 'block';
+        
+        updateTourStep();
+        document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeTour() {
+        tourOverlay.style.display = 'none';
+        tourCard.style.display = 'none';
+        tourCard.classList.remove('minimized');
+        tourSpotlight.style.display = 'block';
+        // Reset to home demo page
+        demoIframe.src = '../admin.html?demo=true';
+    }
+
+    function minimizeTour(e) {
+        if (e) e.stopPropagation();
+        tourCard.classList.add('minimized');
+        tourSpotlight.style.display = 'none';
+        tourOverlay.style.pointerEvents = 'none'; // Allow interacting with content while minimized
+    }
+
+    function restoreTour(e) {
+        if (e) e.stopPropagation();
+        tourCard.classList.remove('minimized');
+        tourSpotlight.style.display = 'block';
+        tourOverlay.style.pointerEvents = 'auto';
+        updateTourStep(); // Refresh highlight/position
+    }
+
+    // Toggle minimize/restore when clicking the card itself (only if minimized)
+    tourCard.addEventListener('click', (e) => {
+        if (tourCard.classList.contains('minimized')) {
+            restoreTour(e);
+        }
+    });
+
+    async function updateTourStep() {
+        // If minimized, don't auto-update position/spotlight as it's hidden anyway
+        if (tourCard.classList.contains('minimized')) return;
+        const step = tourSteps[currentStep - 1];
+        if (!step) return;
+
+        console.log(`Tour: Moving to step ${currentStep}`, step);
+
+        // Update Text
+        tourTitle.textContent = step.title;
+        tourContent.textContent = step.content;
+        
+        // Update Step Numbers
+        const totalSteps = tourSteps.length;
+        const indicator = document.querySelector('.tour-step-indicator');
+        if (indicator) {
+            indicator.innerHTML = `שלב <span id="current-step-num">${currentStep}</span> מתוך ${totalSteps}`;
+        }
+        
+        // Navigation buttons state
+        tourPrevBtn.disabled = currentStep === 1;
+        tourNextBtn.textContent = currentStep === totalSteps ? 'סיום' : 'הבא';
+
+        // Check if navigation is needed
+        try {
+            const currentUrl = new URL(demoIframe.contentWindow.location.href);
+            const targetUrl = new URL(step.url, window.location.href);
+
+            // Compare paths (ignoring search/hash for basic routing)
+            if (currentUrl.pathname !== targetUrl.pathname) {
+                demoIframe.src = step.url;
+                demoIframe.onload = () => {
+                    demoIframe.onload = null;
+                    setTimeout(() => applyStepHighlight(step), 400);
+                };
+            } else {
+                applyStepHighlight(step);
+            }
+        } catch (e) {
+            console.warn("Tour navigation check fallback:", e);
+            // Fallback for cross-origin or other errors
+            if (!demoIframe.src.includes(step.url.split('?')[0])) {
+                demoIframe.src = step.url;
+                demoIframe.onload = () => {
+                    demoIframe.onload = null;
+                    setTimeout(() => applyStepHighlight(step), 600);
+                };
+            } else {
+                applyStepHighlight(step);
+            }
+        }
+    }
+
+    function applyStepHighlight(step, retryCount = 0) {
+        try {
+            const iframeDoc = demoIframe.contentDocument || demoIframe.contentWindow.document;
+            
+            // Switch tab if needed
+            if (step.tab && demoIframe.contentWindow.switchTab) {
+                demoIframe.contentWindow.switchTab(step.tab);
+            }
+
+            // Run preAction if defined
+            if (step.preAction && demoIframe.contentWindow) {
+                try {
+                    step.preAction(demoIframe.contentWindow);
+                } catch (err) {
+                    console.warn("Tour preAction failed:", err);
+                }
+            }
+
+            // Spotlight handling
+            if (step.selector) {
+                const el = iframeDoc.querySelector(step.selector);
+                
+                // Retry if element not ready or zero dimension
+                if ((!el || (el.offsetHeight === 0 && el.offsetWidth === 0)) && retryCount < 8) {
+                    setTimeout(() => applyStepHighlight(step, retryCount + 1), 300);
+                    return;
+                }
+
+                if (el && (el.offsetHeight > 0 || el.offsetWidth > 0)) {
+                    // Scroll it into view - use 'start' for large elements to avoid negative top
+                    const scrollAlign = el.offsetHeight > 550 ? 'start' : 'center';
+                    el.scrollIntoView({ behavior: 'smooth', block: scrollAlign });
+                    
+                    // Allow scroll animation to finish before snapping spotlight
+                    setTimeout(() => {
+                        const rect = el.getBoundingClientRect();
+                        const demoSection = document.getElementById('demo');
+                        const demoRect = demoSection.getBoundingClientRect();
+                        const iframeRect = demoIframe.getBoundingClientRect();
+                        
+                        const offsetTop = iframeRect.top - demoRect.top;
+                        const offsetLeft = iframeRect.left - demoRect.left;
+
+                        // Calculate spotlight box with padding
+                        let spotWidth = rect.width + 40;
+                        let spotHeight = rect.height + 40;
+                        let spotTop = rect.top + offsetTop - 20;
+                        let spotLeft = rect.left + offsetLeft - 20;
+
+                        // Clamp spotlight to IFRAME area boundaries (inside #demo section)
+                        // This prevents the spotlight and its purple borders from bleeding outside the browser mockup.
+                        if (spotLeft < offsetLeft) {
+                            spotWidth -= (offsetLeft - spotLeft);
+                            spotLeft = offsetLeft;
+                        }
+                        if (spotLeft + spotWidth > offsetLeft + iframeRect.width) {
+                            spotWidth = offsetLeft + iframeRect.width - spotLeft;
+                        }
+                        if (spotTop < offsetTop) {
+                            spotHeight -= (offsetTop - spotTop);
+                            spotTop = offsetTop;
+                        }
+                        if (spotTop + spotHeight > offsetTop + iframeRect.height) {
+                            spotHeight = offsetTop + iframeRect.height - spotTop;
+                        }
+
+                        // We update the spotlight as long as SOME part of it is in the viewport range (0-600)
+                        if (rect.bottom > 0 && rect.top < 600) {
+                            tourSpotlight.style.opacity = '1';
+                            tourSpotlight.style.width = spotWidth + 'px';
+                            tourSpotlight.style.height = spotHeight + 'px';
+                            tourSpotlight.style.top = spotTop + 'px';
+                            tourSpotlight.style.left = spotLeft + 'px';
+                            tourSpotlight.style.borderWidth = '3px';
+
+                            // Position card beside the spotlight if possible
+                            positionTourCard(rect, offsetTop, offsetLeft);
+                        } else if (retryCount < 5) {
+                            // Elements still moving or off-screen, retry
+                            setTimeout(() => applyStepHighlight(step, retryCount + 1), 200);
+                        }
+                    }, 600);
+                } else {
+                    hideSpotlight();
+                }
+            } else {
+                hideSpotlight();
+            }
+        } catch (e) {
+            console.warn("Tour spotlight error, retrying...", e);
+            if (retryCount < 3) {
+                setTimeout(() => applyStepHighlight(step, retryCount + 1), 500);
+            } else {
+                hideSpotlight();
+            }
+        }
+    }
+
+    function hideSpotlight() {
+        // Full overlay effect (cutout is size 0 at center)
+        tourSpotlight.style.opacity = '1';
+        tourSpotlight.style.width = '0';
+        tourSpotlight.style.height = '0';
+        tourSpotlight.style.top = '50%';
+        tourSpotlight.style.left = '50%';
+        tourSpotlight.style.borderWidth = '0';
+        
+        tourCard.style.top = '50%';
+        tourCard.style.left = '50%';
+        tourCard.style.transform = 'translate(-50%, -50%)';
+        tourCard.style.display = 'block';
+    }
+
+    function positionTourCard(rect, offsetTop, offsetLeft) {
+        // Ensure accurate height (fallback to estimated if necessary)
+        const cardWidth = 400;
+        const cardHeight = tourCard.offsetHeight > 0 ? tourCard.offsetHeight : 250;
+
+        // Parent container dimensions
+        const demoSection = document.getElementById('demo');
+        const demoRect = demoSection.getBoundingClientRect();
+        const demoHeight = demoSection.offsetHeight;
+        const demoWidth = demoSection.offsetWidth;
+
+        // Spotlight absolute positions relative to #demo
+        const sTop = rect.top + offsetTop - 20;
+        const sBottom = rect.bottom + offsetTop + 20;
+        const sLeft = rect.left + offsetLeft - 20;
+        const sRight = rect.right + offsetLeft + 20;
+
+        let top, left;
+
+        // Determine if we should place it BESIDE (preferred)
+        const spaceRight = demoWidth - sRight;
+        const spaceLeft = sLeft;
+
+        if (spaceRight > cardWidth + 30) {
+            // Place to the right
+            left = sRight + 15;
+            top = sTop;
+        } else if (spaceLeft > cardWidth + 30) {
+            // Place to the left
+            left = sLeft - cardWidth - 15;
+            top = sTop;
+        } else {
+            // No space on sides, place ABOVE or BELOW
+            left = (sLeft + (sRight - sLeft) / 2) - cardWidth / 2;
+            
+            // Try below first
+            top = sBottom + 40;
+            if (top + cardHeight > demoHeight - 50) {
+                // Not enough space below, place above
+                top = sTop - cardHeight - 40;
+            }
+        }
+
+        // Viewport clamping: Ensure it's within the currently visible part of #demo
+        const viewportTop = Math.max(0, -demoRect.top);
+        const viewportBottom = -demoRect.top + window.innerHeight;
+
+        // Clamp to current viewport but respect #demo boundaries
+        if (top < viewportTop + 20) top = viewportTop + 20;
+        if (top + cardHeight > viewportBottom - 20) {
+            top = viewportBottom - cardHeight - 20;
+        }
+
+        // Final #demo boundary clamping
+        if (top < 10) top = 10;
+        if (top + cardHeight > demoHeight - 10) top = demoHeight - cardHeight - 10;
+        if (left < 10) left = 10;
+        if (left + cardWidth > demoWidth - 10) left = demoWidth - cardWidth - 10;
+
+        tourCard.style.top = top + 'px';
+        tourCard.style.left = left + 'px';
+        tourCard.style.transform = 'none';
+        tourCard.style.display = 'block';
+    }
+
+    tourNextBtn.addEventListener('click', () => {
+        if (currentStep < tourSteps.length) {
+            currentStep++;
+            updateTourStep();
+        } else {
+            closeTour();
+        }
+    });
+
+    tourPrevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateTourStep();
+        }
+    });
+
+    tourOverlay.addEventListener('click', (e) => {
+        if (e.target === tourOverlay) {
+            closeTour();
+        }
+    });
+
+    // ==============================
+    // Draggable Tour Card Logic
+    // ==============================
+    let isDragging = false;
+    let dragStartX, dragStartY, initialCardX, initialCardY;
+
+    tourCard.addEventListener('mousedown', (e) => {
+        // Don't drag if clicking buttons, links or inputs
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        
+        isDragging = true;
+        tourCard.style.transition = 'none'; // Disable transition for smooth dragging
+        
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        const rect = tourCard.getBoundingClientRect();
+        // Use offsetLeft/Top relative to the parent (overlay)
+        initialCardX = tourCard.offsetLeft;
+        initialCardY = tourCard.offsetTop;
+        
+        tourCard.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent text selection
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        let newLeft = initialCardX + dx;
+        let newTop = initialCardY + dy;
+        
+        // Add boundaries to prevent escaping
+        const overlayWidth = tourOverlay.offsetWidth;
+        const overlayHeight = tourOverlay.offsetHeight;
+        const cardWidth = tourCard.offsetWidth;
+        const cardHeight = tourCard.offsetHeight;
+        
+        // Constrain to overlay area
+        newLeft = Math.max(0, Math.min(newLeft, overlayWidth - cardWidth));
+        newTop = Math.max(0, Math.min(newTop, overlayHeight - cardHeight));
+        
+        tourCard.style.left = newLeft + 'px';
+        tourCard.style.top = newTop + 'px';
+        tourCard.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            tourCard.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            tourCard.style.cursor = 'move';
+        }
+    });
+
+    // Handle touch events for mobile draggability
+    tourCard.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        
+        isDragging = true;
+        tourCard.style.transition = 'none';
+        
+        const touch = e.touches[0];
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        
+        initialCardX = tourCard.offsetLeft;
+        initialCardY = tourCard.offsetTop;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragStartX;
+        const dy = touch.clientY - dragStartY;
+        
+        let newLeft = initialCardX + dx;
+        let newTop = initialCardY + dy;
+        
+        // Boundaries for touch as well
+        const overlayWidth = tourOverlay.offsetWidth;
+        const overlayHeight = tourOverlay.offsetHeight;
+        const cardWidth = tourCard.offsetWidth;
+        const cardHeight = tourCard.offsetHeight;
+        
+        newLeft = Math.max(0, Math.min(newLeft, overlayWidth - cardWidth));
+        newTop = Math.max(0, Math.min(newTop, overlayHeight - cardHeight));
+        
+        tourCard.style.left = newLeft + 'px';
+        tourCard.style.top = newTop + 'px';
+        tourCard.style.transform = 'none';
+        
+        if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        tourCard.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    });
+
+    // ==============================
+    // Mobile Warning Logic
+    // ==============================
+    function dismissMobileWarning() {
+        document.getElementById('mobile-demo-warning').style.display = 'none';
+        localStorage.setItem('pension_demo_warning_dismissed', 'true');
+        // If it was called during tour start, actually start the tour now
+        startTour();
+    }
+    // Make global for onclick
+    window.dismissMobileWarning = dismissMobileWarning;
+    </script>
 </body>
 </html>
