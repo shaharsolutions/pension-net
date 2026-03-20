@@ -379,7 +379,11 @@ function initFlatpickr() {
     onChange: function(selectedDates, dateStr, instance) {
       const row = instance.element.closest("tr");
       if (row) {
-        updateCheckOutFromDays(row);
+        if (instance.element.dataset.field === "check_in") {
+          updateCheckOutFromDays(row);
+        } else if (instance.element.dataset.field === "check_out") {
+          updateDaysFromDates(row);
+        }
         // Refresh day name display if exists
         const displayDiv = instance.element.nextElementSibling;
         if (displayDiv && selectedDates.length > 0) {
@@ -427,6 +431,34 @@ function updateCheckOutFromDays(row) {
     displayDiv.textContent = `${newDay}/${newMonth}/${newYear} (${dayName})`;
   }
 }
+function updateDaysFromDates(row) {
+  const checkInInput = row.querySelector('.date-input[data-field="check_in"]');
+  const checkOutInput = row.querySelector('.date-input[data-field="check_out"]');
+  const daysInput = row.querySelector(".days-input");
+
+  if (!checkInInput || !checkOutInput || !daysInput) return;
+
+  const checkIn = checkInInput.value;
+  const checkOut = checkOutInput.value;
+
+  if (!checkIn || !checkOut) return;
+
+  const days = calculateDays(checkIn, checkOut);
+  daysInput.value = days;
+  
+  // Sync price/total display
+  const priceInput = row.querySelector(".price-input");
+  const tooltip = row.querySelector(".tooltip");
+  const totalLabel = row.querySelector(".total-price-display");
+
+  if (priceInput) {
+    const price = parseInt(priceInput.value) || 0;
+    const total = days * price;
+    if (tooltip) tooltip.textContent = `עלות שהייה: ${formatNumber(total)}₪`;
+    if (totalLabel) totalLabel.textContent = `סה"כ: ${formatNumber(total)}₪`;
+  }
+}
+
 
 function addDaysToDate(dateStr, days) {
   const date = new Date(dateStr);
