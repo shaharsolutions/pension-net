@@ -1955,11 +1955,28 @@ async function loadData() {
 
     console.log("Data loaded:", data.length, "rows");
 
-    window.allOrdersCache = data.map(o => ({
-      ...o,
-      _check_in: new Date(o.check_in + 'T00:00:00'),
-      _check_out: new Date(o.check_out + 'T00:00:00')
-    }));
+    // --- Retroactive Dog Photo Propagation ---
+    const dogPhotoMap = new Map();
+    // Build a map of the latest photo for each unique dog (phone + name)
+    // Since data is ordered by check_out ASC, later orders will overwrite earlier ones in the map
+    data.forEach(order => {
+      if (order.dog_photo && order.dog_name && order.phone) {
+        const dogKey = `${order.phone.replace(/[\s\-]/g, "")}_${order.dog_name.trim().toLowerCase()}`;
+        dogPhotoMap.set(dogKey, order.dog_photo);
+      }
+    });
+
+    window.allOrdersCache = data.map(o => {
+      const dogKey = `${o.phone?.replace(/[\s\-]/g, "")}_${o.dog_name?.trim().toLowerCase()}`;
+      const latestPhoto = dogPhotoMap.get(dogKey);
+      
+      return {
+        ...o,
+        dog_photo: o.dog_photo || latestPhoto,
+        _check_in: new Date(o.check_in + 'T00:00:00'),
+        _check_out: new Date(o.check_out + 'T00:00:00')
+      };
+    });
 
     if (window.currentView === "calendar") {
       renderMonthlyCalendar(window.allOrdersCache);
@@ -1979,7 +1996,7 @@ async function loadData() {
     const now = new Date();
     renderFutureOrdersTable();
     
-    window.pastOrdersRawData = data.filter((row) => {
+    window.pastOrdersRawData = window.allOrdersCache.filter((row) => {
       const checkOut = new Date(row.check_out);
       return checkOut < now;
     });

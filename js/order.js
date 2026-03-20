@@ -14,6 +14,8 @@ let previousOrders = [];
 let lastSearchedPhone = '';
 let currentCapacityDate = new Date();
 let selectionPhase = 1; // 1: Selecting check-in, 2: Selecting check-out
+let arrivedFromExistingDog = false;
+let existingDogPhotoUrl = null;
 
 // Get owner ID from URL (e.g. order.html?owner=UUID)
 const urlParams = new URLSearchParams(window.location.search);
@@ -455,6 +457,14 @@ function updateStepIndicator() {
     step.classList.remove('active');
   });
   document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+
+  // Update Back button text at step 3 for returning customers
+  if (currentStep === 3) {
+    const backBtn = document.querySelector('.form-step[data-step="3"] .btn-secondary');
+    if (backBtn) {
+      backBtn.textContent = arrivedFromExistingDog ? 'עריכת פרטי כלב' : 'חזרה →';
+    }
+  }
 }
 
 function validateStep(step) {
@@ -644,7 +654,7 @@ async function identifyCustomer() {
   try {
     const { data, error } = await client
       .from('orders')
-      .select('id, dog_name, dog_breed, dog_age, neutered, owner_name, created_at, phone')
+      .select('id, dog_name, dog_breed, dog_age, neutered, owner_name, created_at, phone, dog_photo')
       .eq('phone', phone) // חיפוש עם מספר נקי
       .eq('user_id', PENSION_OWNER_ID)
       .order('created_at', { ascending: false });
@@ -660,12 +670,22 @@ async function identifyCustomer() {
       buttonsContainer.innerHTML = '';
       
       const uniqueDogs = [];
-      const dogNames = new Set();
+      const dogNames = new Map(); // Use Map to track existing dogs and their data
       
       previousOrders.forEach(order => {
-        if (order.dog_name && !dogNames.has(order.dog_name)) { // בדיקה נוספת ששם הכלב קיים
-          dogNames.add(order.dog_name);
-          uniqueDogs.push(order);
+        if (!order.dog_name) return;
+        
+        const existingId = dogNames.get(order.dog_name);
+        if (existingId === undefined) {
+          // New dog found
+          dogNames.set(order.dog_name, uniqueDogs.length);
+          uniqueDogs.push({...order});
+        } else {
+          // If this dog was already added, but the current order (which is older due to sorting)
+          // has a photo and the saved one doesn't, update it
+          if (!uniqueDogs[existingId].dog_photo && order.dog_photo) {
+            uniqueDogs[existingId].dog_photo = order.dog_photo;
+          }
         }
       });
       
@@ -674,12 +694,21 @@ async function identifyCustomer() {
         button.type = 'button';
         button.className = 'dog-button';
         button.dataset.dogIndex = index;
-        button.innerHTML = `<span class="dog-button-icon"><i class="fas fa-paw"></i></span> ${order.dog_name} (${order.dog_breed || 'גודל לא ידוע'}, ${order.dog_age || 'גיל לא ידוע'})`; // טיפול בערכים חסרים בתצוגה
+        
+        let dogIconInner = `<i class="fas fa-paw"></i>`;
+        if (order.dog_photo) {
+          dogIconInner = `<img src="${order.dog_photo}" class="dog-selection-photo" alt="${order.dog_name}" onerror="this.parentElement.innerHTML='<i class=\'fas fa-paw\'></i>'">`;
+        }
+        
+        button.innerHTML = `<span class="dog-button-icon">${dogIconInner}</span> <div class="dog-button-info"><strong>${order.dog_name}</strong><br><small>${order.dog_breed || 'גודל לא ידוע'}, ${order.dog_age || 'גיל לא ידוע'}</small></div>`;
         button.onclick = function() {
           document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
           this.classList.add('selected');
           
+          arrivedFromExistingDog = true;
           const selectedDog = uniqueDogs[index];
+          existingDogPhotoUrl = selectedDog.dog_photo || null;
+          
           document.querySelector('input[name="dogName"]').value = selectedDog.dog_name;
           
           // --- תיקון שגיאת SyntaxError ---
@@ -709,6 +738,9 @@ async function identifyCustomer() {
       newDogButton.onclick = function() {
         document.querySelectorAll('.dog-button').forEach(btn => btn.classList.remove('selected'));
         this.classList.add('selected');
+        
+        arrivedFromExistingDog = false;
+        existingDogPhotoUrl = null;
         
         document.querySelector('input[name="dogName"]').value = '';
         document.querySelectorAll('input[name="dogAge"], input[name="dogSize"], input[name="neutered"]').forEach(radio => radio.checked = false);
@@ -822,8 +854,8 @@ async function submitForm() {
   const defaultPensionPriceDay = window.pensionProfile?.default_price || 130;
   const priceToSave = customPriceDay || defaultPensionPriceDay;
   
-  // Upload Photo if exists
-  let photoUrl = null;
+  // Upload Photo if exists, or reuse existing one
+  let photoUrl = existingDogPhotoUrl; 
   if (selectedDogPhotoFile) {
     submitBtn.textContent = 'מעלה תמונה...';
     photoUrl = await uploadDogPhoto(selectedDogPhotoFile, PENSION_OWNER_ID);
