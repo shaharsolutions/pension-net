@@ -950,6 +950,8 @@ window.jewishHolidaysCache = {};
 async function getJewishHolidays(year, month) {
   if (localStorage.getItem('pensionNet_showHolidays') === 'false') return {};
   
+  if (!year || isNaN(year) || isNaN(month)) return {};
+  
   const cacheKey = `${year}-${month}`;
   if (window.jewishHolidaysCache[cacheKey]) {
     return window.jewishHolidaysCache[cacheKey];
@@ -978,7 +980,12 @@ async function getJewishHolidays(year, month) {
 
 async function renderMonthlyCalendar(allOrders) {
   const calendarGrid = document.getElementById("monthlyCalendarGrid");
-  const date = window.currentCalendarDate;
+  let dateObj = window.currentCalendarDate;
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    dateObj = new Date();
+    window.currentCalendarDate = dateObj;
+  }
+  const date = dateObj;
   
   // Update Selects
   const monthSelect = document.getElementById("calendarMonth");
@@ -1097,24 +1104,32 @@ async function renderMonthlyCalendar(allOrders) {
             // Show text on every day as requested
             const showText = true;
 
-            const trackColors = [
-                { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' }, // Blue
-                { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' }, // Amber
-                { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' }, // Emerald
-                { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' }, // Red
-                { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' }, // Violet
-                { bg: '#fae8ff', border: '#f5d0fe', text: '#86198f' }, // Fuchsia
-                { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' }, // Orange
-                { bg: '#ecfeff', border: '#a5f3fc', text: '#083344' }  // Cyan
-            ];
-            const trackColor = trackColors[i % trackColors.length];
+            const trackColor = getDogColor(dogInTrack.dog_name, dogInTrack.phone);
+
+            const isFirstDayOfView = dayCounter === 1;
+            const atBeginning = isStartOfStay || isFirstDayOfView;
+            let dogPhotoHtml = '';
+            
+            if (atBeginning) {
+                const dogNameEscaped = (dogInTrack.dog_name || 'כלב').replace(/'/g, "\\'");
+                const openPreviewCall = `event.stopPropagation(); openImagePreview('${dogInTrack.dog_photo}', '${dogNameEscaped}', '${dogInTrack.id}', '${dogInTrack.phone}')`;
+                const uploadPhotoCall = `event.stopPropagation(); triggerDogPhotoUploadFromTable('${dogInTrack.id}', '${dogNameEscaped}', '${dogInTrack.phone}')`;
+
+                if (dogInTrack.dog_photo) {
+                    dogPhotoHtml = `<img src="${dogInTrack.dog_photo}" class="calendar-dog-photo clickable-photo" alt="" onclick="${openPreviewCall}">`;
+                } else {
+                    dogPhotoHtml = `<div class="calendar-dog-photo-placeholder clickable-photo" onclick="${uploadPhotoCall}"><i class="fas fa-camera"></i></div>`;
+                }
+            }
+
+            const dogDisplayName = atBeginning ? `${dogName}${ownerName}` : '';
 
             const reverseClass = currentDayOfWeek === 6 ? " reverse-tooltip" : "";
             dogsContentHTML += `
                 <div class="${trackClasses.join(" ")}${reverseClass}" 
                      data-order-id="${dogInTrack.id}"
                      style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important;">
-                    <div class="dog-label-name">${dogName}${ownerName}</div>
+                    <div class="dog-label-name">${dogPhotoHtml}${dogDisplayName}</div>
                     <div class="dog-tooltip"><div class="dog-tooltip-content">
                         <div class="dog-tooltip-item"><strong>${dogName}</strong>${ownerName}</div>
                     </div></div>
@@ -1176,7 +1191,30 @@ async function renderMonthlyCalendar(allOrders) {
 
 async function renderWeeklyCalendar(allOrders) {
   const calendarGrid = document.getElementById("monthlyCalendarGrid");
-  const date = new Date(window.currentCalendarDate);
+  let dateObj = window.currentCalendarDate;
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    dateObj = new Date();
+    window.currentCalendarDate = dateObj;
+  }
+  const date = new Date(dateObj);
+
+  // Update Selects if present
+  const monthSelect = document.getElementById("calendarMonth");
+  const yearSelect = document.getElementById("calendarYear");
+  
+  if (monthSelect) monthSelect.value = date.getMonth();
+  if (yearSelect) {
+    if (yearSelect.options.length === 0) {
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+      }
+    }
+    yearSelect.value = date.getFullYear();
+  }
   
   const weekStart = new Date(date);
   weekStart.setDate(date.getDate() - date.getDay());
@@ -1243,24 +1281,32 @@ async function renderWeeklyCalendar(allOrders) {
             if (isEndOfStay) trackClasses.push("round-left");
             if (isStartOfStay && isEndOfStay) trackClasses.push("single-day");
 
-            const trackColors = [
-                { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' }, 
-                { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' }, 
-                { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' }, 
-                { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' }, 
-                { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' }, 
-                { bg: '#fae8ff', border: '#f5d0fe', text: '#86198f' }, 
-                { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' }, 
-                { bg: '#ecfeff', border: '#a5f3fc', text: '#083344' }
-            ];
-            const trackColor = trackColors[trackIdx % trackColors.length];
+            const trackColor = getDogColor(dogInTrack.dog_name, dogInTrack.phone);
+
+            const isFirstDayOfView = i === 0;
+            const atBeginning = isStartOfStay || isFirstDayOfView;
+            let dogPhotoHtml = '';
+            
+            if (atBeginning) {
+                const dogNameEscaped = (dogInTrack.dog_name || 'כלב').replace(/'/g, "\\'");
+                const openPreviewCall = `event.stopPropagation(); openImagePreview('${dogInTrack.dog_photo}', '${dogNameEscaped}', '${dogInTrack.id}', '${dogInTrack.phone}')`;
+                const uploadPhotoCall = `event.stopPropagation(); triggerDogPhotoUploadFromTable('${dogInTrack.id}', '${dogNameEscaped}', '${dogInTrack.phone}')`;
+
+                if (dogInTrack.dog_photo) {
+                    dogPhotoHtml = `<img src="${dogInTrack.dog_photo}" class="calendar-dog-photo clickable-photo" alt="" onclick="${openPreviewCall}">`;
+                } else {
+                    dogPhotoHtml = `<div class="calendar-dog-photo-placeholder clickable-photo" onclick="${uploadPhotoCall}"><i class="fas fa-camera"></i></div>`;
+                }
+            }
+
+            const dogDisplayName = atBeginning ? `${dogInTrack.dog_name} (${dogInTrack.owner_name})` : '';
 
             const reverseClass = i === 6 ? " reverse-tooltip" : "";
             dogsContentHTML += `
               <div class="${trackClasses.join(" ")}${reverseClass}" 
                    data-order-id="${dogInTrack.id}"
                    style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important; height: 32px; font-size: 11px; margin-bottom: 2px;">
-                  <div class="dog-label-name" style="line-height: 24px;">${dogInTrack.dog_name} (${dogInTrack.owner_name})</div>
+                  <div class="dog-label-name" style="line-height: 24px;">${dogPhotoHtml}${dogDisplayName}</div>
               </div>
             `;
           } else {
@@ -1388,8 +1434,15 @@ function jumpToDate() {
     const yearSelect = document.getElementById("calendarYear");
     if (!monthSelect || !yearSelect) return;
     
-    const month = parseInt(monthSelect.value);
-    const year = parseInt(yearSelect.value);
+    const monthVal = monthSelect.value;
+    const yearVal = yearSelect.value;
+    
+    if (!monthVal || !yearVal) return;
+    
+    const month = parseInt(monthVal);
+    const year = parseInt(yearVal);
+    
+    if (isNaN(month) || isNaN(year)) return;
     
     window.currentCalendarDate = new Date(year, month, 1);
     
@@ -1580,7 +1633,7 @@ function renderPastOrdersTable() {
     <td data-label="כלב">
       <div style="display: flex; align-items: center; gap: 10px;">
         ${row.dog_photo ? `
-          <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
+          <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.id}', '${row.phone}')" />
         ` : `
           <div class="dog-thumbnail-placeholder" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')"`}>
             <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
@@ -2120,7 +2173,7 @@ function renderFutureOrdersTable() {
       <td data-label="כלב">
         <div style="display: flex; align-items: center; gap: 10px;">
           ${row.dog_photo ? `
-            <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}')" />
+            <img src="${row.dog_photo}" class="dog-thumbnail" onclick="openImagePreview('${row.dog_photo}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.id}', '${row.phone}')" />
           ` : `
             <div class="dog-thumbnail-placeholder" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('${row.id}', '${(row.dog_name || 'כלב').replace(/'/g, "\\'")}', '${row.phone}')"`}>
               <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
@@ -2421,8 +2474,11 @@ document
       savedBanner.innerHTML = '<i class="fas fa-check-circle"></i> השינויים נשמרו בהצלחה';
       document.body.appendChild(savedBanner);
 
-      setTimeout(() => {
-        location.reload();
+      setTimeout(async () => {
+        savedBanner.remove();
+        await loadData();
+        saveBtn.disabled = false;
+        saveBtn.classList.remove("loading");
       }, 2000);
     } catch (error) {
       console.error("Error saving:", error);
@@ -4418,7 +4474,8 @@ function renderClientsTable() {
             
             let imgHtml = '';
             if (photoUrl) {
-              imgHtml = `<img src="${photoUrl}" class="dog-thumbnail" style="width:28px; height:28px;" onclick="openImagePreview('${photoUrl}', '${dog.replace(/'/g, "\\'")}')" />`;
+              const phone = c.originalPhone;
+              imgHtml = `<img src="${photoUrl}" class="dog-thumbnail" style="width:28px; height:28px;" onclick="openImagePreview('${photoUrl}', '${dog.replace(/'/g, "\\'")}', '', '${phone}')" />`;
             } else {
               imgHtml = `<div class="dog-thumbnail-placeholder" style="width:28px; height:28px; font-size: 10px;" title="${window.isDemoMode ? '' : 'לחצו להעלאת תמונה'}" ${window.isDemoMode ? '' : `onclick="triggerDogPhotoUploadFromTable('', '${dog.replace(/'/g, "\\'")}', '${c.originalPhone}')"`}>
                 <i class="fas fa-camera" ${window.isDemoMode ? 'style="opacity: 0.3; cursor: default;"' : ''}></i>
@@ -4651,7 +4708,7 @@ function openEditClientModal(phoneKey) {
               <div style="position: absolute; bottom: -2px; right: -2px; background: #6366f1; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; border: 1.5px solid white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="שנה תמונה" onclick="document.getElementById('adminDogPhotoInput-${index}').click()">
                 <i class="fas fa-camera"></i>
               </div>
-              <div style="position: absolute; top: -2px; right: -2px; background: rgba(255,255,255,0.9); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; border: 1.5px solid #e2e8f0; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" title="צפה בתמונה" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}')">
+              <div style="position: absolute; top: -2px; right: -2px; background: rgba(255,255,255,0.9); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; border: 1.5px solid #e2e8f0; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" title="צפה בתמונה" onclick="openImagePreview('${photo}', '${dog.replace(/'/g, "\\'")}', '', '')">
                 <i class="fas fa-eye"></i>
               </div>
             ` : `
@@ -5232,14 +5289,50 @@ async function triggerDogPhotoUploadFromTable(orderId, dogName, phone) {
   input.click();
 }
 
+function getDogColor(dogName, phone) {
+  const trackColors = [
+    { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' }, // כחול
+    { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' }, // ענבר
+    { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' }, // ירוק
+    { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' }, // אדום
+    { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' }, // סגול
+    { bg: '#fae8ff', border: '#f5d0fe', text: '#86198f' }, // ורוד
+    { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' }, // כתום
+    { bg: '#ecfeff', border: '#a5f3fc', text: '#083344' }  // ציאן
+  ];
+  
+  // Hash פשוט לפי שם וטלפון כדי שהצבע יישמר תמיד לאותו כלב
+  const str = `${phone}-${dogName}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const index = Math.abs(hash) % trackColors.length;
+  return trackColors[index];
+}
+
 // --- Image Preview Logic ---
-function openImagePreview(url, title) {
+function openImagePreview(url, title, orderId, phone) {
   const modal = document.getElementById('imagePreviewModal');
   const img = document.getElementById('previewModalImg');
   const titleEl = document.getElementById('previewModalTitle');
+  const changeBtn = document.getElementById('previewModalChangeBtn');
+
   if (modal && img) {
     img.src = url;
     if (titleEl) titleEl.textContent = title || 'תצוגת תמונה';
+    
+    if (changeBtn && orderId && phone) {
+        changeBtn.style.display = 'flex';
+        changeBtn.onclick = () => {
+            closeImagePreview();
+            triggerDogPhotoUploadFromTable(orderId, title, phone);
+        };
+    } else if (changeBtn) {
+        changeBtn.style.display = 'none';
+    }
+
     modal.style.display = 'flex';
   }
 }
