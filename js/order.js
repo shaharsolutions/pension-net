@@ -465,6 +465,24 @@ function updateStepIndicator() {
       backBtn.textContent = arrivedFromExistingDog ? 'עריכת פרטי כלב' : 'חזרה →';
     }
   }
+
+  // Update Photo Preview at Step 2
+  const previewContainer = document.getElementById('photoPreviewContainer');
+  const uploadStatus = document.getElementById('photoUploadStatus');
+  
+  if (currentStep === 2 && previewContainer) {
+    if (selectedDogPhotoFile) {
+      // If user JUST uploaded a photo in this session, handlePhotoSelect already handled it
+    } else if (arrivedFromExistingDog && existingDogPhotoUrl) {
+      // Show existing photo from DB
+      previewContainer.innerHTML = `<img src="${existingDogPhotoUrl}" alt="Dog Preview" />`;
+      if (uploadStatus) uploadStatus.textContent = 'תמונה קיימת במערכת - לחצו להחלפה';
+    } else if (!arrivedFromExistingDog) {
+      // Reset for new dog
+      previewContainer.innerHTML = `<i class="fas fa-camera" style="font-size: 40px; color: #cbd5e0;"></i>`;
+      if (uploadStatus) uploadStatus.textContent = 'לחצו לבחירת תמונה';
+    }
+  }
 }
 
 function validateStep(step) {
