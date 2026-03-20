@@ -1192,7 +1192,7 @@ async function renderMonthlyCalendar(allOrders) {
 
     calendarHTML += `<td class="${classes}">
           <div class="calendar-cell-header">
-            <div class="day-number">${dayCounter} (${dayName})</div>
+            <div class="day-number">${dayCounter}</div>
             ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
             ${customEventsHTML}
             ${dogsToday.length > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsToday.length} כלבים</div>` : ''}
