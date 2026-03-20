@@ -304,8 +304,10 @@
                 <th>גודל</th>
                 <th>מסורס / מעוקרת</th>
                 <th>הערות מיוחדות</th>
+                <th>תוספות</th>
                 <th>מחיר ליום</th>
-                <th>ימים</th>
+                <th>סה"כ לשהייה</th>
+                <th>סה"כ כולל תוספות</th>
                 <th>סטטוס</th>
                 <th class="manager-note-column">הערות מנהל</th>
               </tr>
@@ -341,8 +343,10 @@
                   <th>גודל</th>
                   <th>מסורס / מעוקרת</th>
                   <th>הערות מיוחדות</th>
+                  <th>תוספות</th>
                   <th>מחיר ליום</th>
-                  <th>ימים</th>
+                  <th>סה"כ לשהייה</th>
+                  <th>סה"כ כולל תוספות</th>
                   <th>סטטוס</th>
                   <th class="manager-note-column">הערות מנהל</th>
                 </tr>
@@ -510,6 +514,17 @@
                     <div id="staff-list" class="staff-tags"></div>
                   </div>
                 </div>
+              </div>
+
+              <div class="settings-section" style="grid-column: span 2;">
+                <h4><i class="fas fa-plus-circle" style="color: #6366f1;"></i> ניהול תוספות (Add-ons)</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">הוסף שירותים נוספים שהלקוחות יכולים להוסיף להזמנה</p>
+                <div id="settings-addons-list" class="addons-manager-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                  <!-- Add-ons will be injected here -->
+                </div>
+                <button type="button" onclick="addNewAddonRow()" class="header-btn" style="background: #f1f5f9; color: #475569; border: 1.5px dashed #cbd5e1; width: 100%; padding: 10px; border-radius: 12px; font-weight: 700;">
+                  <i class="fas fa-plus"></i> הוספת תוספת חדשה
+                </button>
               </div>
 
               <div class="settings-section" style="grid-column: span 2;">

@@ -1637,6 +1637,10 @@ function renderPastOrdersTable() {
     const detailsDisabled = (!window.isAdminMode && !perms.edit_details) ? "disabled" : "";
     const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
+    const addons = Array.isArray(row.addons) ? row.addons : [];
+    const addonsTotal = addons.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+    const grandTotal = totalPrice + addonsTotal;
+
     tr.innerHTML = `
     <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
     <td data-label="בעלים">${row.owner_name}</td>
@@ -1684,8 +1688,11 @@ function renderPastOrdersTable() {
         </div>
       ` : ''}
     </td>
-    <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
+    <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
       ${formatOrderNotes(row.notes)}
+    </td>
+    <td data-label="תוספות" style="font-size: 12px; max-width: 150px; white-space: normal;">
+        ${addons.length > 0 ? addons.map(a => `<div style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; display: inline-block; font-size: 11px;">${a.name} (${a.price}₪)</div>`).join(' ') : '<span style="color:#94a3b8">אין</span>'}
     </td>
     <td data-label="מחיר" class="price-cell" style="vertical-align: top;">
       <div class="price-wrapper">
@@ -1699,24 +1706,9 @@ function renderPastOrdersTable() {
           }" value="${pricePerDay}" min="0" step="10" />
         </div>
       </div>
-      <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
-      <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
     </td>
-    <td data-label="ימים" style="vertical-align: top;">
-      <div class="days-wrapper">
-        <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
-          <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
-          <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
-        </div>
-        <div class="days-input-container">
-          <input type="number" class="days-input" ${detailsDisabled} data-id="${
-            row.id
-          }" data-checkin="${
-          row.check_in
-        }" value="${days}" min="1" max="365" />
-        </div>
-      </div>
-    </td>
+    <td data-label="סהכ שהייה" style="font-weight: 600;">${formatNumber(totalPrice)}₪</td>
+    <td data-label="סהכ כולל" style="font-weight: 800; color: #6366f1; font-size: 16px;">${formatNumber(grandTotal)}₪</td>
     <td data-label="סטטוס">
       <select data-id="${row.id}" ${statusDisabled} class="status-select ${
         row.status === "מאושר"
@@ -2177,6 +2169,10 @@ function renderFutureOrdersTable() {
       const detailsDisabled = (!window.isAdminMode && !perms.edit_details) ? "disabled" : "";
       const statusDisabled = (!window.isAdminMode && !perms.edit_status && !perms.edit_details) ? "disabled" : "";
 
+      const addons = Array.isArray(row.addons) ? row.addons : [];
+      const addonsTotal = addons.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+      const grandTotal = totalPrice + addonsTotal;
+
       tr.innerHTML = `
       <td data-label="תאריך הזמנה">${formatDateTime(row.order_date || row.created_at)}</td>
       <td data-label="בעלים">${row.owner_name || ""}</td>
@@ -2224,8 +2220,11 @@ function renderFutureOrdersTable() {
           </div>
         ` : ''}
       </td>
-      <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 250px; white-space: normal;">
+      <td data-label="הערות" style="text-align: right; padding: 12px; line-height: 1.6; max-width: 200px; white-space: normal;">
         ${formatOrderNotes(row.notes)}
+      </td>
+      <td data-label="תוספות" style="font-size: 12px; max-width: 150px; white-space: normal;">
+        ${addons.length > 0 ? addons.map(a => `<div style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; display: inline-block; font-size: 11px;">${a.name} (${a.price}₪)</div>`).join(' ') : '<span style="color:#94a3b8">אין</span>'}
       </td>
       <td data-label="מחיר" class="price-cell" style="vertical-align: top;">
         <div class="price-wrapper">
@@ -2239,24 +2238,9 @@ function renderFutureOrdersTable() {
             }" value="${pricePerDay}" min="0" step="10" />
           </div>
         </div>
-        <div class="total-price-display" style="font-size: 11px; color: #666; margin-top: 4px; font-weight: 500;">סה"כ: ${formatNumber(totalPrice)}₪</div>
-        <div class="tooltip">עלות שהייה: ${formatNumber(totalPrice)}₪</div>
       </td>
-      <td data-label="ימים" style="vertical-align: top;">
-        <div class="days-wrapper">
-          <div class="days-controls" ${detailsDisabled ? 'style="opacity:0.3;pointer-events:none;"' : ''}>
-            <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), 1)">▲</button>
-            <button class="price-btn" ${detailsDisabled} onclick="updateDaysWithButtons(this.closest('.days-wrapper').querySelector('.days-input'), -1)">▼</button>
-          </div>
-          <div class="days-input-container">
-            <input type="number" class="days-input" ${detailsDisabled} data-id="${
-              row.id
-            }" data-checkin="${
-            row.check_in
-          }" value="${days}" min="1" max="365" />
-          </div>
-        </div>
-      </td>
+      <td data-label="סהכ שהייה" style="font-weight: 600;">${formatNumber(totalPrice)}₪</td>
+      <td data-label="סהכ כולל" style="font-weight: 800; color: #6366f1; font-size: 16px;">${formatNumber(grandTotal)}₪</td>
       <td data-label="סטטוס">
         <select data-id="${row.id}" ${statusDisabled} class="status-select ${
         row.status === "מאושר"
@@ -3485,7 +3469,7 @@ async function loadSettings() {
   try {
     let { data: profile, error } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data, custom_events')
+      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data, custom_events, addons_definitions')
       .eq('user_id', session.user.id)
       .single();
 
@@ -3548,6 +3532,10 @@ async function loadSettings() {
       }
       
       const showHolidaysInput = document.getElementById('settings-show-holidays');
+      
+      // Load Add-ons Definitions
+      window.addonsDefinitions = profile.addons_definitions || [];
+      renderAddonsManager();
       if (showHolidaysInput) {
         showHolidaysInput.checked = localStorage.getItem('pensionNet_showHolidays') !== 'false';
       }
@@ -3618,7 +3606,8 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     location: document.getElementById('settings-location').value,
     default_price: parseInt(document.getElementById('settings-default-price').value),
     staff_members: window.currentStaffMembers,
-    manager_pin: document.getElementById('settings-admin-pin').value
+    manager_pin: document.getElementById('settings-admin-pin').value,
+    addons_definitions: getAddonsFromUI()
   };
 
   const showHolidaysInput = document.getElementById('settings-show-holidays');
@@ -5547,4 +5536,77 @@ function generateLocalDemoData() {
         }
     ];
     return demoOrders;
+}
+// --- Add-ons Management Functions ---
+window.addNewAddonRow = function(addonData = null) {
+  const list = document.getElementById('settings-addons-list');
+  if (!list) return;
+
+  const div = document.createElement('div');
+  div.className = 'addon-manager-row';
+  div.style = 'display: grid; grid-template-columns: 2fr 1fr auto auto auto; gap: 8px; align-items: center; background: #fff; padding: 10px; border-radius: 12px; border: 1.5px solid #f1f5f9;';
+  
+  const id = addonData?.id || Date.now() + Math.random().toString(36).substr(2, 5);
+  const name = addonData?.name || '';
+  const price = addonData?.price || 0;
+  const isRecommended = addonData?.is_recommended || false;
+  const isActive = addonData?.is_active !== false;
+
+  div.innerHTML = `
+    <input type="text" placeholder="שם התוספת (למשל: מקלחת)" class="addon-name" value="${name}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+    <input type="number" placeholder="מחיר" class="addon-price" value="${price}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+    <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: #64748b;">
+      <input type="checkbox" class="addon-recommended" ${isRecommended ? 'checked' : ''}> מומלץ
+    </label>
+    <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: #64748b;">
+      <input type="checkbox" class="addon-active" ${isActive ? 'checked' : ''}> פעיל
+    </label>
+    <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 5px;">
+      <i class="fas fa-trash-alt"></i>
+    </button>
+    <input type="hidden" class="addon-id" value="${id}">
+  `;
+  list.appendChild(div);
+};
+
+function renderAddonsManager() {
+  const list = document.getElementById('settings-addons-list');
+  if (!list) return;
+  list.innerHTML = '';
+  
+  const addons = window.addonsDefinitions || [];
+  if (addons.length === 0) {
+    // Show some default suggestions if empty
+    const defaults = [
+      { name: 'מקלחת', price: 50, is_recommended: true, is_active: true },
+      { name: 'תספורת', price: 150, is_recommended: false, is_active: true },
+      { name: 'טיול ארוך', price: 30, is_recommended: true, is_active: true }
+    ];
+    defaults.forEach(a => window.addNewAddonRow(a));
+  } else {
+    addons.forEach(a => window.addNewAddonRow(a));
+  }
+}
+
+function getAddonsFromUI() {
+  const list = document.getElementById('settings-addons-list');
+  if (!list) return [];
+  
+  const rows = list.querySelectorAll('.addon-manager-row');
+  const addons = [];
+  
+  rows.forEach(row => {
+    const name = row.querySelector('.addon-name').value.trim();
+    if (!name) return;
+    
+    addons.push({
+      id: row.querySelector('.addon-id').value,
+      name: name,
+      price: parseFloat(row.querySelector('.addon-price').value) || 0,
+      is_recommended: row.querySelector('.addon-recommended').checked,
+      is_active: row.querySelector('.addon-active').checked
+    });
+  });
+  
+  return addons;
 }

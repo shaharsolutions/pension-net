@@ -53,7 +53,7 @@ async function loadOwnerInfo() {
   try {
     const { data: profiles, error } = await client
       .from('profiles')
-      .select('phone, business_name, location, default_price, clients_data')
+      .select('phone, business_name, location, default_price, clients_data, addons_definitions')
       .eq('user_id', PENSION_OWNER_ID);
     
     if (error) {
@@ -87,6 +87,11 @@ async function loadOwnerInfo() {
       
       const successPhoneEl = document.getElementById('displayAdminPhone');
       if (successPhoneEl) successPhoneEl.textContent = ADMIN_PHONE;
+
+      // Render Add-ons if available
+      if (profile.addons_definitions && profile.addons_definitions.length > 0) {
+        renderAddonsList(profile.addons_definitions);
+      }
     } else {
       // Profile NOT found at all
       console.warn('Owner profile row missing in database for ID:', PENSION_OWNER_ID);
@@ -464,6 +469,7 @@ function updateStepIndicator() {
     if (backBtn) {
       backBtn.textContent = arrivedFromExistingDog ? 'עריכת פרטי כלב' : 'חזרה →';
     }
+    showSummary();
   }
 
   // Update Photo Preview at Step 2
@@ -599,8 +605,25 @@ function showSummary() {
         <span class="summary-value">${pricePerDay}₪${customPrice ? ' <span style="background: #dbeafe; color: #1d4ed8; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-right: 6px; font-weight: 600;">מחיר אישי</span>' : ''}</span>
       </div>
       <div class="summary-item">
-        <span class="summary-label">סה"כ לתשלום:</span>
-        <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
+        <span class="summary-label">סה"כ לשהייה:</span>
+        <span class="summary-value">${totalPrice}₪</span>
+      </div>
+      ${data.selectedAddons && data.selectedAddons.length > 0 ? `
+      <div class="summary-item" style="flex-direction: column; align-items: flex-start; gap: 5px; margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+        <span class="summary-label" style="font-weight: 700;">תוספות שנבחרו:</span>
+        <div style="width: 100%;">
+          ${data.selectedAddons.map(a => `
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; margin-bottom: 4px;">
+              <span>${a.name}</span>
+              <span>${a.price}₪</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+      <div class="summary-item" style="margin-top: 15px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
+        <span class="summary-label" style="font-size: 16px; font-weight: 800;">סה"כ לתשלום:</span>
+        <span class="summary-value" style="color: #667eea; font-size: 20px; font-weight: 800;">${totalPrice + (data.addonsTotal || 0)}₪</span>
       </div>
       ${data.notes ? `
       <div class="summary-item">
@@ -636,7 +659,101 @@ function getFormData() {
   });
   
   console.log('Form data extracted:', data);
+
+  // Extract selected addons
+  const selectedAddons = [];
+  let addonsTotal = 0;
+  document.querySelectorAll('.addon-checkbox:checked').forEach(cb => {
+    const addon = JSON.parse(cb.dataset.addon);
+    selectedAddons.push(addon);
+    addonsTotal += parseFloat(addon.price) || 0;
+  });
+  data.selectedAddons = selectedAddons;
+  data.addonsTotal = addonsTotal;
+
   return data;
+}
+
+function renderAddonsList(definitions) {
+  const container = document.getElementById('addonsSection');
+  const list = document.getElementById('addonsList');
+  if (!container || !list) return;
+
+  const activeAddons = definitions.filter(a => a.is_active !== false);
+  if (activeAddons.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  list.innerHTML = '';
+
+  activeAddons.forEach(addon => {
+    const card = document.createElement('div');
+    card.className = `addon-card ${addon.is_recommended ? 'recommended' : ''}`;
+    card.style = `
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: white; border-radius: 12px;
+      border: 2px solid ${addon.is_recommended ? '#667eea' : '#e2e8f0'};
+      cursor: pointer; transition: all 0.2s; position: relative;
+    `;
+    
+    if (addon.is_recommended) {
+        card.style.background = '#f0f4ff';
+    }
+
+    const priceText = addon.price > 0 ? `${addon.price}₪` : 'חינם';
+    
+    card.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <input type="checkbox" class="addon-checkbox" id="addon-${addon.id}" 
+               data-addon='${JSON.stringify({id: addon.id, name: addon.name, price: addon.price})}'
+               style="width: 20px; height: 20px; cursor: pointer; accent-color: #667eea;">
+        <div>
+          <div style="font-weight: 700; color: #1e293b;">${addon.name}</div>
+          ${addon.is_recommended ? '<div style="font-size: 11px; color: #667eea; font-weight: 600;">⭐ רוב הלקוחות מוסיפים שירות זה</div>' : ''}
+        </div>
+      </div>
+      <div style="font-weight: 800; color: #667eea;">${priceText}</div>
+    `;
+
+    card.onclick = (e) => {
+        if (e.target.tagName !== 'INPUT') {
+            const cb = card.querySelector('input');
+            cb.checked = !cb.checked;
+            updateAddonsTotal();
+        }
+    };
+    
+    card.querySelector('input').onclick = (e) => {
+        e.stopPropagation();
+        updateAddonsTotal();
+    };
+
+    list.appendChild(card);
+  });
+}
+
+function updateAddonsTotal() {
+  let total = 0;
+  const checkboxes = document.querySelectorAll('.addon-checkbox:checked');
+  checkboxes.forEach(cb => {
+    const addon = JSON.parse(cb.dataset.addon);
+    total += parseFloat(addon.price) || 0;
+  });
+
+  const totalDisplay = document.getElementById('addonsTotalDisplay');
+  const totalPriceEl = document.getElementById('addonsTotalPrice');
+  
+  if (totalDisplay && totalPriceEl) {
+    totalPriceEl.textContent = total;
+    totalDisplay.style.display = total > 0 ? 'block' : 'none';
+  }
+  
+  // Refresh summary preview if it's already showing
+  if (currentStep === 3) {
+      showSummary();
+  }
 }
 
 async function identifyCustomer() {
@@ -891,7 +1008,8 @@ async function submitForm() {
     notes: (formData.notes ? formData.notes + '\n\n' : '') + '✅ הלקוח/ה אישר/ה תנאי שימוש',
     user_id: PENSION_OWNER_ID,
     price_per_day: priceToSave,
-    dog_photo: photoUrl
+    dog_photo: photoUrl,
+    addons: formData.selectedAddons || []
   };
   
   const client = getSupabase();
@@ -995,8 +1113,25 @@ async function submitForm() {
         <span class="summary-value">${pricePerDay}₪</span>
       </div>
       <div class="summary-item">
-        <span class="summary-label">סה"כ לתשלום:</span>
-        <span class="summary-value" style="color: #667eea; font-size: 18px;">${totalPrice}₪</span>
+        <span class="summary-label">סה"כ לשהייה:</span>
+        <span class="summary-value">${totalPrice}₪</span>
+      </div>
+      ${formData.selectedAddons && formData.selectedAddons.length > 0 ? `
+      <div class="summary-item" style="flex-direction: column; align-items: flex-start; gap: 5px; margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+        <span class="summary-label" style="font-weight: 700;">תוספות שנבחרו:</span>
+        <div style="width: 100%;">
+          ${formData.selectedAddons.map(a => `
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; margin-bottom: 4px;">
+              <span>${a.name}</span>
+              <span>${a.price}₪</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+      <div class="summary-item" style="margin-top: 15px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
+        <span class="summary-label" style="font-size: 16px; font-weight: 800;">סה"כ לתשלום:</span>
+        <span class="summary-value" style="color: #667eea; font-size: 20px; font-weight: 800;">${totalPrice + (formData.addonsTotal || 0)}₪</span>
       </div>
       ${formData.notes ? `
       <div class="summary-item">
