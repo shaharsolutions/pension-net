@@ -2428,6 +2428,10 @@ body.staff-mode.perm-manage-payments #payments-table button {
     table-layout: fixed !important; /* Ensure equal column widths */
   }
 
+  .calendar-table.weekly-view.mobile-scroll {
+    min-width: 900px !important; /* Force horizontal scroll for 7 days */
+  }
+
   .calendar-table th {
     padding: 4px;
     font-size: 11px;
@@ -2435,17 +2439,20 @@ body.staff-mode.perm-manage-payments #payments-table button {
 
   .calendar-table td {
     height: auto !important;
-    min-height: 70px !important; /* Increased from 50 to fill more area vertically when empty */
-    padding: 2px !important;
-    border-radius: 6px !important;
+    min-height: 70px !important; 
+    padding: 0 !important; /* Zero padding to ensure absolute top start */
+    border-radius: 4px !important;
+    vertical-align: top !important;
   }
 
   .calendar-cell-header {
-    height: auto !important;
-    min-height: 22px !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 2px !important;
-    border-bottom: 1px solid #f1f5f9;
+    height: 42px !important; /* Slightly more room */
+    min-height: 42px !important;
+    box-sizing: border-box !important;
+    padding: 4px 4px 2px 4px !important;
+    margin: 0 0 4px 0 !important;
+    border-bottom: 2px solid #f1f5f9 !important; /* Clearer separator */
+    overflow: hidden;
   }
 
   .day-number {
@@ -2500,25 +2507,39 @@ body.staff-mode.perm-manage-payments #payments-table button {
 
   /* Different display for days - stack specific content */
   .calendar-table td .day-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    margin-bottom: 4px;
+    display: block !important; /* Block instead of flex to avoid gap issues */
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   /* Compact dog labels on mobile */
+  /* Tighter content for mobile horizontal scroll - Sync heights strictly */
+  .calendar-table.mobile-grid .dog-label-unified,
+  .calendar-table.mobile-grid .dog-label-spacer {
+    height: 24px !important;
+    margin: 0 0 2px 0 !important; /* Precise 2px gap at bottom */
+    box-sizing: border-box !important;
+    border: 1px solid transparent !important; /* Base border for all */
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important; /* Remove any padding that might stretch */
+  }
+  
   .calendar-table.mobile-grid .dog-label-unified {
-    margin-bottom: 1px !important;
-    height: 18px !important;
+    border: 1px solid #93c5fd !important;
+    overflow: hidden !important; 
   }
   
   .calendar-table.mobile-grid .dog-label-name {
-    line-height: 18px !important;
+    line-height: normal !important;
+    font-size: 9px !important;
+    padding: 0 4px !important;
+    width: 100% !important;
+    text-align: center !important;
   }
 
-  /* Reduce dead space: hide spacers on mobile if they are not needed for layout stability */
   .calendar-table.mobile-grid .dog-label-spacer {
-    display: none; /* In vertical grid of 2, horizontal tracks are less critical if we want to save space */
+    visibility: hidden !important;
   }
 
   /* Settings grid */

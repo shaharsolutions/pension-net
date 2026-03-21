@@ -1147,7 +1147,7 @@ async function renderMonthlyCalendar(allOrders) {
             const trackColor = getDogColor(dogInTrack.dog_name, dogInTrack.phone);
 
             const isFirstDayOfView = dayCounter === 1;
-            const atBeginning = isStartOfStay || isFirstDayOfView;
+            const atBeginning = isStartOfStay || isEndOfStay || isFirstDayOfView;
             let dogPhotoHtml = '';
             
             if (atBeginning) {
@@ -1271,20 +1271,16 @@ async function renderWeeklyCalendar(allOrders) {
   const todayStr = new Date().toDateString();
 
   const isMobile = window.innerWidth < 640;
-  const cols = isMobile ? 1 : 7;
+  const cols = 7; // Always 7 columns for weekly view to allow horizontal scroll
   const dayNames = isMobile ? ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"] : ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
   const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-  let calendarHTML = `<table class="calendar-table weekly-view ${isMobile ? 'mobile-grid' : ''}"><thead><tr>`;
-  if (!isMobile) {
-      dayLabels.forEach((day, idx) => {
-        const d = new Date(weekStart);
-        d.setDate(d.getDate() + idx);
-        calendarHTML += `<th>${day} (${d.getDate()}/${d.getMonth() + 1})</th>`;
-      });
-  } else {
-      calendarHTML += `<th colspan="1">תצוגה שבועית: ${weekStart.getDate()}/${weekStart.getMonth()+1} - ${weekEnd.getDate()}/${weekEnd.getMonth()+1}</th>`;
-  }
+  let calendarHTML = `<table class="calendar-table weekly-view ${isMobile ? 'mobile-scroll' : ''}"><thead><tr>`;
+  dayLabels.forEach((day, idx) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + idx);
+    calendarHTML += `<th>${day} (${d.getDate()}/${d.getMonth() + 1})</th>`;
+  });
   calendarHTML += "</tr></thead><tbody><tr>";
 
     for (let i = 0; i < 7; i++) {
@@ -1316,8 +1312,8 @@ async function renderWeeklyCalendar(allOrders) {
             const isStartOfStay = stayStart.getTime() === currentDate.getTime();
             const isEndOfStay = stayEnd.getTime() === currentDate.getTime();
             
-            const isStartOfRow = isMobile ? true : (i === 0);
-            const isEndOfRow = isMobile ? true : (i === 6);
+            const isStartOfRow = (i === 0);
+            const isEndOfRow = (i === 6);
 
             const canBridgeLeft = !isEndOfStay && !isEndOfRow;
             const canBridgeRight = !isStartOfStay && !isStartOfRow;
@@ -1333,7 +1329,7 @@ async function renderWeeklyCalendar(allOrders) {
             const trackColor = getDogColor(dogInTrack.dog_name, dogInTrack.phone);
 
             const isFirstDayOfView = i === 0;
-            const atBeginning = isStartOfStay || isFirstDayOfView;
+            const atBeginning = isStartOfStay || isEndOfStay || isFirstDayOfView;
             let dogPhotoHtml = '';
             
             if (atBeginning) {
@@ -1354,12 +1350,12 @@ async function renderWeeklyCalendar(allOrders) {
             dogsContentHTML += `
               <div class="${trackClasses.join(" ")}${reverseClass}" 
                    data-order-id="${dogInTrack.id}"
-                   style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important; height: 32px; font-size: 11px; margin-bottom: 2px;">
-                  <div class="dog-label-name" style="line-height: 24px;">${dogPhotoHtml}${dogDisplayName}</div>
+                   style="background: ${trackColor.bg} !important; border-color: ${trackColor.border} !important; color: ${trackColor.text} !important;">
+                  <div class="dog-label-name">${dogPhotoHtml}${dogDisplayName}</div>
               </div>
             `;
           } else {
-            dogsContentHTML += `<div class="dog-label-spacer" style="height: 32px; margin-bottom: 2px; visibility: hidden;"></div>`;
+            dogsContentHTML += `<div class="dog-label-spacer"></div>`;
           }
         }
 
@@ -1374,22 +1370,17 @@ async function renderWeeklyCalendar(allOrders) {
             });
         }
 
-        const curDayName = dayLabels[i];
-        calendarHTML += `<td class="${classes}" style="${isMobile ? 'min-height: auto;' : 'min-height: 300px;'}">
-              <div class="calendar-cell-header" style="${isMobile ? 'height: auto !important; min-height: 40px;' : 'height: 100px !important;'} margin-bottom: 10px; border-bottom: 1px dashed #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                    <div class="day-number" style="font-size: ${isMobile ? '16px' : '22px'};">${currentDate.getDate()} <span style="font-size: 0.7em; opacity: 0.7; font-weight: 400;">${curDayName}</span></div>
-                    <div class="dog-count-label" style="font-size: 0.9em; font-weight: bold; color: var(--primary);">${dogsToday.length > 0 ? `${dogsToday.length} כלבים` : ''}</div>
+        calendarHTML += `<td class="${classes}">
+              <div class="calendar-cell-header">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
+                    <div class="day-number" style="font-size: 16px; white-space: nowrap;">${currentDate.getDate()} <span style="font-size: 0.7em; opacity: 0.7; font-weight: 400;">${dayLabels[currentDate.getDay()]}</span></div>
+                    <div class="dog-count-label" style="font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap;">${dogsToday.length > 0 ? `${dogsToday.length} כלבים` : ''}</div>
                 </div>
                 ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
                 ${customEventsHTML}
               </div>
               <div class="day-content" style="padding: 0;">${dogsContentHTML}</div>
           </td>`;
-
-        if (isMobile && i < 6) {
-          calendarHTML += "</tr><tr>";
-        }
     }
 
 
