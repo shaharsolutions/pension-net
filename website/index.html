@@ -395,14 +395,9 @@
                 <div class="mockup-content" style="padding: 0; height: 600px; display: flex; flex-direction: column; position: relative;">
                     <iframe src="../admin.html?demo=true" style="width: 100%; height: 100%; border: none; border-radius: 0 0 10px 10px;" loading="lazy" title="הדגמה אינטראקטיבית של מערכת פנסיון-נט"></iframe>
                     
-                    <!-- Mobile Warning Overlay -->
-                    <div id="mobile-demo-warning" class="mobile-warning-overlay">
-                        <div class="warning-card">
-                            <i class="fas fa-desktop"></i>
-                            <h3>חוויית המערכת אופטימלית במחשב</h3>
-                            <p>דף ההדגמה אינו מותאם באופן מלא למובייל. לחוויה מקצועית ומלאה, אנו ממליצים לגלוש מהמחשב.</p>
-                            <button onclick="dismissMobileWarning()" class="warning-btn">המשך בכל זאת</button>
-                        </div>
+                    <!-- Mobile Demo Container -->
+                    <div id="mobile-demo-container" class="mobile-demo-active">
+                        <!-- The iframe loads admin.html which is now mobile optimized -->
                     </div>
                 </div>
             </div>
@@ -898,12 +893,6 @@
     ];
 
     function startTour() {
-        // Show mobile warning if needed
-        if (window.innerWidth < 1024 && !localStorage.getItem('pension_demo_warning_dismissed')) {
-            document.getElementById('mobile-demo-warning').style.display = 'flex';
-            return;
-        }
-
         // Reset tour state to start from the beginning
         currentStep = 1;
         
@@ -1310,17 +1299,7 @@
         tourCard.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
     });
 
-    // ==============================
-    // Mobile Warning Logic
-    // ==============================
-    function dismissMobileWarning() {
-        document.getElementById('mobile-demo-warning').style.display = 'none';
-        localStorage.setItem('pension_demo_warning_dismissed', 'true');
-        // If it was called during tour start, actually start the tour now
-        startTour();
-    }
-    // Make global for onclick
-    window.dismissMobileWarning = dismissMobileWarning;
+    // Mobile warning removed as system is now optimized
     </script>
 </body>
 </html>

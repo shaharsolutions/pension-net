@@ -5414,7 +5414,11 @@ function generateLocalDemoData() {
             is_arrived: false,
             is_paid: false,
             price_per_day: 150,
-            admin_note: 'צריכה הרבה יחס'
+            admin_note: 'צריכה הרבה יחס',
+            addons: [
+                { name: 'מקלחת לפני יציאה', price: 50 },
+                { name: 'טיול ארוך', price: 30 }
+            ]
         },
         {
             id: 'demo-today-out',
@@ -5432,7 +5436,10 @@ function generateLocalDemoData() {
             is_arrived: true,
             is_paid: true,
             price_per_day: 130,
-            admin_note: 'בחדר גדול'
+            admin_note: 'בחדר גדול',
+            addons: [
+                { name: 'מקלחת לפני יציאה', price: 50 }
+            ]
         },
         // --- ACTIVE / STAYING ---
         {
@@ -5470,7 +5477,10 @@ function generateLocalDemoData() {
             is_arrived: false,
             is_paid: false,
             price_per_day: 140,
-            admin_note: 'להוציא הרבה לחצר'
+            admin_note: 'להוציא הרבה לחצר',
+            addons: [
+                { name: 'טיול ארוך', price: 30 }
+            ]
         },
         {
             id: 'demo-future-2',
@@ -5487,7 +5497,11 @@ function generateLocalDemoData() {
             status: 'ממתין',
             is_arrived: false,
             is_paid: false,
-            price_per_day: 130,
+            price_per_day: 135,
+            addons: [
+                { name: 'מקלחת לפני יציאה', price: 50 },
+                { name: 'טיול ארוך', price: 30 }
+            ],
             admin_note: 'תרופות בבוקר'
         },
         {

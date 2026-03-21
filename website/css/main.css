@@ -1570,8 +1570,8 @@ nav.scrolled {
     }
 
     .mockup-content {
-        height: auto;
-        padding: 15px !important;
+        height: 550px !important; /* Fixed height to showcase mobile calendar */
+        padding: 0 !important;
     }
 
     .mockup-content > div:first-child {

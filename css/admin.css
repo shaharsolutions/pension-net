@@ -2429,7 +2429,7 @@ body.staff-mode.perm-manage-payments #payments-table button {
   }
 
   .calendar-table.weekly-view.mobile-scroll {
-    min-width: 900px !important; /* Force horizontal scroll for 7 days */
+    min-width: 350% !important; /* Exactly 2 days per screen width (7 / 2 = 3.5) */
   }
 
   .calendar-table th {
