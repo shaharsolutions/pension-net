@@ -3799,6 +3799,22 @@ async function fillWithDemoData() {
                     date.setDate(date.getDate() - daysAgo);
                     date.setHours(Math.floor(Math.random() * 14) + 8, Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
                     return date.toISOString();
+                })(),
+                addons: (() => {
+                    const possibleAddons = [
+                        { name: 'מקלחת לפני יציאה', price: 50 },
+                        { name: 'טיול ארוך', price: 30 }
+                    ];
+                    const numAddons = Math.random() < 0.4 ? 1 : (Math.random() < 0.15 ? 2 : 0);
+                    if (numAddons === 0) return null;
+                    const selected = [];
+                    for (let a = 0; a < numAddons; a++) {
+                        const idx = Math.floor(Math.random() * possibleAddons.length);
+                        if (!selected.some(s => s.name === possibleAddons[idx].name)) {
+                            selected.push(possibleAddons[idx]);
+                        }
+                    }
+                    return selected;
                 })()
             });
         }
@@ -5414,11 +5430,8 @@ function generateLocalDemoData() {
             is_arrived: false,
             is_paid: false,
             price_per_day: 150,
-            admin_note: 'צריכה הרבה יחס',
-            addons: [
-                { name: 'מקלחת לפני יציאה', price: 50 },
-                { name: 'טיול ארוך', price: 30 }
-            ]
+            addons: [{ name: 'מקלחת לפני יציאה', price: 50 }],
+            admin_note: 'צריכה הרבה יחס'
         },
         {
             id: 'demo-today-out',
@@ -5436,10 +5449,8 @@ function generateLocalDemoData() {
             is_arrived: true,
             is_paid: true,
             price_per_day: 130,
-            admin_note: 'בחדר גדול',
-            addons: [
-                { name: 'מקלחת לפני יציאה', price: 50 }
-            ]
+            addons: [{ name: 'טיול ארוך', price: 30 }],
+            admin_note: 'בחדר גדול'
         },
         // --- ACTIVE / STAYING ---
         {
@@ -5458,6 +5469,9 @@ function generateLocalDemoData() {
             is_arrived: true,
             is_paid: true,
             price_per_day: 140,
+            addons: [
+                { name: 'טיול ארוך', price: 30 }
+            ],
             admin_note: 'לקוח VIP'
         },
         // --- FUTURE ---
@@ -5477,10 +5491,8 @@ function generateLocalDemoData() {
             is_arrived: false,
             is_paid: false,
             price_per_day: 140,
-            admin_note: 'להוציא הרבה לחצר',
-            addons: [
-                { name: 'טיול ארוך', price: 30 }
-            ]
+            addons: [{ name: 'מקלחת לפני יציאה', price: 50 }],
+            admin_note: 'להוציא הרבה לחצר'
         },
         {
             id: 'demo-future-2',
@@ -5497,9 +5509,8 @@ function generateLocalDemoData() {
             status: 'ממתין',
             is_arrived: false,
             is_paid: false,
-            price_per_day: 135,
+            price_per_day: 130,
             addons: [
-                { name: 'מקלחת לפני יציאה', price: 50 },
                 { name: 'טיול ארוך', price: 30 }
             ],
             admin_note: 'תרופות בבוקר'
@@ -5520,6 +5531,7 @@ function generateLocalDemoData() {
             is_arrived: false,
             is_paid: true,
             price_per_day: 140,
+            addons: [{ name: 'מקלחת לפני יציאה', price: 50 }],
             admin_note: 'לקוחה מפורסמת'
         },
         // --- HISTORY ---
