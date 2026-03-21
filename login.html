@@ -456,6 +456,25 @@
       
       // Make available to the global onclick handler
       window.signInWithGoogle = signInWithGoogle;
+
+      // Load custom background if set
+      async function loadCustomBackground() {
+          try {
+              const { data, error } = await supabase
+                  .from('system_settings')
+                  .select('value')
+                  .eq('key', 'login_page')
+                  .maybeSingle();
+              
+              if (data && data.value && data.value.background_url) {
+                  const url = data.value.background_url;
+                  document.body.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.45)), url('${url}')`;
+              }
+          } catch (err) {
+              console.warn('Could not load custom background:', err);
+          }
+      }
+      loadCustomBackground();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/auth.js?v=50"></script>

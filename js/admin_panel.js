@@ -169,7 +169,8 @@ async function loadAdminPanelData() {
             loadAllActivityLogs(),
             loadAllUserPlans(),
             loadAnnouncements(),
-            loadUserFeedback()
+            loadUserFeedback(),
+            loadSystemSettings()
         ]);
 
         renderSummaryCards(sessions, orders, profiles);
@@ -518,6 +519,148 @@ async function loadUserFeedback() {
     } catch (err) {
         console.error('Error loading feedback:', err);
         return [];
+    }
+}
+
+// ============================================
+// System Settings (Login Background, etc.)
+// ============================================
+
+async function loadSystemSettings() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('system_settings')
+            .select('*')
+            .eq('key', 'login_page')
+            .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data && data.value) {
+            const bgUrl = data.value.background_url;
+            updateLoginBgUI(bgUrl);
+        }
+        return data;
+    } catch (err) {
+        console.warn('Error loading system settings:', err);
+        return null;
+    }
+}
+
+function updateLoginBgUI(url) {
+    const urlInput = document.getElementById('loginBgUrl');
+    const preview = document.getElementById('loginBgPreview');
+    const container = document.getElementById('loginBgPreviewContainer');
+    
+    if (urlInput) urlInput.value = url || '';
+    
+    if (url && url !== 'images/login-bg.png') {
+        if (preview) preview.src = url;
+        if (container) container.style.display = 'block';
+    } else {
+        if (container) container.style.display = 'none';
+    }
+}
+
+async function saveLoginBgUrl() {
+    const url = document.getElementById('loginBgUrl').value.trim();
+    if (!url) {
+        showToast('נא להזין URL תקין', 'error');
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('system_settings')
+            .upsert({
+                key: 'login_page',
+                value: { background_url: url },
+                updated_at: new Date().toISOString(),
+                updated_by: (await Auth.getSession())?.user?.email || ADMIN_EMAIL
+            });
+
+        if (error) throw error;
+        
+        showToast('תמונת הרקע עודכנה בהצלחה!', 'success');
+        updateLoginBgUI(url);
+    } catch (err) {
+        console.error('Save login bg error:', err);
+        showToast('שגיאה בשמירת תמונת הרקע', 'error');
+    }
+}
+
+async function handleLoginBgUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('נא לבחור קובץ תמונה תקין', 'error');
+        return;
+    }
+
+    const status = document.getElementById('loginBgUploadStatus');
+    status.textContent = 'מעלה...';
+
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `login-bg-${Date.now()}.${fileExt}`;
+        const filePath = `system/${fileName}`;
+
+        const { data, error } = await supabaseClient.storage
+            .from('dog-photos')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('dog-photos')
+            .getPublicUrl(filePath);
+
+        // Save to settings
+        const { error: settingsError } = await supabaseClient
+            .from('system_settings')
+            .upsert({
+                key: 'login_page',
+                value: { background_url: publicUrl },
+                updated_at: new Date().toISOString(),
+                updated_by: (await Auth.getSession())?.user?.email || ADMIN_EMAIL
+            });
+
+        if (settingsError) throw settingsError;
+
+        showToast('התמונה הועלתה ועודכנה בהצלחה!', 'success');
+        updateLoginBgUI(publicUrl);
+        status.textContent = 'העלאה הושלמה';
+    } catch (err) {
+        console.error('Upload error:', err);
+        showToast('שגיאה בהעלאת התמונה', 'error');
+        status.textContent = 'שגיאה בהעלאה';
+    }
+}
+
+async function resetLoginBg() {
+    const defaultUrl = 'images/login-bg.png';
+    try {
+        const { error } = await supabaseClient
+            .from('system_settings')
+            .upsert({
+                key: 'login_page',
+                value: { background_url: defaultUrl },
+                updated_at: new Date().toISOString(),
+                updated_by: (await Auth.getSession())?.user?.email || ADMIN_EMAIL
+            });
+
+        if (error) throw error;
+        
+        showToast('תמונת הרקע הוחזרה לברירת מחדל', 'success');
+        updateLoginBgUI(defaultUrl);
+    } catch (err) {
+        console.error('Reset login bg error:', err);
+        showToast('שגיאה באיפוס תמונת הרקע', 'error');
     }
 }
 

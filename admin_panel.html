@@ -349,6 +349,38 @@
                             </div>
                         </div>
 
+                        <div style="border-top: 2px solid #f1f5f9; padding-top: 30px; margin-top: 30px;">
+                            <h3 style="margin-bottom: 20px;"><i class="fas fa-image"></i> רקע דף כניסה</h3>
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                                <div style="margin-bottom: 16px;">
+                                    <label style="display: block; font-weight: 700; margin-bottom: 8px;">URL של תמונת רקע:</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="loginBgUrl" style="flex-grow: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px;" placeholder="https://example.com/image.jpg">
+                                        <button onclick="saveLoginBgUrl()" class="admin-action-btn" style="background: var(--admin-primary); padding: 10px 20px;">שמירה</button>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 16px;">
+                                    <label style="display: block; font-weight: 700; margin-bottom: 8px;">או העלאת תמונה למערכת:</label>
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <input type="file" id="loginBgFile" accept="image/*" style="display: none;" onchange="handleLoginBgUpload(event)">
+                                        <button onclick="document.getElementById('loginBgFile').click()" class="admin-nav-btn" style="background: white;">
+                                            <i class="fas fa-upload"></i> בחר תמונה והעלה
+                                        </button>
+                                        <div id="loginBgUploadStatus" style="font-size: 13px; color: var(--admin-text-muted);"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="loginBgPreviewContainer" style="margin-top: 20px; display: none;">
+                                    <label style="display: block; font-weight: 700; margin-bottom: 8px;">תצוגה מקדימה:</label>
+                                    <img id="loginBgPreview" src="" style="max-width: 100%; max-height: 200px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                    <div style="margin-top: 10px;">
+                                        <button onclick="resetLoginBg()" class="admin-nav-btn danger" style="background: white; color: #ef4444; border-color: #ef4444;">חזרה לברירת מחדל</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div style="border-top: 2px solid #f1f5f9; padding-top: 30px;">
                             <h3 style="margin-bottom: 20px;"><i class="fas fa-comments"></i> משוב והערות משתמשים</h3>
                             <div id="userFeedbackContainer" class="admin-table-container">
