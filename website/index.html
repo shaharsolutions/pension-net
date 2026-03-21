@@ -825,9 +825,8 @@
             tab: 'ongoing',
             preAction: (win) => {
                 // Force calendar view if it was switched to dogs view
-                if (win.currentView !== 'calendar') {
-                    const toggleBtn = win.document.getElementById('toggleCalendarViewBtn');
-                    if (toggleBtn) win.toggleCalendarView(toggleBtn);
+                if (win.currentView !== 'calendar' && win.switchCalendarView) {
+                    win.switchCalendarView('calendar');
                 }
                 // Ensure the calendar is not collapsed
                 const container = win.document.getElementById('monthlyCalendarContainer');
@@ -844,7 +843,9 @@
             url: '../admin.html?demo=true',
             tab: 'ongoing',
             preAction: (win) => {
-                if (win.currentView !== 'dogs') win.toggleCalendarView(win.document.getElementById('toggleCalendarViewBtn'));
+                if (win.currentView !== 'dogs' && win.switchCalendarView) {
+                    win.switchCalendarView('dogs');
+                }
             }
         },
         {
