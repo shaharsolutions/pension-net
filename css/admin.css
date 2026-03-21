@@ -2861,7 +2861,7 @@ body.demo-read-only #pastOrdersTableWrapper {
   display: none;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1024px) and (min-width: 769px) {
   .container:not(#monthlyCalendarContainer):has(table)::after {
     display: block;
   }

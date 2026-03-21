@@ -1110,9 +1110,9 @@
     }
 
     function positionTourCard(rect, offsetTop, offsetLeft) {
-        // Ensure accurate height (fallback to estimated if necessary)
-        const cardWidth = 400;
-        const cardHeight = tourCard.offsetHeight > 0 ? tourCard.offsetHeight : 250;
+        // Use dynamic dimensions for the card
+        const cardWidth = tourCard.offsetWidth || 400;
+        const cardHeight = tourCard.offsetHeight || 250;
 
         // Parent container dimensions
         const demoSection = document.getElementById('demo');

@@ -1838,6 +1838,7 @@ nav.scrolled {
 }
 
 .tour-card.minimized {
+    position: fixed !important;
     width: 60px;
     height: 60px;
     padding: 0;
@@ -1845,8 +1846,8 @@ nav.scrolled {
     display: flex;
     align-items: center;
     justify-content: center;
-    bottom: 20px;
-    left: 20px !important;
+    bottom: 110px !important; /* Floating above WhatsApp (30px + 60px + gap) */
+    left: 30px !important;
     top: auto !important;
     transform: none !important;
     background: var(--primary);
@@ -1854,7 +1855,9 @@ nav.scrolled {
     box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
     cursor: pointer;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10001; /* Above almost everything else */
 }
+
 
 .tour-card.minimized::after {
     display: none;
@@ -2005,6 +2008,61 @@ nav.scrolled {
     right: 50px;
     display: none; /* Can be enabled per step if needed */
 }
+
+/* Mobile responsive adjustments for tour card */
+@media (max-width: 600px) {
+    .tour-card {
+        padding: 18px !important;
+        max-width: 300px !important;
+        width: 88% !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .tour-card h3 {
+        font-size: 1.15rem !important;
+        margin-bottom: 8px !important;
+        font-weight: 700 !important;
+    }
+    
+    .tour-card p {
+        font-size: 0.9rem !important;
+        margin-bottom: 15px !important;
+        line-height: 1.4 !important;
+    }
+    
+    .tour-step-indicator {
+        font-size: 0.7rem !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .tour-actions {
+        gap: 8px !important;
+        margin-top: 5px !important;
+    }
+    
+    .tour-btn {
+        padding: 7px 15px !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+    }
+    
+    .tour-close-btn {
+        top: 12px !important;
+        left: 12px !important;
+        font-size: 18px !important;
+    }
+
+    .tour-card.minimized {
+        bottom: 85px !important;
+        left: 20px !important;
+        width: 54px !important;
+        height: 54px !important;
+        position: fixed !important;
+    }
+
+}
+
 
 /* ==============================
    Mobile Demo Warning
