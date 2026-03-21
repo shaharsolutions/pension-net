@@ -5548,13 +5548,16 @@ window.addNewAddonRow = function(addonData = null) {
   
   const id = addonData?.id || Date.now() + Math.random().toString(36).substr(2, 5);
   const name = addonData?.name || '';
-  const price = addonData?.price || 0;
+  const price = addonData?.price ?? '';
   const isRecommended = addonData?.is_recommended || false;
   const isActive = addonData?.is_active !== false;
 
   div.innerHTML = `
-    <input type="text" placeholder="שם התוספת (למשל: מקלחת)" class="addon-name" value="${name}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-    <input type="number" placeholder="מחיר" class="addon-price" value="${price}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+    <input type="text" placeholder="שם התוספת (למשל: מקלחת לפני יציאה)" class="addon-name" value="${name}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+    <div style="position: relative; display: flex; align-items: center;">
+      <input type="number" placeholder="מחיר" class="addon-price" value="${price}" style="padding: 8px 8px 8px 25px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; width: 100%;">
+      <span style="position: absolute; left: 8px; color: #94a3b8;">₪</span>
+    </div>
     <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: #64748b;">
       <input type="checkbox" class="addon-recommended" ${isRecommended ? 'checked' : ''}> מומלץ
     </label>
@@ -5578,9 +5581,8 @@ function renderAddonsManager() {
   if (addons.length === 0) {
     // Show some default suggestions if empty
     const defaults = [
-      { name: 'מקלחת', price: 50, is_recommended: true, is_active: true },
-      { name: 'תספורת', price: 150, is_recommended: false, is_active: true },
-      { name: 'טיול ארוך', price: 30, is_recommended: true, is_active: true }
+      { name: 'מקלחת לפני יציאה', price: 50, is_recommended: true, is_active: true },
+      { name: 'טיול ארוך', price: 30, is_recommended: false, is_active: true }
     ];
     defaults.forEach(a => window.addNewAddonRow(a));
   } else {
@@ -5610,3 +5612,39 @@ function getAddonsFromUI() {
   
   return addons;
 }
+
+window.showAddonsDemoModal = function() {
+  const addons = getAddonsFromUI().filter(a => a.is_active);
+  const overlay = document.getElementById('general-modal-overlay');
+  const content = document.getElementById('general-modal-content');
+  
+  if (!overlay || !content) return;
+  
+  overlay.style.display = 'flex';
+  content.innerHTML = `
+    <div style="padding: 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; direction: rtl;">
+      <h3 style="margin: 0; font-size: 18px; color: #1e293b;">תצוגה מקדימה ללקוח</h3>
+      <button onclick="document.getElementById('general-modal-overlay').style.display='none'" style="background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer;">×</button>
+    </div>
+    <div style="padding: 24px; background: #f8fafc; direction: rtl; font-family: 'Heebo', sans-serif;">
+      <label style="font-size: 1.1rem; margin-bottom: 15px; display: block; color: #1e293b;"><i class="fas fa-plus-circle" style="color: #6366f1;"></i> תוספות להזמנה (אופציונלי)</label>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto;">
+        ${addons.length === 0 ? '<div style="text-align: center; color: #94a3b8; padding: 20px;">אין תוספות פעילות כרגע</div>' : addons.map(addon => `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-radius: 12px; border: 2px solid ${addon.is_recommended ? '#6366f1' : '#e2e8f0'}; position: relative; ${addon.is_recommended ? 'background: #f0f4ff;' : ''}">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input type="checkbox" style="width: 20px; height: 20px; accent-color: #6366f1;">
+              <div>
+                <div style="font-weight: 700; color: #1e293b;">${addon.name}</div>
+                ${addon.is_recommended ? '<div style="font-size: 11px; color: #6366f1; font-weight: 600;">⭐ רוב הלקוחות מוסיפים שירות זה</div>' : ''}
+              </div>
+            </div>
+            <div style="font-weight: 800; color: #6366f1;">${addon.price > 0 ? addon.price + '₪' : 'חינם'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div style="padding: 15px; text-align: center; font-size: 12px; color: #94a3b8;">
+      * כך ייראו התוספות עבור הלקוחות בעת ביצוע הזמנה
+    </div>
+  `;
+};

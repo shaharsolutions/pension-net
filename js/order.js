@@ -463,15 +463,6 @@ function updateStepIndicator() {
   });
   document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
 
-  // Update Back button text at step 3 for returning customers
-  if (currentStep === 3) {
-    const backBtn = document.querySelector('.form-step[data-step="3"] .btn-secondary');
-    if (backBtn) {
-      backBtn.textContent = arrivedFromExistingDog ? 'עריכת פרטי כלב' : 'חזרה →';
-    }
-    showSummary();
-  }
-
   // Update Photo Preview at Step 2
   const previewContainer = document.getElementById('photoPreviewContainer');
   const uploadStatus = document.getElementById('photoUploadStatus');
@@ -524,7 +515,7 @@ function validateStep(step) {
 function nextStep() {
   if (validateStep(currentStep)) {
     if (currentStep === 3) {
-      showSummary();
+      // showSummary();
     }
     currentStep++;
     updateStepIndicator();
@@ -634,7 +625,7 @@ function showSummary() {
     </div>
   `;
   
-  document.getElementById('summaryPreview').innerHTML = summary;
+  // document.getElementById('summaryPreview').innerHTML = summary;
 }
 
 function getFormData() {
@@ -751,9 +742,9 @@ function updateAddonsTotal() {
   }
   
   // Refresh summary preview if it's already showing
-  if (currentStep === 3) {
-      showSummary();
-  }
+  // if (currentStep === 3) {
+  //     showSummary();
+  // }
 }
 
 async function identifyCustomer() {
@@ -802,6 +793,10 @@ async function identifyCustomer() {
     
     if (previousOrders.length > 0) {
       const buttonsContainer = document.getElementById('dogSelectionButtons');
+      if (!buttonsContainer) {
+        console.error('CRITICAL: Element #dogSelectionButtons not found in DOM!');
+        return;
+      }
       buttonsContainer.innerHTML = '';
       
       const uniqueDogs = [];
