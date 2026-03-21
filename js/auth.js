@@ -45,12 +45,22 @@ const Auth = {
       return null;
     }
 
+    // Check if we are in the middle of an OAuth redirect (e.g. Google login)
+    // If there is an access_token in the URL hash, Supabase needs time to process it.
+    // We should NOT redirect to login.html in this case.
+    if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+      console.log('⏳ קולט נתוני התחברות חיצונית, ממתין לסיום עיבוד...');
+      // Wait a bit to allow getSession to potentially catch it after internal processing
+      await new Promise(res => setTimeout(res, 500));
+    }
+
     const session = await this.getSession();
     if (!session) {
       // If we are on a protected page and not logged in, redirect to login
       const protectedPages = ["admin.html", "admin_panel.html", "growth.html", "insights.html", "features_guide.html"];
       const currentPage = window.location.pathname.split("/").pop();
       if (protectedPages.includes(currentPage)) {
+        console.log('🚫 אין סשן פעיל, עובר לעמוד התחברות');
         window.location.href = "login.html";
       }
       return null;
