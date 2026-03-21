@@ -2037,7 +2037,7 @@ async function loadData() {
   try {
     const { data, error } = await pensionNetSupabase
       .from("orders")
-      .select("id, dog_name, owner_name, check_in, check_out, status, created_at, phone, price_per_day, is_arrived, is_departed, admin_note, dog_photo, dog_breed, dog_age, neutered")
+      .select("id, dog_name, owner_name, check_in, check_out, status, created_at, phone, price_per_day, is_arrived, is_departed, admin_note, dog_photo, dog_breed, dog_age, neutered, addons")
       .eq("user_id", session.user.id) // חיפוש רק של המשתמש הנוכחי
       .order("check_out", { ascending: true });
 
