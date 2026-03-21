@@ -1069,21 +1069,29 @@ async function renderMonthlyCalendar(allOrders) {
   const todayStr = new Date().toDateString();
 
 
-  let calendarHTML = '<table class="calendar-table"><thead><tr>';
-  const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
-  const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-  dayNames.forEach((day) => {
-    calendarHTML += `<th>${day}</th>`;
-  });
+  const isMobile = window.innerWidth < 640;
+  const cols = isMobile ? (window.innerWidth < 450 ? 2 : 3) : 7;
+  const dayLabels = isMobile ? ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"] : ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+  let calendarHTML = `<table class="calendar-table ${isMobile ? 'mobile-grid' : ''}"><thead><tr>`;
+  if (!isMobile) {
+      dayLabels.forEach((day) => {
+          calendarHTML += `<th>${day}</th>`;
+      });
+  } else {
+      calendarHTML += `<th colspan="${cols}">לוח נוכחות - ${date.toLocaleString('he-IL', {month: 'long'})}</th>`;
+  }
   calendarHTML += "</tr></thead><tbody><tr>";
 
-  const firstDayIndex = firstDayOfMonth.getDay();
-  for (let i = 0; i < firstDayIndex; i++) {
-    calendarHTML += '<td class="empty-day"></td>';
+  if (!isMobile) {
+      const firstDayIndex = firstDayOfMonth.getDay();
+      for (let i = 0; i < firstDayIndex; i++) {
+        calendarHTML += '<td class="empty-day"></td>';
+      }
   }
 
   let dayCounter = 1;
-  let currentDayOfWeek = firstDayIndex;
+  let cellIndex = isMobile ? 0 : firstDayOfMonth.getDay();
   
   const monthHolidays = await getJewishHolidays(date.getFullYear(), date.getMonth());
 
@@ -1110,11 +1118,11 @@ async function renderMonthlyCalendar(allOrders) {
             const isEndOfStay = stayEnd.getDate() === dayCounter && stayEnd.getMonth() === date.getMonth();
             
             const isFirstDayOfMonth = currentDate.getDate() === 1;
-            const isSunday = currentDate.getDay() === 0;
-            const isSaturday = currentDate.getDay() === 6;
+            const isStartOfRow = (cellIndex % cols === 0);
+            const isEndOfRow = (cellIndex % cols === cols - 1);
 
-            const canBridgeLeft = !isEndOfStay && !isSaturday;
-            const canBridgeRight = !isStartOfStay && !isSunday;
+            const canBridgeLeft = !isEndOfStay && !isEndOfRow;
+            const canBridgeRight = !isStartOfStay && !isStartOfRow;
 
             let trackClasses = ["dog-label-unified"];
             if (canBridgeLeft) trackClasses.push("bridge-left");
@@ -1156,7 +1164,7 @@ async function renderMonthlyCalendar(allOrders) {
 
             const dogDisplayName = atBeginning ? `${dogName}${ownerName}` : '';
 
-            const reverseClass = currentDayOfWeek === 6 ? " reverse-tooltip" : "";
+            const reverseClass = currentDate.getDay() === 6 ? " reverse-tooltip" : "";
             dogsContentHTML += `
                 <div class="${trackClasses.join(" ")}${reverseClass}" 
                      data-order-id="${dogInTrack.id}"
@@ -1172,7 +1180,6 @@ async function renderMonthlyCalendar(allOrders) {
         }
     }
 
-    const dayName = dayLabels[currentDayOfWeek];
     const pD = (n) => n < 10 ? '0'+n : n;
     const dateFormattedPart = `${date.getFullYear()}-${pD(date.getMonth() + 1)}`;
     const holidayFormattedDate = `${dateFormattedPart}-${pD(dayCounter)}`;
@@ -1190,27 +1197,31 @@ async function renderMonthlyCalendar(allOrders) {
         });
     }
 
+    const curDayName = dayLabels[currentDate.getDay()];
     calendarHTML += `<td class="${classes}">
           <div class="calendar-cell-header">
-            <div class="day-number">${dayCounter}</div>
-            ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                <div class="day-number">${dayCounter}${isMobile ? ` <span style="font-size: 0.8em; font-weight: 400; opacity: 0.7;">${curDayName}</span>` : ''}</div>
+                ${dogsToday.length > 0 ? `<div class="dog-count-label" style="font-size: 0.75em; font-weight: 800; color: var(--primary);">${dogsToday.length} כלבים</div>` : ''}
+            </div>
+            ${holidayHebrew ? `<div class="holiday-label" style="font-size: 10px; color: #b45309; background: #fef3c7; padding: 1px 3px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
             ${customEventsHTML}
-            ${dogsToday.length > 0 ? `<div style="text-align: center; font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 4px;">${dogsToday.length} כלבים</div>` : ''}
           </div>
           <div class="day-content" style="padding: 0;">${dogsContentHTML}</div>
       </td>`;
 
-    currentDayOfWeek++;
-    if (currentDayOfWeek > 6) {
+    cellIndex++;
+    if (cellIndex % cols === 0 && dayCounter < lastDayOfMonth.getDate()) {
       calendarHTML += "</tr><tr>";
-      currentDayOfWeek = 0;
     }
     dayCounter++;
   }
 
-  while (currentDayOfWeek > 0 && currentDayOfWeek <= 6) {
-    calendarHTML += '<td class="empty-day"></td>';
-    currentDayOfWeek++;
+  if (!isMobile) {
+      while (cellIndex % cols !== 0) {
+        calendarHTML += '<td class="empty-day"></td>';
+        cellIndex++;
+      }
   }
 
   if (calendarHTML.endsWith("<tr>")) {
@@ -1257,17 +1268,23 @@ async function renderWeeklyCalendar(allOrders) {
   weekEnd.setHours(23, 59, 59, 999);
 
   const { orderToTrack, numTracks, monthOrders } = assignDogTracks(allOrders, weekStart, weekEnd);
-
   const todayStr = new Date().toDateString();
-  const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+  const isMobile = window.innerWidth < 640;
+  const cols = isMobile ? 1 : 7;
+  const dayNames = isMobile ? ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"] : ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
   const dayLabels = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-  let calendarHTML = '<table class="calendar-table weekly-view"><thead><tr>';
-  dayLabels.forEach((day, idx) => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + idx);
-    calendarHTML += `<th>${day} (${d.getDate()}/${d.getMonth() + 1})</th>`;
-  });
+  let calendarHTML = `<table class="calendar-table weekly-view ${isMobile ? 'mobile-grid' : ''}"><thead><tr>`;
+  if (!isMobile) {
+      dayLabels.forEach((day, idx) => {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + idx);
+        calendarHTML += `<th>${day} (${d.getDate()}/${d.getMonth() + 1})</th>`;
+      });
+  } else {
+      calendarHTML += `<th colspan="1">תצוגה שבועית: ${weekStart.getDate()}/${weekStart.getMonth()+1} - ${weekEnd.getDate()}/${weekEnd.getMonth()+1}</th>`;
+  }
   calendarHTML += "</tr></thead><tbody><tr>";
 
     for (let i = 0; i < 7; i++) {
@@ -1299,11 +1316,11 @@ async function renderWeeklyCalendar(allOrders) {
             const isStartOfStay = stayStart.getTime() === currentDate.getTime();
             const isEndOfStay = stayEnd.getTime() === currentDate.getTime();
             
-            const isSunday = currentDate.getDay() === 0;
-            const isSaturday = currentDate.getDay() === 6;
+            const isStartOfRow = isMobile ? true : (i === 0);
+            const isEndOfRow = isMobile ? true : (i === 6);
 
-            const canBridgeLeft = !isEndOfStay && !isSaturday;
-            const canBridgeRight = !isStartOfStay && !isSunday;
+            const canBridgeLeft = !isEndOfStay && !isEndOfRow;
+            const canBridgeRight = !isStartOfStay && !isStartOfRow;
 
             let trackClasses = ["dog-label-unified"];
             if (canBridgeLeft) trackClasses.push("bridge-left");
@@ -1357,17 +1374,22 @@ async function renderWeeklyCalendar(allOrders) {
             });
         }
 
-        calendarHTML += `<td class="${classes}" style="min-height: 300px;">
-              <div class="calendar-cell-header" style="height: 100px !important; margin-bottom: 10px; border-bottom: 1px dashed #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-                <div class="day-number" style="font-size: 22px; margin-bottom: 4px;">${currentDate.getDate()}</div>
+        const curDayName = dayLabels[i];
+        calendarHTML += `<td class="${classes}" style="${isMobile ? 'min-height: auto;' : 'min-height: 300px;'}">
+              <div class="calendar-cell-header" style="${isMobile ? 'height: auto !important; min-height: 40px;' : 'height: 100px !important;'} margin-bottom: 10px; border-bottom: 1px dashed #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div class="day-number" style="font-size: ${isMobile ? '16px' : '22px'};">${currentDate.getDate()} <span style="font-size: 0.7em; opacity: 0.7; font-weight: 400;">${curDayName}</span></div>
+                    <div class="dog-count-label" style="font-size: 0.9em; font-weight: bold; color: var(--primary);">${dogsToday.length > 0 ? `${dogsToday.length} כלבים` : ''}</div>
+                </div>
                 ${holidayHebrew ? `<div class="holiday-label" style="font-size: 11px; color: #b45309; background: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600; text-align: center; margin-bottom: 2px; border: 1px solid #fde68a;">${holidayHebrew}</div>` : ''}
                 ${customEventsHTML}
-                <div style="margin-top: auto; text-align: center; font-size: 0.9em; font-weight: bold; color: #555; padding-bottom: 2px;">
-                  ${dogsToday.length > 0 ? `${dogsToday.length} כלבים` : ''}
-                </div>
               </div>
               <div class="day-content" style="padding: 0;">${dogsContentHTML}</div>
           </td>`;
+
+        if (isMobile && i < 6) {
+          calendarHTML += "</tr><tr>";
+        }
     }
 
 

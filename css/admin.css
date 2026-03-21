@@ -435,10 +435,9 @@ header h1 {
 .calendar-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 6px;
+  border-spacing: 2px;
   table-layout: fixed;
   margin-top: 10px;
-  min-width: 700px; /* Ensure table doesn't squash too much */
 }
 
 #monthlyCalendarGrid {
@@ -459,13 +458,13 @@ header h1 {
 }
 
 .calendar-table td {
-  min-height: 130px;
+  min-height: 100px;
   height: auto;
   background: #ffffff;
   border: 1px solid #f1f5f9;
-  border-radius: 12px;
+  border-radius: 8px;
   vertical-align: top;
-  padding: 8px; /* Slightly tighter padding */
+  padding: 4px; /* Slightly tighter padding */
   overflow: visible !important;
   position: relative;
   transition: all 0.2s;
@@ -473,7 +472,7 @@ header h1 {
 }
 
 .calendar-cell-header {
-  height: 80px; /* Fixed height to ensure dog bars ALWAYS start at the same vertical position */
+  height: 60px; /* Reduced height for mobile-first approach, JS will handle specifics */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2359,7 +2358,7 @@ body.staff-mode.perm-manage-payments #payments-table button {
   }
 
   /* Table responsiveness - cards for mobile */
-  .table-container, table {
+  .table-container, table:not(.calendar-table) {
     display: block;
     width: 100%;
   }
@@ -2372,7 +2371,8 @@ body.staff-mode.perm-manage-payments #payments-table button {
     display: none; /* Hide headers on mobile */
   }
 
-  tbody tr {
+  /* Exclude calendar from block layout */
+  table:not(.calendar-table) tbody tr {
     display: block;
     margin-bottom: 20px;
     padding: 15px;
@@ -2382,7 +2382,7 @@ body.staff-mode.perm-manage-payments #payments-table button {
     position: relative;
   }
 
-  td {
+  table:not(.calendar-table) td {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2415,24 +2415,110 @@ body.staff-mode.perm-manage-payments #payments-table button {
     width: auto;
   }
 
-  /* Calendar improvements */
+  /* Calendar improvements - Optimized for no dead space */
+  #monthlyCalendarContainer.container {
+    padding: 10px 5px !important;
+  }
+
   .calendar-table {
-    min-width: 600px;
-    border-spacing: 4px;
+    display: table !important; /* Force table layout to keep columns wide */
+    width: 100% !important;
+    min-width: 100% !important;
+    border-spacing: 2px !important;
+    table-layout: fixed !important; /* Ensure equal column widths */
+  }
+
+  .calendar-table th {
+    padding: 4px;
+    font-size: 11px;
   }
 
   .calendar-table td {
-    height: 100px;
-    padding: 6px;
+    height: auto !important;
+    min-height: 70px !important; /* Increased from 50 to fill more area vertically when empty */
+    padding: 2px !important;
+    border-radius: 6px !important;
+  }
+
+  .calendar-cell-header {
+    height: auto !important;
+    min-height: 22px !important;
+    padding-bottom: 2px !important;
+    margin-bottom: 2px !important;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .day-number {
+    font-size: 13px !important;
+    margin-bottom: 2px !important;
   }
 
   .calendar-day-number {
-    font-size: 11px !important;
+    font-size: 10px !important;
+  }
+
+  .dog-count-label {
+    text-shadow: 0 0 1px rgba(0,0,0,0.1);
+  }
+
+  .holiday-label {
+    font-size: 8px !important;
+    padding: 1px 2px !important;
   }
 
   .dog-size-label {
-    font-size: 10px !important;
-    padding: 2px 4px !important;
+    font-size: 9px !important;
+    padding: 2px 3px !important;
+  }
+
+  .dog-label-unified {
+    height: 22px !important;
+    font-size: 9px !important;
+    padding: 0 4px !important;
+    border-radius: 3px !important;
+  }
+
+  .dog-label-name {
+    font-size: 9px !important;
+    line-height: 22px !important;
+    padding: 0 10px !important;
+  }
+
+  .dog-label-unified.bridge-left {
+    margin-left: -5px !important;
+  }
+
+  .dog-label-unified.bridge-right {
+    margin-right: -5px !important;
+  }
+
+  .calendar-dog-photo, .calendar-dog-photo-placeholder {
+    width: 14px !important;
+    height: 14px !important;
+    margin-left: 3px !important;
+  }
+
+  /* Different display for days - stack specific content */
+  .calendar-table td .day-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-bottom: 4px;
+  }
+
+  /* Compact dog labels on mobile */
+  .calendar-table.mobile-grid .dog-label-unified {
+    margin-bottom: 1px !important;
+    height: 18px !important;
+  }
+  
+  .calendar-table.mobile-grid .dog-label-name {
+    line-height: 18px !important;
+  }
+
+  /* Reduce dead space: hide spacers on mobile if they are not needed for layout stability */
+  .calendar-table.mobile-grid .dog-label-spacer {
+    display: none; /* In vertical grid of 2, horizontal tracks are less critical if we want to save space */
   }
 
   /* Settings grid */
