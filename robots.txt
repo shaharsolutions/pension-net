@@ -3,5 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://shaharsolutions.github.io/Pension-Net/sitemap.xml
-Sitemap: https://shaharsolutions.github.io/Pension-Net/website/sitemap.xml
+Sitemap: https://shaharsolutions.github.io/pension-net/sitemap.xml
