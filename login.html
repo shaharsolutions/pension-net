@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        // אם הגענו לכאן עם טוקן של התחברות (hash), נעביר אותו לתיקיית system
+        if (window.location.hash) {
+            window.location.href = "system/login.html" + window.location.hash;
+        } else {
+            window.location.href = "system/login.html";
+        }
+    </script>
+</head>
+<body>
+    <p>מעביר לדף התחברות...</p>
+</body>
+</html>
