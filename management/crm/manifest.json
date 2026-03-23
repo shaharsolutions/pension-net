@@ -2,7 +2,7 @@
   "name": "מערכת CRM – פנסיון-נט",
   "short_name": "CRM פנסיון-נט",
   "description": "מערכת ניהול ומעקב אחרי פנייה לפנסיוני כלבים",
-  "start_url": "pensionet-crm.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#6366f1",
