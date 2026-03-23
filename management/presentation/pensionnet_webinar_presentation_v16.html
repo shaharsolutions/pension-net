@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pension-Net Webinar Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f6f8fc;--panel:#ffffff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;
+      --primary:#7c3aed;--primary-soft:#f5f3ff;--green:#10b981;--amber:#f59e0b;--red:#ef4444;
+      --shadow:0 20px 50px rgba(15,23,42,.08);--radius:28px;--radius-sm:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:'Heebo',system-ui,sans-serif;background:
+      radial-gradient(circle at top right, rgba(109,93,252,.10), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(109,93,252,.08), transparent 28%),
+      var(--bg);color:var(--text);height:100%;overflow:hidden}
+    .app{display:grid;grid-template-columns:210px 1fr;height:100vh;padding:18px;gap:18px}
+    .sidebar,.stage{background:rgba(255,255,255,.82);backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .sidebar{border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#8f84ff);display:grid;place-items:center;color:#fff;font-size:20px}
+    .brand h1{margin:0;font-size:1rem}.brand p{margin:3px 0 0;color:var(--muted);font-size:.78rem}
+    .nav{display:grid;gap:6px}
+    .nav button{border:none;background:transparent;padding:10px 12px;border-radius:14px;text-align:right;font:inherit;cursor:pointer;color:var(--text);font-size:.92rem}
+    .nav button.active,.nav button:hover{background:var(--primary-soft);color:var(--primary)}
+    .note{margin-top:auto;border:1px solid var(--line);padding:12px;border-radius:16px;color:var(--muted);font-size:.78rem;line-height:1.45;background:#fff}
+    .stage{border-radius:32px;position:relative;overflow:hidden}
+    .topbar{height:70px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 20px;background:rgba(255,255,255,.88);position:absolute;inset:0 0 auto 0;z-index:3}
+    .chip{padding:8px 12px;background:#fff;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.82rem}
+    .slides{height:100%;overflow:auto;padding-top:70px}
+    .slide{display:none;min-height:calc(100vh - 70px);padding:34px 34px 86px}
+    .slide.active{display:block}
+    .eyebrow{color:var(--primary);font-weight:700;font-size:.82rem;margin-bottom:10px}
+    h2{margin:0;font-size:clamp(1.9rem,4vw,3rem);line-height:1.02;letter-spacing:-.03em;max-width:820px}
+    .sub{margin:12px 0 0;color:var(--muted);max-width:580px;font-size:.98rem;line-height:1.5}
+    .hero,.two,.three,.usecase{display:grid;gap:16px;margin-top:22px}
+    .hero{grid-template-columns:1fr .9fr}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.usecase{grid-template-columns:290px 1fr}
+    .card,.mock,.stat,.quote{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 28px rgba(15,23,42,.04)}
+    .card,.quote{padding:20px}.quote{display:grid;place-items:center;text-align:center;background:linear-gradient(180deg,#ffffff,#faf5ff)}
+    .quote strong{font-size:1.35rem;line-height:1.3;max-width:420px}
+    .mini-list{display:grid;gap:10px}.mini{display:flex;gap:10px;align-items:flex-start}.dot{width:26px;height:26px;border-radius:999px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:.88rem;flex:none}.mini b{display:block;font-size:.98rem}.mini span{color:var(--muted);font-size:.88rem}
+    .stat{padding:18px;text-align:center}.stat .k{font-size:1.5rem;font-weight:800}.stat .l{margin-top:4px;color:var(--muted);font-size:.86rem}
+    .mock{padding:0;overflow:hidden}.mock-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#f8faff)}.mock-head h3{margin:0;font-size:1rem}.tag{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);font-size:.76rem}
+    .screen{padding:16px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid #edf2f7}.row:last-child{border-bottom:none}
+    .person{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#ede9fe)}
+    .badge{padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:700}.ok{background:#ecfdf5;color:#047857}.wait{background:#fffbeb;color:#b45309}.info{background:#eef2ff;color:#4338ca}
+    .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}.tile h4{margin:0 0 6px;font-size:.9rem}.muted{color:var(--muted)}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}.day{aspect-ratio:1;border:1px solid var(--line);border-radius:14px;padding:8px;font-size:.8rem;background:#fff;display:flex;flex-direction:column;justify-content:space-between}.day.on{background:var(--primary-soft);border-color:#cbc4ff}
+    .bars{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;height:150px;margin-top:12px}.bar{border-radius:12px 12px 6px 6px;background:linear-gradient(180deg,#9388ff,var(--primary))}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.tabs button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer}.tabs button.active{background:var(--primary-soft);color:var(--primary);border-color:#cbc4ff}
+    .panel{display:none}.panel.active{display:block}
+    .flow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px;direction:rtl}
+    .flow .step{padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:16px;min-width:120px;text-align:center;font-weight:600}
+    .flow .arrow{font-size:1.25rem;color:var(--primary);line-height:1}
+    .flow .step{padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:18px;min-width:150px;text-align:center;font-weight:700}
+    .flow .step small{display:block;margin-top:4px;color:var(--muted);font-size:.78rem;font-weight:500}
+    .uc-card{background:linear-gradient(180deg,#fff,#faf5ff);border:1px solid #e9d5ff;border-radius:24px;padding:20px}
+    .uc-card h3{margin:0 0 6px;font-size:1.12rem}.uc-card p{margin:0;color:var(--muted);line-height:1.5}
+    .uc-bullets{display:grid;gap:8px;margin-top:14px}.uc-bullets div{padding:10px 12px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:.88rem}
+
+    .footer{position:absolute;left:20px;right:20px;bottom:18px;display:flex;justify-content:space-between;align-items:center}
+    .btns{display:flex;gap:10px}.btn{border:none;border-radius:999px;padding:11px 16px;font:inherit;cursor:pointer}.btn.primary{background:linear-gradient(135deg,var(--primary),#8f84ff);color:#fff}.btn.secondary{background:#fff;border:1px solid var(--line)}
+    .count{padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid var(--line);color:var(--muted)}
+
+    .topbar .btns,.footer .btns,.sidebar .nav{transition:opacity .2s ease}
+    body.presenting .topbar .btns,body.presenting .footer .btns,body.presenting .sidebar .nav{opacity:0;pointer-events:none}
+    body.presenting .topbar{justify-content:flex-start}
+    body.presenting .sidebar{width:210px}
+    .app-demo{background:radial-gradient(circle at top right, rgba(124,58,237,.14), transparent 28%),linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid var(--line);border-radius:30px;overflow:hidden;box-shadow:0 18px 48px rgba(15,23,42,.08);padding:18px}
+    .browser{background:#fff;border:1px solid #e9eef5;border-radius:26px;overflow:hidden;box-shadow:0 16px 36px rgba(15,23,42,.06)}
+    .browser-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #eef2f7;background:linear-gradient(180deg,#fff,#fafafa)}
+    .browser-dots{display:flex;gap:8px}.browser-dots span{width:10px;height:10px;border-radius:999px;background:#e2e8f0}.browser-dots span:first-child{background:#fda4af}.browser-dots span:nth-child(2){background:#fcd34d}.browser-dots span:nth-child(3){background:#86efac}
+    .browser-url{padding:8px 14px;border:1px solid #eef2f7;border-radius:999px;color:#64748b;font-size:.8rem;background:#fff}
+    .landing-shell{padding:18px;background:linear-gradient(180deg,#fcfcff,#f8fafc)}
+    .landing-hero{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;align-items:stretch}
+    .hero-copy{background:linear-gradient(180deg,#ffffff,#fbfbff);border:1px solid #edf2f7;border-radius:24px;padding:22px}
+    .hero-kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#f5f3ff;color:var(--primary);font-size:.82rem;font-weight:700}
+    .hero-copy h3{margin:14px 0 10px;font-size:1.55rem;line-height:1.1;letter-spacing:-.02em}
+    .hero-copy p{margin:0;color:var(--muted);line-height:1.55;font-size:.95rem}
+    .hero-mini-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+    .mini-stat{background:#fff;border:1px solid #edf2f7;border-radius:18px;padding:14px}
+    .mini-stat b{display:block;font-size:1.2rem}.mini-stat span{color:var(--muted);font-size:.8rem}
+    .phone-stack{display:grid;gap:12px}
+    .phone-card,.preview-card{background:#fff;border:1px solid #edf2f7;border-radius:24px;padding:16px;box-shadow:0 10px 22px rgba(15,23,42,.04)}
+    .phone-card .status{display:inline-flex;padding:7px 10px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:.76rem;font-weight:700}
+    .dog-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+    .dog-row .dog{display:flex;align-items:center;gap:12px}.dog-face{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#ede9fe,#dbeafe);display:grid;place-items:center;font-size:1.35rem}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .metric{border:1px solid #edf2f7;border-radius:18px;padding:14px;background:#fff}
+    .metric b{display:block;font-size:1.15rem}.metric span{color:var(--muted);font-size:.8rem}
+    .system-board{display:grid;grid-template-columns:220px 1fr;gap:14px}
+    .system-sidebar{background:#0f172a;border-radius:24px;padding:16px;color:#cbd5e1;display:flex;flex-direction:column;gap:10px}
+    .system-sidebar .brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#8f84ff);display:grid;place-items:center;color:#fff}
+    .system-sidebar .nav-item{padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);font-size:.84rem}
+    .system-sidebar .nav-item.active{background:rgba(124,58,237,.24);color:#fff;border-color:rgba(143,132,255,.34)}
+    .system-main{display:grid;gap:12px}
+    .system-top{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #edf2f7;border-radius:22px;padding:16px}
+    .system-title{font-weight:800;font-size:1.05rem}.system-sub{color:var(--muted);font-size:.82rem}
+    .pill{padding:7px 10px;border-radius:999px;background:#f5f3ff;color:var(--primary);font-size:.76rem;font-weight:700}
+    .content-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.stack{display:grid;gap:12px}
+    .ui-card{background:#fff;border:1px solid #edf2f7;border-radius:22px;padding:16px;box-shadow:0 8px 20px rgba(15,23,42,.03)}
+    .ui-card h4{margin:0 0 10px;font-size:.92rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{background:#f8fafc;border:1px solid #edf2f7;border-radius:16px;padding:11px}.field b{display:block;font-size:.74rem;color:var(--muted);margin-bottom:5px}.field span{font-size:.88rem}
+    .day-list{display:grid;gap:8px}.day-item{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border:1px solid #edf2f7;border-radius:16px;background:#fff}
+    .monthly-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.monthly-grid .day{min-height:76px;aspect-ratio:auto}.monthly-grid .day.on{background:#f5f3ff;border-color:#ddd6fe}
+    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.tile{background:#fff;border:1px solid #edf2f7;border-radius:18px;padding:14px}.tile .n{font-size:1.18rem;font-weight:800}
+    .analytics-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:160px}.analytics-bars .bar{border-radius:12px 12px 6px 6px;background:linear-gradient(180deg,#c4b5fd,var(--primary))}
+    .soft-note{margin-top:12px;padding:12px 14px;border-radius:16px;background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8;font-size:.86rem}
+    @media (max-width:1100px){.landing-hero,.system-board,.content-grid,.kpi,.form-grid,.hero-mini-stats,.metric-grid{grid-template-columns:1fr}.system-sidebar{display:none}}
+
+    @media (max-width:1100px){html,body{overflow:auto}.app{grid-template-columns:1fr;height:auto;min-height:100vh}.sidebar{display:none}.slide{padding:26px 18px 84px}.hero,.two,.three,.usecase,.tiles{grid-template-columns:1fr}.footer{position:static;padding:0 18px 18px}.slides{padding-bottom:20px}.topbar{position:sticky}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">🐾</div>
+      <div>
+        <h1>Pension-Net</h1>
+        <p>וובינר · מצב דמו</p>
+      </div>
+    </div>
+    <div class="nav" id="nav"></div>
+    
+  </aside>
+
+  <main class="stage">
+    <div class="topbar">
+      
+      <div class="btns">
+        <button class="btn secondary" id="popout">פתח שלט</button>
+        <button class="btn secondary" id="restart">התחל מחדש</button>
+      </div>
+    </div>
+
+    <section class="slides">
+      <section class="slide active" data-title="פתיחה">
+        <div class="eyebrow">שקף 1</div>
+        <h2>לנהל פנסיון <span style="color:var(--primary)">בלי בלגן</span></h2>
+        <p class="sub">פחות בלגן, יותר שליטה, ובסיס אמיתי לצמיחה של הפנסיון.</p>
+        <div class="hero">
+          <div class="card">
+            <div class="mini-list">
+              <div class="mini"><div class="dot">1</div><div><b>סדר</b><span>הכל במקום אחד</span></div></div>
+              <div class="mini"><div class="dot">2</div><div><b>שליטה</b><span>יודעים מה קורה</span></div></div>
+              <div class="mini"><div class="dot">3</div><div><b>צמיחה</b><span>מנהלים נכון יותר</span></div></div>
+            </div>
+          </div>
+          <div class="quote"><strong>פחות כאוס.<br>יותר שליטה.</strong></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="הבעיה">
+        <div class="eyebrow">שקף 2</div>
+        <h2>כשהניהול ידני, <span style="color:var(--primary)">הכל מתפזר</span></h2>
+        <div class="three">
+          <div class="card"><h3>הזמנות</h3><div class="muted">בכמה מקומות</div></div>
+          <div class="card"><h3>תשלומים</h3><div class="muted">לא תמיד ברורים</div></div>
+          <div class="card"><h3>ניהול</h3><div class="muted">קשה להתרחב</div></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="מה מקבלים">
+        <div class="eyebrow">שקף 3</div>
+        <h2>מה מקבלים <span style="color:var(--primary)">במערכת</span></h2>
+        <div class="three">
+          <div class="stat"><div class="k">הזמנות</div><div class="l">פתיחה ומעקב</div></div>
+          <div class="stat"><div class="k">גבייה</div><div class="l">ברור ומהיר</div></div>
+          <div class="stat"><div class="k">דוחות</div><div class="l">הכנסות ותפוסה</div></div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="תרחישי שימוש">
+        <div class="eyebrow">שקף 4</div>
+        <h2>כך זה נראה <span style="color:var(--primary)">ביום עבודה אמיתי</span></h2>
+        <p class="sub">דוגמאות קצרות מתוך השגרה של פנסיון כלבים, כמו בדף הנחיתה: פחות כאב תפעולי, יותר שליטה בפועל.</p>
+        <div class="tabs">
+          <button class="tab active" data-panel="p1">קליטת הזמנה</button>
+          <button class="tab" data-panel="p2">סדר יומי</button>
+          <button class="tab" data-panel="p3">גבייה</button>
+          <button class="tab" data-panel="p4">תובנות</button>
+        </div>
+        <div class="usecase">
+          <div>
+            <div class="panel active" id="p1"><div class="uc-card"><h3>לקוחה שולחת הודעה על שהות לסוף שבוע</h3><p>פותחים הזמנה אחת מסודרת עם פרטי בעלים, כלב, תאריכי כניסה ויציאה, מחיר והערות.</p><div class="uc-bullets"><div>בעלים: יוליה כהן</div><div>כלב: לוסי · גולדן</div><div>שהות: חמישי עד שבת</div></div></div></div>
+            <div class="panel" id="p2"><div class="uc-card"><h3>בוקר עמוס עם כניסות ויציאות</h3><p>במקום לעבור על וואטסאפ ופתקים, רואים מיד מי נכנס היום, מי יוצא ומה צפוי בהמשך.</p><div class="uc-bullets"><div>3 כניסות היום</div><div>2 יציאות עד 18:00</div><div>הזמנה אחת ממתינה לאישור</div></div></div></div>
+            <div class="panel" id="p3"><div class="uc-card"><h3>לקוח מגיע לאסוף את הכלב בסוף השהות</h3><p>פותחים את ההזמנה ורואים מיד את סכום הגבייה המלא לסיום השהות, בלי חישוב ידני ובלי חיפוש בהודעות.</p><div class="uc-bullets"><div>סה"כ לתשלום: ₪840</div><div>מועד גבייה: בסיום השהות</div><div>סטטוס: ממתין לתשלום</div></div></div></div>
+            <div class="panel" id="p4"><div class="uc-card"><h3>רוצים להבין איך החודש נראה</h3><p>נכנסים לדוחות ורואים הכנסות, תפוסה, לקוחות מובילים ומגמות שחוזרות על עצמן.</p><div class="uc-bullets"><div>תפוסה גבוהה בסופי שבוע</div><div>2 לקוחות חוזרים מובילים</div><div>צפי חזק לחג הקרוב</div></div></div></div>
+          </div>
+          <div class="quote">
+            <strong id="flowTitle">מקליטת הזמנה לסוף שבוע</strong>
+            <div class="flow" id="flowArea"></div>
+          </div>
+        </div>
+      </section>
+
+      
+      <section class="slide" data-title="דמו הזמנה">
+        <div class="eyebrow">שקף 5</div>
+        <h2>דמו: <span style="color:var(--primary)">פתיחת הזמנה</span></h2>
+        <p class="sub">במקום מוקאפ כללי, התצוגה כאן בנויה בשפה של ההדגמה בדף הנחיתה: נקייה, בהירה ומבוססת כרטיסים.</p>
+        <div class="app-demo">
+          <div class="browser">
+            <div class="browser-top">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">app.pensionet.co.il / orders / new</div>
+            </div>
+            <div class="landing-shell">
+              <div class="landing-hero">
+                <div class="hero-copy">
+                  <span class="hero-kicker">פתיחת הזמנה חדשה</span>
+                  <h3>כל פרטי ההזמנה במקום אחד, בלי הודעות מפוזרות</h3>
+                  <p>קולטים את פרטי הבעלים, הכלב, השהות וההערות למסך אחד מסודר, בדיוק כמו ההדגמה הקלה והבהירה שמופיעה בדף הנחיתה.</p>
+                  <div class="hero-mini-stats">
+                    <div class="mini-stat"><b>12.03</b><span>כניסה</span></div>
+                    <div class="mini-stat"><b>15.03</b><span>יציאה</span></div>
+                    <div class="mini-stat"><b>₪280</b><span>מחיר ליום</span></div>
+                    <div class="mini-stat"><b>מאושר</b><span>סטטוס הזמנה</span></div>
+                  </div>
+                </div>
+                <div class="phone-stack">
+                  <div class="phone-card">
+                    <span class="status">הזמנה אושרה</span>
+                    <div class="dog-row">
+                      <div class="dog"><div class="dog-face">🐶</div><div><b>לוסי</b><div class="muted">תחש · קטנה</div></div></div>
+                      <b>יוליה</b>
+                    </div>
+                    <div class="metric-grid">
+                      <div class="metric"><b>3</b><span>לילות</span></div>
+                      <div class="metric"><b>₪840</b><span>סה״כ שהות</span></div>
+                    </div>
+                  </div>
+                  <div class="preview-card">
+                    <div class="muted">הערות חשובות</div>
+                    <div style="margin-top:8px;font-weight:700">רגישה לעוף · איסוף ב-18:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="slide" data-title="דמו ניהול יומי">
+        <div class="eyebrow">שקף 6</div>
+        <h2>דמו: <span style="color:var(--primary)">ניהול יומי</span></h2>
+        <p class="sub">התצוגה מזכירה את רוח ההדגמה בדף הנחיתה, אבל מראה שימוש אמיתי: מי נכנס, מי יוצא ומה קורה החודש.</p>
+        <div class="app-demo">
+          <div class="browser">
+            <div class="browser-top">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">app.pensionet.co.il / dashboard</div>
+            </div>
+            <div class="landing-shell">
+              <div class="system-board">
+                <div class="system-sidebar">
+                  <div class="brand-mark">🐾</div>
+                  <div class="nav-item">הזמנות</div>
+                  <div class="nav-item active">לוח ניהול</div>
+                  <div class="nav-item">לקוחות וכלבים</div>
+                  <div class="nav-item">דוחות</div>
+                </div>
+                <div class="system-main">
+                  <div class="system-top">
+                    <div><div class="system-title">לוח ניהול יומי</div><div class="system-sub">12 במרץ 2026 · תמונת מצב לפנסיון</div></div>
+                    <span class="pill">8 כלבים היום</span>
+                  </div>
+                  <div class="content-grid">
+                    <div class="ui-card">
+                      <h4>תנועות להיום</h4>
+                      <div class="day-list">
+                        <div class="day-item"><div><b>לוסי</b><div class="muted">כניסה · 09:30</div></div><span class="badge ok">הגיעה</span></div>
+                        <div class="day-item"><div><b>רוקי</b><div class="muted">כניסה · 11:00</div></div><span class="badge wait">בדרך</span></div>
+                        <div class="day-item"><div><b>מיקה</b><div class="muted">יציאה · 14:00</div></div><span class="badge info">לאיסוף</span></div>
+                      </div>
+                    </div>
+                    <div class="stack">
+                      <div class="ui-card">
+                        <h4>מדדים מהירים</h4>
+                        <div class="kpi">
+                          <div class="tile"><div class="n">85%</div><div class="muted">תפוסה</div></div>
+                          <div class="tile"><div class="n">3</div><div class="muted">כניסות היום</div></div>
+                          <div class="tile"><div class="n">2</div><div class="muted">יציאות היום</div></div>
+                        </div>
+                      </div>
+                      <div class="ui-card">
+                        <h4>שבוע קרוב</h4>
+                        <div class="monthly-grid">
+                          <div class="day"><span>13</span><span>4 כלבים</span></div>
+                          <div class="day"><span>14</span><span>5 כלבים</span></div>
+                          <div class="day on"><span>15</span><span>7 כלבים</span></div>
+                          <div class="day on"><span>16</span><span>6 כלבים</span></div>
+                          <div class="day"><span>17</span><span>4 כלבים</span></div>
+                          <div class="day"><span>18</span><span>3 כלבים</span></div>
+                          <div class="day on"><span>19</span><span>6 כלבים</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="slide" data-title="דמו תשלום">
+        <div class="eyebrow">שקף 7</div>
+        <h2>דמו: <span style="color:var(--primary)">גבייה בסיום השהות</span></h2>
+        <p class="sub">כאן המסך נראה יותר כמו המערכת בדף הנחיתה, אבל עם מצב שימוש אמיתי של גבייה באיסוף הכלב.</p>
+        <div class="app-demo">
+          <div class="browser">
+            <div class="browser-top">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">app.pensionet.co.il / orders / 2481</div>
+            </div>
+            <div class="landing-shell">
+              <div class="landing-hero">
+                <div class="hero-copy">
+                  <span class="hero-kicker">גבייה באיסוף</span>
+                  <h3>בעלת הכלב מגיעה, פותחים הזמנה ורואים מיד כמה לגבות</h3>
+                  <p>הסכום הכולל מוכן מול העיניים, בלי לחשב ידנית ובלי לחפש בהודעות. זה תואם לאופי הפשוט והמהיר שמוצג גם בדף הנחיתה.</p>
+                  <div class="hero-mini-stats">
+                    <div class="mini-stat"><b>₪840</b><span>סה״כ לתשלום</span></div>
+                    <div class="mini-stat"><b>15.03</b><span>איסוף</span></div>
+                    <div class="mini-stat"><b>פתוח</b><span>סטטוס גבייה</span></div>
+                    <div class="mini-stat"><b>מזומן / העברה</b><span>אמצעי אפשרי</span></div>
+                  </div>
+                </div>
+                <div class="phone-stack">
+                  <div class="phone-card">
+                    <span class="status" style="background:#fffbeb;color:#b45309">ממתין לתשלום</span>
+                    <div class="dog-row">
+                      <div><div class="muted">לקוחה</div><b>יוליה כהן</b></div>
+                      <div><div class="muted">כלב</div><b>לוסי</b></div>
+                    </div>
+                    <div class="metric-grid">
+                      <div class="metric"><b>₪840</b><span>לתשלום עכשיו</span></div>
+                      <div class="metric"><b>3</b><span>לילות</span></div>
+                    </div>
+                  </div>
+                  <div class="preview-card">
+                    <div class="muted">פעולה הבאה</div>
+                    <div style="margin-top:8px;font-weight:700">מסמנים שולם בסיום השהות וממשיכים להזמנה הבאה.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="slide" data-title="דמו דוחות">
+        <div class="eyebrow">שקף 8</div>
+        <h2>דמו: <span style="color:var(--primary)">דוחות וצמיחה</span></h2>
+        <p class="sub">המסך משלב את שפת הדף השיווקי עם תצוגה ניהולית אמיתית של הכנסות, תפוסה ומגמות.</p>
+        <div class="app-demo">
+          <div class="browser">
+            <div class="browser-top">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">app.pensionet.co.il / reports</div>
+            </div>
+            <div class="landing-shell">
+              <div class="system-board">
+                <div class="system-sidebar">
+                  <div class="brand-mark">🐾</div>
+                  <div class="nav-item">הזמנות</div>
+                  <div class="nav-item">לוח ניהול</div>
+                  <div class="nav-item">לקוחות וכלבים</div>
+                  <div class="nav-item active">דוחות</div>
+                </div>
+                <div class="system-main">
+                  <div class="system-top">
+                    <div><div class="system-title">דוחות חודשיים</div><div class="system-sub">מרץ 2026 · תמונת מצב עסקית</div></div>
+                    <span class="pill">₪18,400 החודש</span>
+                  </div>
+                  <div class="stack">
+                    <div class="kpi">
+                      <div class="tile"><div class="n">78%</div><div class="muted">תפוסה</div></div>
+                      <div class="tile"><div class="n">32</div><div class="muted">הזמנות</div></div>
+                      <div class="tile"><div class="n">6</div><div class="muted">לקוחות חוזרים</div></div>
+                    </div>
+                    <div class="ui-card">
+                      <h4>מגמת הכנסות</h4>
+                      <div class="analytics-bars">
+                        <div class="bar" style="height:40%"></div>
+                        <div class="bar" style="height:54%"></div>
+                        <div class="bar" style="height:61%"></div>
+                        <div class="bar" style="height:58%"></div>
+                        <div class="bar" style="height:79%"></div>
+                        <div class="bar" style="height:73%"></div>
+                        <div class="bar" style="height:88%"></div>
+                      </div>
+                      <div class="soft-note">רואים בבירור שסופי השבוע והחגים מייצרים את השיאים, ולכן קל יותר להיערך מראש.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="slide" data-title="סיכום">
+        <div class="eyebrow">שקף 9</div>
+        <h2>יותר סדר. <span style="color:var(--primary)">יותר שליטה.</span></h2>
+        <div class="hero">
+          <div class="card">
+            <div class="mini-list">
+              <div class="mini"><div class="dot">✓</div><div><b>פחות טעויות</b><span>פחות פספוסים</span></div></div>
+              <div class="mini"><div class="dot">✓</div><div><b>יותר מקצועיות</b><span>ניהול ברור</span></div></div>
+              <div class="mini"><div class="dot">✓</div><div><b>בסיס לצמיחה</b><span>אפשר לגדול מסודר</span></div></div>
+            </div>
+          </div>
+          <div class="quote"><strong>מחיר השקה מיוחד לנרשמים מהוובינר</strong></div>
+        </div>
+      </section>
+    </section>
+
+    <div class="footer">
+      <div class="btns">
+        <button class="btn secondary" id="prev">הקודם</button>
+        <button class="btn primary" id="next">הבא</button>
+      </div>
+      <div class="count" id="count">1 / 9</div>
+    </div>
+  </main>
+</div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const count=document.getElementById('count');
+  let current=0;
+  let remoteWindow=null;
+  let isPresenting=false;
+
+  slides.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.textContent=s.dataset.title;
+    b.onclick=()=>go(i);
+    nav.appendChild(b);
+  });
+
+  function render(){
+    slides.forEach((s,i)=>s.classList.toggle('active',i===current));
+    [...nav.children].forEach((b,i)=>b.classList.toggle('active',i===current));
+    count.textContent=`${current+1} / ${slides.length}`;
+    document.getElementById('next').textContent=current===slides.length-1?'להתחלה':'הבא';
+    syncRemote();
+  }
+
+  function go(i){current=(i+slides.length)%slides.length;render()}
+
+  document.getElementById('prev').onclick=()=>go(current-1);
+  document.getElementById('next').onclick=()=>go(current===slides.length-1?0:current+1);
+  document.getElementById('restart').onclick=()=>go(0);
+
+  document.addEventListener('keydown',e=>{
+    if(['ArrowLeft','PageDown',' '].includes(e.key)){e.preventDefault();document.getElementById('next').click();}
+    if(['ArrowRight','PageUp'].includes(e.key)){e.preventDefault();document.getElementById('prev').click();}
+  });
+
+  const flowData={
+    p1:{title:'מקליטת הזמנה לסוף שבוע',steps:[['תרחיש','לקוחה חוזרת נכנסת לקישור ההזמנה ומבקשת מקום ללוסי לסוף שבוע'],['פעולה','הלקוחה ממלאת הזמנה בקישור, אתה מקבל התראה במייל ונכנס לאשר'],['תוצאה','בלחיצה על אישור ההזמנה מאושרת והודעת אישור מוכנה לשליחה בוואטסאפ']]},
+    p2:{title:'מפתיחת יום מסודרת',steps:[['תרחיש','יש כמה כניסות ויציאות באותו יום'],['פעולה','פותחים את מסך הניהול ורואים מי נכנס, מי יוצא ומה ממתין'],['תוצאה','היום מתנהל בשליטה ועם פחות פספוסים']]},
+    p3:{title:'מגבייה מסודרת בסוף השהות',steps:[['תרחיש','לקוח מגיע לאסוף את הכלב בסיום השהות'],['פעולה','פותחים את ההזמנה ורואים מיד את הסכום המלא לגבייה'],['תוצאה','גובים במקום בצורה מסודרת ובלי חישוב ידני']]},
+    p4:{title:'מנתונים להחלטה עסקית',steps:[['תרחיש','רוצים להבין אם החודש חזק או חלש'],['פעולה','בודקים הכנסות, תפוסה ולקוחות מובילים בדוחות'],['תוצאה','מקבלים החלטות לפי מספרים ולא רק תחושת בטן']]}
+  };
+
+  function renderFlow(key){
+    const data=flowData[key];
+    if(!data) return;
+    const area=document.getElementById('flowArea');
+    const title=document.getElementById('flowTitle');
+    if(title) title.textContent=data.title;
+    area.innerHTML=data.steps.map((step,i)=>`<div class="step">${step[0]}<small>${step[1]}</small></div>${i<data.steps.length-1?'<div class="arrow">←</div>':''}`).join('');
+  }
+  renderFlow('p1');
+
+  document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+    renderFlow(btn.dataset.panel);
+  }));
+
+  const speakerExamples={
+    0:[
+      'אפשר לפתוח בזה שרוב הפנסיונים מתחילים מווטסאפ, יומן וזיכרון.',
+      'תן דוגמה פשוטה: שני כלבים נכנסים באותו יום, ואחד מהם מתארך ברגע האחרון.'
+    ],
+    1:[
+      'דוגמה: הזמנה נשארת בוואטסאפ, ואז ביום הכניסה צריך לחפש פרטים.',
+      'תדגיש שהבעיה היא לא רק עומס, אלא גם חוסר ודאות מה קורה היום בעסק.'
+    ],
+    2:[
+      "תן דוגמה ללקוחה שמתקשרת לשמור מקום לסוף שבוע, ואתה קולט הכל בבת אחת.",
+      'אפשר להסביר שהמערכת מרכזת לקוח, כלב, תאריכים, מחיר והערות במסך אחד.'
+    ],
+    3:[
+      'דוגמה: בבוקר אחד יש כניסה של רוקי, יציאה של לוסי והארכת שהות למיקה.',
+      'אפשר להגיד שבמקום לעבור בין הודעות, פותחים מסך אחד ורואים את היום.'
+    ],
+    4:[
+      'דוגמה: לקוח שואל מה היה התעריף שסגרתם בפעם הקודמת.',
+      'תסביר שהמידע נשמר מסודר, במקום לחפש בהודעות ישנות או במחברת.'
+    ],
+    5:[
+      'דוגמה אמיתית: הלקוח מגיע לאיסוף, ובאותו רגע רואים כמה צריך לגבות.',
+      'אפשר להדגיש שזה חוסך חישוב ידני לפי מספר ימים או בלבול מול הלקוח.'
+    ],
+    6:[
+      'דוגמה: רוצים לדעת אם אוגוסט חזק יותר מיולי או אם יש חורים באמצע השבוע.',
+      'אפשר להגיד שהמטרה היא לא רק סדר, אלא גם לראות מגמות ולפעול לפי נתונים.'
+    ],
+    7:[
+      'תן דוגמה לפנסיון קטן שגדל וכבר קשה לו לעבוד רק עם שיחות ווטסאפ.',
+      'תחדד שזה מתאים במיוחד למי שכבר מרגיש שהניהול הידני מתחיל לעכב אותו.'
+    ],
+    8:[
+      'אפשר לסיים בהצעה פשוטה: להתחיל במחיר השקה ולראות שזה עובד בפועל.',
+      'תזכיר שהמטרה בוובינר היא להראות איך ניהול מסודר הופך את העסק ליותר נשלט.'
+    ]
+  };
+
+  function remoteHTML(){
+    const titles=slides.map((s,i)=>`<button class="jump" data-index="${i}">${i+1}. ${s.dataset.title}</button>`).join('');
+    return `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>שלט מצגת</title><style>
+      body{margin:0;padding:16px;font-family:Heebo,Arial,sans-serif;background:#f6f8fc;color:#0f172a}
+      .wrap{display:grid;gap:12px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:14px;box-shadow:0 10px 25px rgba(15,23,42,.06)}
+      .top{display:flex;justify-content:space-between;align-items:center;gap:10px}.title{font-size:14px;color:#64748b}.now{font-weight:800;font-size:22px}
+      .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn,.jump{border:none;background:#fff;padding:12px 14px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid #e2e8f0;text-align:right}
+      .btn.primary{background:linear-gradient(135deg,#6d5dfc,#8f84ff);color:#fff;border:none}.list{display:grid;gap:8px;max-height:58vh;overflow:auto}.jump.active{background:#f1efff;color:#6d5dfc;border-color:#cbc4ff}
+      .hint{font-size:12px;color:#64748b}.sub{font-size:13px;font-weight:700;margin-bottom:8px}.examples{display:grid;gap:8px}.example{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.5}
+    </style></head><body><div class="wrap">
+      <div class="card top"><div><div class="title">שלט מצגת</div><div class="now" id="currentTitle">-</div></div><div class="hint" id="counter">1 / ${slides.length}</div></div>
+      <div class="card btns"><button class="btn" id="prevBtn">הקודם</button><button class="btn primary" id="nextBtn">הבא</button></div>
+      <div class="card"><div class="sub">דוגמאות שתוכל להגיד בעל פה</div><div class="examples" id="examplesBox"><div class="hint">בחר שקף כדי לראות דוגמאות.</div></div></div>
+      <div class="card list">${titles}</div>
+    </div>
+    <script>
+      function send(action,payload){ if(window.opener && !window.opener.closed){ window.opener.postMessage({source:'pension-remote',action,payload},'*'); } }
+      document.getElementById('prevBtn').onclick=()=>send('prev');
+      document.getElementById('nextBtn').onclick=()=>send('next');
+      document.querySelectorAll('.jump').forEach(btn=>btn.onclick=()=>send('go',Number(btn.dataset.index)));
+      window.addEventListener('message',e=>{
+        const msg=e.data||{}; if(msg.source!=='pension-main') return;
+        document.getElementById('currentTitle').textContent=msg.title;
+        document.getElementById('counter').textContent=(msg.index+1)+' / '+msg.total;
+        document.querySelectorAll('.jump').forEach((b,i)=>b.classList.toggle('active',i===msg.index));
+        const box=document.getElementById('examplesBox');
+        const examples=Array.isArray(msg.examples)?msg.examples:[];
+        box.innerHTML = examples.length
+          ? examples.map(function(x){ return '<div class="example">' + x + '</div>'; }).join('')
+          : '<div class="hint">אין דוגמאות לשקף הזה.</div>';
+      });
+    <\/script></body></html>`;
+  }
+
+  function setPresenting(on){
+    isPresenting=on;
+    document.body.classList.toggle('presenting', on);
+  }
+
+  function openRemote(){
+    if(remoteWindow && !remoteWindow.closed){ remoteWindow.focus(); setPresenting(true); syncRemote(); return; }
+    remoteWindow=window.open('', 'pensionnetRemote', 'width=420,height=760,resizable=yes,scrollbars=yes');
+    if(!remoteWindow){ alert('הדפדפן חסם את חלון השלט.'); return; }
+    setPresenting(true);
+    remoteWindow.onbeforeunload=()=>setPresenting(false);
+    remoteWindow.document.open();
+    remoteWindow.document.write(remoteHTML());
+    remoteWindow.document.close();
+    const remoteWatcher=setInterval(()=>{
+      if(!remoteWindow || remoteWindow.closed){
+        clearInterval(remoteWatcher);
+        setPresenting(false);
+      }
+    },500);
+    setTimeout(syncRemote, 150);
+  }
+
+  function syncRemote(){
+    if(remoteWindow && !remoteWindow.closed){
+      remoteWindow.postMessage({source:'pension-main',index:current,total:slides.length,title:slides[current].dataset.title,examples:speakerExamples[current]||[]}, '*');
+    }
+  }
+
+  document.getElementById('popout').onclick=openRemote;
+  window.addEventListener('message',e=>{
+    const msg=e.data||{};
+    if(msg.source!=='pension-remote') return;
+    if(msg.action==='prev') go(current-1);
+    if(msg.action==='next') go(current===slides.length-1?0:current+1);
+    if(msg.action==='go') go(Number(msg.payload));
+  });
+
+  render();
+</script>
+</body>
+</html>

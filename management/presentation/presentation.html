@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-55W1DS6SQJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-55W1DS6SQJ');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מצגת פנסיון-נט</title>
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <!-- ייבוא פונט Heebo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- ייבוא אייקונים -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --accent-color: #e94560;
+            --text-color: #ffffff;
+            --secondary-text: #aeb2b8;
+            --highlight: #0f3460;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* מונע גלילה */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+
+        /* קונטיינר המצגת */
+        .presentation-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* עיצוב שקף בודד */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: none; /* מונע אינטראקציה עם שקפים מוסתרים */
+        }
+
+        /* המצב הפעיל של שקף */
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* אלמנטים בתוך השקף */
+        .icon-container {
+            font-size: 5rem;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 10px rgba(233, 69, 96, 0.3));
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--secondary-text);
+            max-width: 900px;
+            line-height: 1.4;
+        }
+
+        .highlight-text {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        /* רשימת פיצ'רים */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 900px;
+            text-align: right;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border-right: 4px solid var(--accent-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* בקרי שליטה */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button.btn-next {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        button.btn-next:hover {
+            background: #ff4d6d;
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        /* מד התקדמות */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* התאמה לנייד */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.2rem; }
+            .features-grid { grid-template-columns: 1fr; gap: 10px; }
+            .feature-item { padding: 8px 15px; font-size: 1rem; }
+            .icon-container { font-size: 2.5rem; margin-bottom: 1.5rem; }
+            .presentation-container { width: 95%; height: 85vh; }
+            .slide { padding-bottom: 100px; }
+            .controls { bottom: 20px; gap: 12px; }
+            button { padding: 10px 18px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        
+        <!-- שקף 1 -->
+        <div class="slide active">
+            <div class="icon-container"><i class="fa-solid fa-paw"></i></div>
+            <h1>פנסיון-נט</h1>
+            <h2>מערכת ניהול חכמה לפנסיון כלבים</h2>
+        </div>
+
+        <!-- שקף 2 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-question-circle"></i></div>
+            <h1>למה לי להשתמש במערכת?</h1>
+            <h2>"יש לי פנסיון פעיל עם הזמנות קבועות,<br><span class="highlight-text">למה לי לשנות את איך שאני עובד?</span>"</h2>
+            <h2 style="margin-top: 20px; color: var(--text-color); font-weight: 700;">הנקודה היא לא לשנות - אלא <span class="highlight-text">לשפר</span>.</h2>
+        </div>
+
+        <!-- שקף 3 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <h1>בואו נדבר מספרים</h1>
+            <h2>איך אתם עוקבים אחרי הפעילות העסקית?<br>יודעים כמה כלבים בממוצע מגיעים כל חודש?<br>יודעים מהי <span class="highlight-text">תחזית ההכנסות</span> שלכם?</h2>
+        </div>
+
+        <!-- שקף 4 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-brain"></i></div>
+            <h1>לנהל עסק, לא רק לשמור</h1>
+            <h2>המערכת לא מיועדת למי שמסתפק ב”לך תזכור בראש”.<br>היא מיועדת למי שרוצה <span class="highlight-text">לנהל עסק</span> ולא רק לשמור על כלבים.</h2>
+        </div>
+
+        <!-- שקף 5 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-chart-line"></i></div>
+            <h1>דוחות ותחזיות בזמן אמת</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> הכנסות החודש + אחוז שינוי</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> מספר כלבים ומגמות גדילה</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> תפוסה מול קיבולת מירבית</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> לקוחות פעילים מול חדשים</div>
+            </div>
+        </div>
+
+        <!-- שקף 6 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-table-list"></i></div>
+            <h1>שליטה עמוקה בנתונים</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> תחזית הכנסות ל-3 חודשים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> 10 הלקוחות המכניסים ביותר</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> גרפי הכנסות ותפוסה חציוניים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> פילוח שוק לפי סוגי כלבים</div>
+            </div>
+        </div>
+
+        <!-- שקף 7 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-coins"></i></div>
+            <h1>כל הנתונים במקום אחד</h1>
+            <div class="features-grid">
+                <div class="feature-item"><i class="fa-solid fa-check"></i> ממוצע הכנסה לביקור</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> סך ימי אירוח מצטברים</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> זיהוי חודשי שיא ושפל</div>
+                <div class="feature-item"><i class="fa-solid fa-check"></i> מעקב אחרי תשלומים ויתרות</div>
+            </div>
+        </div>
+
+        <!-- שקף 8 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-microchip"></i></div>
+            <h1>לא רק מספרים - תובנות</h1>
+            <h2>המערכת מנתחת את הנתונים עבורך<br>ומציעה <span class="highlight-text">פעולות לשיפור הרווחיות</span>.</h2>
+        </div>
+
+        <!-- שקף 9 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-bullhorn"></i></div>
+            <h1>דחיפה לשיווק וצמיחה</h1>
+            <h2>תפוסה נמוכה מ-50%?<br>המערכת תתריע <span class="highlight-text">ותדרבן אותך להשקיע בשיווק</span> כדי למלא את המקום.</h2>
+        </div>
+
+        <!-- שקף 10 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-shield-halved"></i></div>
+            <h1>הפחתת סיכונים</h1>
+            <h2>זיהוי תלות בלקוחות קבועים (חוק פארטו).<br>אם 20% מהלקוחות מייצרים 80% מההכנסות - <br><span class="highlight-text">אתם צריכים לדעת מזה</span>.</h2>
+        </div>
+
+        <!-- שקף 11 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-umbrella-beach"></i></div>
+            <h1>זיהוי עונתיות</h1>
+            <h2>המערכת לומדת מתי הפנסיון ריק<br>ומכוונת אותך <span class="highlight-text">למבצעים ממוקדים</span> בחודשים החלשים.</h2>
+        </div>
+
+        <!-- שקף 12 -->
+        <div class="slide">
+            <div class="icon-container"><i class="fa-solid fa-handshake"></i></div>
+            <h1>תודה!</h1>
+            <h2>שחר כהן – מייסד ומפתח<br><br>
+            <span style="font-size: 0.8em; opacity: 0.8;">shaharsolutions@gmail.com | 052-8366744</span>
+            </h2>
+        </div>
+
+    </div>
+
+    <!-- כפתורי שליטה -->
+    <div class="controls">
+        <button onclick="prevSlide()"><i class="fa-solid fa-chevron-right"></i> הקודם</button>
+        <button onclick="nextSlide()" class="btn-next">הבא <i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <!-- בר התקדמות -->
+    <div class="progress-bar" id="progress"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            // טיפול בגבולות
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            
+            currentSlide = index;
+
+            // הסרת המחלקה active מכולם והוספה לנוכחי
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+
+            // עדכון בר התקדמות
+            const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // האזנה למקלדת
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft' || event.key === ' ') {
+                nextSlide(); 
+            } else if (event.key === 'ArrowRight') {
+                prevSlide();
+            }
+        });
+
+        // אתחול ראשוני
+        showSlide(0);
+    </script>
+</body>
+</html>
