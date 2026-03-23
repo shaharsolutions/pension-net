@@ -440,7 +440,7 @@
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-              redirectTo: `${window.location.href.split('/pension-net/login.html')[0]}/pension-net/admin.html`,
+              redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'admin.html'),
             },
           });
           localStorage.setItem('pensionet_just_logged_in', 'true');
