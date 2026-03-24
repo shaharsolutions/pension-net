@@ -20,6 +20,7 @@
     <link rel="alternate" hreflang="he" href="https://shaharsolutions.github.io/Pension-Net/website/">
     <link rel="icon" href="../system/favicon.png" type="image/png" />
     <link rel="sitemap" type="application/xml" href="../sitemap.xml">
+    <base href="/website/">
 
     <!-- Preload critical resources -->
     <link rel="preload" href="images/hero.png" as="image">
@@ -162,7 +163,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="/website/css/main.css">
 </head>
 <body>
 
@@ -181,14 +182,22 @@
             </div>
             <span>פנסיון-נט</span>
         </a>
-        <ul class="nav-links">
+
+        <div class="menu-toggle" id="menuToggle" aria-label="פתח תפריט">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <ul class="nav-links" id="navLinks">
             <li><a href="#features">פיצ'רים</a></li>
             <li><a href="#how-it-works">איך זה עובד</a></li>
             <li><a href="../system/pensions.html">חיפוש פנסיון</a></li>
             <li><a href="#demo">הדגמה</a></li>
             <li><a href="#contact">השאירו פרטים</a></li>
+            <li class="mobile-only"><a href="../system/login.html" class="cta-btn">כניסת מנהל</a></li>
         </ul>
-        <a href="../system/login.html" class="cta-btn">כניסת מנהל</a>
+        <a href="../system/login.html" class="cta-btn desktop-only">כניסת מנהל</a>
     </nav>
 
     <main id="main-content">
