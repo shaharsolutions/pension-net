@@ -11,6 +11,15 @@ const Features = {
     async init(userId = null) {
         // Only run once per session load or manually re-triggered
         if (this._loading && !userId) return;
+
+        // Skip DB resolution in demo mode
+        if (window.isDemoMode) {
+            console.log('🛡️ Features bypass for Demo Mode');
+            this._initialized = true;
+            this.syncUI();
+            return;
+        }
+
         this._loading = true;
 
         const { data: { session } } = await supabaseClient.auth.getSession();

@@ -807,21 +807,21 @@
             title: "ברוכים הבאים לדף ההדגמה!",
             content: "כאן תוכלו להתנסות במערכת לניהול פנסיון כלבים בזמן אמת. בואו נצא לסיור קצר בין הפיצ'רים המובילים שלנו.",
             selector: null,
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'ongoing'
         },
         {
             title: "ניהול שוטף ותנועות יומיות",
             content: "כאן רואים את כל הכלבים שנכנסים ויוצאים היום מהפנסיון. זה הכלי המרכזי שיוצר לכם סדר בבוקר!",
             selector: '.movements-container',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'ongoing'
         },
         {
             title: "לוח שנה צבעוני",
             content: "לוח שנה חודשי שמראה תפוסה מלאה של כל הכלבים. תוכלו לראות מתי אתם בתפוסה מלאה ומתי יש מקום פנוי.",
             selector: '#monthlyCalendarContainer',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'ongoing',
             preAction: (win) => {
                 // Force calendar view if it was switched to dogs view
@@ -840,7 +840,7 @@
             title: "כלבים שכרגע בפנסיון",
             content: "כאן תוכלו לראות במבט מהיר את כל הכלבים שנמצאים כרגע בפנסיון, בחלוקה לפי גדלים. הדרך הכי קלה לדעת מי נמצא אצלכם בכל רגע נתון.",
             selector: '#currentDogsColumnView',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'ongoing',
             preAction: (win) => {
                 if (win.currentView !== 'dogs' && win.switchCalendarView) {
@@ -852,7 +852,7 @@
             title: "הזמנות עתידיות",
             content: "כל ההזמנות שמחכות לכם, עם חיפוש וסינון מהיר לפי סטטוסים.",
             selector: '#futureOrdersTable',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'ongoing',
             scroll: true
         },
@@ -860,37 +860,38 @@
             title: "היסטוריית הזמנות",
             content: "כאן תוכלו למצוא את כל ההזמנות מהעבר, כולל סיכומי תשלום והערות היסטוריות של הלקוחות.",
             selector: '#historyTableContainer',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'history'
         },
         {
             title: "מאגר לקוחות חכם",
             content: "כל הנתונים של הלקוחות והכלבים שלהם נשמרים כאן, כולל היסטוריית הערות והעדפות מיוחדות.",
             selector: '#tab-clients',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'clients'
         },
         {
             title: "דוחות וניתוחים",
             content: "נתחו את הרווחיות, התפוסה והצמיחה שלכם לאורך זמן עם דוחות גרפיים מתקדמים.",
             selector: '.dashboard-grid',
-            url: '../growth.html?demo=true',
+            url: '../system/growth.html?demo=true',
             tab: null
         },
         {
             title: "יומן פעולות (Audit)",
             content: "שקיפות מלאה! כאן רואים בדיוק מי מהצוות ביצע כל פעולה במערכת ומתי.",
             selector: '#tab-audit',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'audit'
         },
         {
             title: "הגדרות פנסיון",
             content: "התאמה אישית של שם הפנסיון, הקיבולת והמחירים שלכם במקום אחד.",
             selector: '#tab-settings',
-            url: '../admin.html?demo=true',
+            url: '../system/admin.html?demo=true',
             tab: 'settings'
         }
+
     ];
 
     function startTour() {
@@ -919,7 +920,7 @@
         tourCard.classList.remove('minimized');
         tourSpotlight.style.display = 'block';
         // Reset to home demo page
-        demoIframe.src = '../admin.html?demo=true';
+        demoIframe.src = '../system/admin.html?demo=true';
     }
 
     function minimizeTour(e) {
