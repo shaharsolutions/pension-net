@@ -1745,6 +1745,7 @@ function renderPastOrdersTable() {
       <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
          <i class="fas fa-comments"></i> הערות (${safeParseNotes(row.admin_note).length})
       </button>
+      ${window.isAdminMode ? `<button type="button" class="delete-order-btn" onclick="showDeleteOrderConfirm('${row.id}', '${(row.dog_name||'').replace(/'/g,"\\'")}'  , '${(row.owner_name||'').replace(/'/g,"\\'")}'  )" title="מחק הזמנה" style="margin-top:6px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;"><i class=\"fas fa-trash-alt\"></i> מחק</button>` : ''}
     </td>
   `;
     tbody.appendChild(tr);
@@ -2277,6 +2278,7 @@ function renderFutureOrdersTable() {
         <button type="button" class="view-notes-btn" onclick="openNotesModal('${row.id}', '${row.dog_name.replace(/'/g, "\\'")}', '${row.owner_name.replace(/'/g, "\\'")}')">
           <i class="fas fa-comments"></i> הערות (${safeParseNotes(row.admin_note).length})
       </button>
+      ${window.isAdminMode ? `<button type="button" class="delete-order-btn" onclick="showDeleteOrderConfirm('${row.id}', '${(row.dog_name||'').replace(/'/g,"\\'")}'  , '${(row.owner_name||'').replace(/'/g,"\\'")}'  )" title="מחק הזמנה" style="margin-top:6px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;"><i class=\"fas fa-trash-alt\"></i> מחק</button>` : ''}
       </td>
     `;
       futureTbody.appendChild(tr);
@@ -4661,6 +4663,57 @@ function showDeleteClientConfirm(phoneKey, clientName) {
         `האם אתה בטוח שברצונך למחוק את הלקוח <b>${clientName}</b>?<br><br>פעולה זו תמחק את <b>כל</b> ההזמנות של הלקוח וכל המידע הקשור אליו מהמערכת לצמיתות.`,
         () => deleteClient(phoneKey)
     );
+}
+
+function showDeleteOrderConfirm(orderId, dogName, ownerName) {
+    showConfirm(
+        '<i class="fas fa-trash-alt" style="color: #ef4444;"></i> מחיקת הזמנה',
+        `האם אתה בטוח שברצונך למחוק את ההזמנה של <b>${dogName}</b> (${ownerName})?<br><br><b style="color:#dc2626;">פעולה זו אינה הפיכה.</b>`,
+        () => deleteOrder(orderId)
+    );
+}
+
+async function deleteOrder(orderId) {
+    if (window.isDemoMode) {
+        showToast('לא ניתן למחוק הזמנות במצב הדגמה', 'info');
+        return;
+    }
+
+    const session = window.currentUserSession;
+    if (!session) {
+        showToast('יש להתחבר תחילה', 'error');
+        return;
+    }
+
+    const order = window.allOrdersCache.find(o => String(o.id) === String(orderId));
+
+    try {
+        const { error } = await pensionNetSupabase
+            .from('orders')
+            .delete()
+            .eq('id', orderId);
+
+        if (error) throw error;
+
+        // Remove from local cache
+        window.allOrdersCache = window.allOrdersCache.filter(o => String(o.id) !== String(orderId));
+        if (window.pastOrdersRawData) {
+            window.pastOrdersRawData = window.pastOrdersRawData.filter(o => String(o.id) !== String(orderId));
+        }
+
+        const label = order ? `${order.dog_name} (${order.owner_name})` : `#${orderId}`;
+        showToast(`ההזמנה של ${label} נמחקה בהצלחה`, 'success');
+        createAuditLog('DELETE', `מחיקת הזמנה: ${label}`, orderId);
+
+        // Re-render both tables
+        renderFutureOrdersTable();
+        renderPastOrdersTable();
+        processClientsData();
+
+    } catch (err) {
+        console.error('Error deleting order:', err);
+        showToast('שגיאה במחיקת ההזמנה. אנא נסה שוב.', 'error');
+    }
 }
 
 async function deleteClient(phoneKey) {
