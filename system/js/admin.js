@@ -3528,6 +3528,7 @@ async function loadSettings() {
   
   const fullName = profile.full_name || '';
   if (myNameEl)  myNameEl.value  = fullName;
+  if (myEmailEl) myEmailEl.value = profile.email || window.currentUserSession?.user?.email || '';
   if (myAvatarEl && fullName) {
     // Check both profile and user metadata
     const avatarUrl = profile.avatar_url || window.currentUserSession?.user?.user_metadata?.avatar_url;
