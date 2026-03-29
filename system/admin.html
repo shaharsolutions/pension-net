@@ -87,7 +87,7 @@
     <!-- Login/Profile Selection Overlay -->
     <div id="login-overlay" style="display: flex !important;">
       <div class="profile-card" style="position: relative;">
-        <button onclick="closeProfileOverlay()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="סגור">×</button>
+        <button onclick="closeProfileOverlay()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="סגור">×</button>
         <div class="logo-wrapper" style="margin-bottom: 10px;">
           <div class="pensionet-icon">
             <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -157,7 +157,7 @@
         <button class="tab-btn" onclick="switchTab('history')" data-feature="history_tab">היסטוריית הזמנות</button>
         <button class="tab-btn manager-only" onclick="switchTab('audit')" data-feature="audit_log">יומן פעולות</button>
         <button class="tab-btn manager-only" onclick="switchTab('clients')" data-feature="clients_basic"><i class="fas fa-users"></i> לקוחות</button>
-        <button class="tab-btn manager-only" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i> הגדרות</button>
+        <button class="tab-btn" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i> הגדרות</button>
       </div>
 
       <div id="tab-ongoing" class="tab-content active">
@@ -425,7 +425,7 @@
       </div>
 
       <!-- Settings Tab -->
-      <div id="tab-settings" class="tab-content manager-only">
+      <div id="tab-settings" class="tab-content">
         <div class="settings-container">
           <div class="settings-card">
             <div class="settings-header">
@@ -435,11 +435,22 @@
                 </h3>
                 <div id="settingsPlanBadgeContainer"></div>
               </div>
-              <p>נהל את פרטי העסק והגדרות המערכת שלך</p>
+              <p>צפה בפרטי העסק והגדרות המערכת</p>
+            </div>
+
+            <!-- Employee info banner - shown only for non-managers -->
+            <div id="settings-employee-notice" style="display:none; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1.5px solid #93c5fd; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; direction: rtl;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 18px;"></i>
+                <div>
+                  <strong style="color: #1d4ed8; font-size: 14px;">מצב צפייה</strong>
+                  <p style="margin: 2px 0 0; font-size: 13px; color: #1e40af;">ניתן לצפות בפרטי העסק. עריכת ההגדרות מוגבלת למנהל בלבד.</p>
+                </div>
+              </div>
             </div>
             
             <div class="settings-grid">
-              <div class="settings-section">
+              <div class="settings-section" data-manager-section="business">
                 <h4><i class="fas fa-home" style="color: #6366f1;"></i> פרטי עסק</h4>
                 <div class="form-group">
                   <label for="settings-business-name"><i class="fas fa-store"></i> שם הפנסיון / העסק:</label>
@@ -453,7 +464,7 @@
                   <label for="settings-location"><i class="fas fa-map-marker-alt"></i> מיקום הפנסיון:</label>
                   <input type="text" id="settings-location" placeholder="למשל: תל אביב / מושב בשרון">
                 </div>
-                <div class="form-group">
+                <div class="form-group" data-manager-only-field>
                   <label for="settings-admin-pin"><i class="fas fa-key"></i> קוד PIN לניהול (4 ספרות):</label>
                   <div class="password-input-wrapper" style="position: relative; display: flex; align-items: center;">
                     <input type="password" id="settings-admin-pin" maxlength="4" placeholder="למשל: 1234" style="flex: 1; padding-left: 40px;">
@@ -466,7 +477,7 @@
                 </div>
               </div>
 
-              <div class="settings-section">
+              <div class="settings-section" data-manager-section="operational">
                 <h4><i class="fas fa-tools" style="color: #64748b;"></i> הגדרות תפעוליות</h4>
                 <div class="form-group">
                   <label for="settings-phone"><i class="fab fa-whatsapp"></i> טלפון לווטסאפ (לקוחות יחזרו אליו):</label>
@@ -496,20 +507,41 @@
                 <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;" data-feature="staff_management">
                   <label><i class="fas fa-users-cog"></i> ניהול צוות עובדים:</label>
                   <div class="staff-manager">
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
-                      <div style="display:flex; gap:8px;">
-                        <input type="text" id="new-staff-name" placeholder="שם העובד/ת" style="flex: 2;">
-                        <input type="password" id="new-staff-pin" placeholder="PIN (4 ספרות)" maxlength="4" style="flex: 1;">
-                        <button type="button" onclick="addStaffMember()" class="header-btn" style="background:#4caf50; color:white; padding: 0 15px;">הוסף</button>
+                    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <input type="text" id="new-staff-name" placeholder="שם העובד/ת" required>
+                        <input type="email" id="new-staff-email" placeholder="אימייל (לצורך התחברות)" required>
                       </div>
-                      <div class="helper-text">יש להגדיר קוד PIN לכל עובד לצורך כניסה וזיהוי</div>
+                      <div style="display:flex; gap:10px; align-items: center;">
+                        <input type="text" id="new-staff-password" placeholder="סיסמה" style="flex: 1; padding: 10px; border-radius: 8px; border: 1.5px solid #e2e8f0;">
+                        <select id="new-staff-role" style="flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid #e2e8f0;">
+                          <option value="employee">עובד/ת</option>
+                          <option value="manager">מנהל/ת נוסף/ת</option>
+                        </select>
+                        <button type="button" onclick="addStaffMember()" class="header-btn" style="background:#4caf50; color:white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 700;">הוסף צוות</button>
+                      </div>
+                      <div style="margin-top: 5px;">
+                        <label style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 5px; display: block;">הרשאות עובד:</label>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                           <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                             <input type="checkbox" class="perm-check" value="manage_orders" checked> ניהול הזמנות ולידים
+                           </label>
+                           <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                             <input type="checkbox" class="perm-check" value="manage_clients" checked> ניהול לקוחות
+                           </label>
+                           <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                             <input type="checkbox" class="perm-check" value="view_reports"> צפייה בדוחות
+                           </label>
+                        </div>
+                      </div>
+                      <div class="helper-text" style="font-size: 11px; color: #94a3b8; margin-top: 5px;">העובד יוכל להתחבר עם האימייל שלו ולראות את הפנסיון לפי ההרשאות שנתת.</div>
                     </div>
-                    <div id="staff-list" class="staff-tags"></div>
+                    <div id="staff-list" class="staff-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                   </div>
                 </div>
               </div>
 
-              <div class="settings-section" style="grid-column: span 2;">
+              <div class="settings-section" style="grid-column: span 2;" data-manager-section="addons">
                 <h4 style="display: flex; align-items: center; justify-content: space-between;">
                   <span><i class="fas fa-plus-circle" style="color: #6366f1;"></i> ניהול תוספות (Add-ons)</span>
                   <button type="button" onclick="showAddonsDemoModal()" class="header-btn" title="תצוגה מקדימה (איך הלקוח יראה את זה)" style="background: #e0e7ff; color: #4338ca; border: none; padding: 6px 12px; font-size: 13px; border-radius: 8px;">
@@ -525,29 +557,30 @@
                 </button>
               </div>
 
-              <div class="settings-section" style="grid-column: span 2;">
-                <h4><i class="fas fa-shield-alt" style="color: #f59e0b;"></i> אבטחת חשבון</h4>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">שינוי סיסמת ההתחברות למערכת הניהול</p>
+              <!-- Password section – available to ALL users (manager and employee alike) -->
+              <div class="settings-section" style="grid-column: span 2; border-top: 2px solid #e0e7ff; background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%); border-radius: 16px; padding: 20px;">
+                <h4 style="margin-bottom: 6px;"><i class="fas fa-key" style="color: #6366f1;"></i> שינוי סיסמה אישית</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">עדכן את סיסמת ההתחברות שלך למערכת. הסיסמה משויכת לחשבון האישי שלך בלבד.</p>
                 <div class="form-row">
                   <div class="form-group">
                     <label for="settings-new-password"><i class="fas fa-lock"></i> סיסמה חדשה:</label>
-                    <input type="password" id="settings-new-password" placeholder="לפחוות 6 תווים">
+                    <input type="password" id="settings-new-password" placeholder="לפחות 6 תווים">
                   </div>
                   <div class="form-group">
                     <label for="settings-confirm-password"><i class="fas fa-check-double"></i> אימות סיסמה:</label>
                     <input type="password" id="settings-confirm-password" placeholder="הקלד שוב">
                   </div>
                 </div>
-                <div style="display: flex; justify-content: center; width: 100%;">
-                  <button type="button" id="changePasswordBtn" class="header-btn" style="background: #64748b; margin-top: 10px; color: white; padding: 10px 25px;">
-                    עדכן סיסמת כניסה
+                <div style="display: flex; justify-content: center; width: 100%; margin-top: 10px;">
+                  <button type="button" id="changePasswordBtn" class="header-btn" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 11px 32px; font-weight: 700; border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(99,102,241,0.3);">
+                    <i class="fas fa-save"></i> עדכן סיסמה
                   </button>
                 </div>
               </div>
 
             </div>
 
-            <div class="settings-actions" style="display: flex; gap: 15px; justify-content: center;">
+            <div class="settings-actions" style="display: flex; gap: 15px; justify-content: center;" id="settingsManagerActions">
               <button id="saveSettingsBtn" class="save-settings-btn">
                 <i class="fas fa-check-circle"></i> שמור את כל השינויים
               </button>
@@ -619,11 +652,11 @@
         <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 20px;">
           <h3 style="font-size: 20px;"><i class="fas fa-lock" style="color: #6366f1;"></i> אימות מנהל</h3>
         </div>
-        <p style="margin-bottom: 20px; color: #64748b; font-weight: 500;">נא להזין קוד PIN לביצוע פעולות מנהל</p>
+        <p style="margin-bottom: 20px; color: #64748b; font-weight: 500;">נא להזין סיסמה לביצוע הפעולה</p>
         <div style="margin-bottom: 20px;">
-          <input type="password" id="pinInput" maxlength="4" placeholder="••••" 
-                 style="text-align: center; font-size: 32px; letter-spacing: 12px; width: 180px; 
-                        padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: monospace;">
+          <input type="password" id="pinInput" placeholder="הזן סיסמה..." 
+                 style="text-align: center; font-size: 18px; letter-spacing: 1px; width: 100%; 
+                        padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box;">
         </div>
         <div id="pinError" style="color: #ef4444; font-size: 14px; margin-bottom: 20px; min-height: 20px; font-weight: 600;"></div>
         <div style="display: flex; gap: 12px;">
@@ -635,7 +668,7 @@
 
     <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="modal" style="z-index: 30000; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center;" onclick="if(event.target === this) closeImagePreview()">
-      <button onclick="closeImagePreview()" style="position: fixed; top: 20px; left: 20px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 30001; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+      <button onclick="closeImagePreview()" style="position: fixed; top: 20px; left: 20px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 30001; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
         <i class="fas fa-times"></i>
       </button>
       <button id="previewModalChangeBtn" style="position: fixed; top: 20px; left: 80px; background: rgba(99, 102, 241, 0.9); border: none; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px; z-index: 30001; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: inherit;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#6366f1';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(99, 102, 241, 0.9)';">
@@ -810,7 +843,7 @@
               <p style="color: #64748b; margin: 2px 0 0; font-size: 12px;">יופיע על לוח השנה החודשי</p>
             </div>
           </div>
-          <span class="close-modal" onclick="closeCustomEventModal()" style="color: #94a3b8; font-size: 24px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">&times;</span>
+          <span class="close-modal" onclick="closeCustomEventModal()" style="color: #94a3b8; font-size: 18px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">&times;</span>
         </div>
 
         <!-- Form Body -->

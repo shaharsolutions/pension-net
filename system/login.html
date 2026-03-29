@@ -357,6 +357,14 @@
             <div id="signupTab" class="tab" onclick="switchMode('signup')">הרשמה</div>
         </div>
 
+        <div id="roleToggleGroup" class="form-group" style="display: none; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 20px;">
+           <label style="display: block; text-align: center; margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">סוג חשבון:</label>
+           <div style="display: flex; gap: 10px;">
+              <button type="button" id="roleManagerBtn" onclick="setSignupRole('manager')" style="flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #6366f1; background: #6366f1; color: white; font-weight: 600; cursor: pointer; font-size: 13px;">אני בעל עסק חדש</button>
+              <button type="button" id="roleStaffBtn" onclick="setSignupRole('staff')" style="flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #e2e8f0; background: white; color: #64748b; font-weight: 600; cursor: pointer; font-size: 13px;">אני עובד שמצטרף לצוות</button>
+           </div>
+        </div>
+
         <div id="errorMessage" class="error-msg"></div>
 
         <form id="authForm" onsubmit="handleAuth(event)">
@@ -365,30 +373,30 @@
                 <input type="email" id="email" placeholder="example@gmail.com" required>
             </div>
             <div id="nameGroup" class="form-group" style="display: none;">
-                <label for="full_name">שם מלא (יופיע בבחירת פרופיל)</label>
+                <label for="full_name">שם מלא</label>
                 <input type="text" id="full_name" placeholder="ישראל ישראלי">
             </div>
-            <div id="phoneGroup" class="form-group" style="display: none;">
+            <div id="phoneGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="phone">מספר טלפון (עבור הודעות ווטסאפ ללקוחות)</label>
                 <input type="tel" id="phone" placeholder="050-1234567" pattern="[0-9]{3}-?[0-9]{7}">
             </div>
-            <div id="capacityGroup" class="form-group" style="display: none;">
+            <div id="capacityGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="max_capacity">קיבולת מקסימלית<br>(מספר כלבים שיכולים לשהות במקביל)</label>
                 <input type="number" id="max_capacity" placeholder="10" min="1" max="100">
             </div>
-            <div id="businessNameGroup" class="form-group" style="display: none;">
+            <div id="businessNameGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="business_name">שם העסק / הפנסיון</label>
                 <input type="text" id="business_name" placeholder="הפנסיון של...">
             </div>
-            <div id="locationGroup" class="form-group" style="display: none;">
+            <div id="locationGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="location">מיקום הפנסיון (עיר/יישוב)</label>
                 <input type="text" id="location" placeholder="לדוגמה: תל אביב">
             </div>
-            <div id="priceGroup" class="form-group" style="display: none;">
+            <div id="priceGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="default_price">מחיר ברירת מחדל ליום (₪)</label>
                 <input type="number" id="default_price" placeholder="130" min="0">
             </div>
-            <div id="pinGroup" class="form-group" style="display: none;">
+            <div id="pinGroup" class="form-group" style="display: none;" class="manager-only">
                 <label for="manager_pin">קוד PIN לניהול (4 ספרות)<br><small>קוד זה ישמש לביצוע פעולות מנהל</small></label>
                 <input type="password" id="manager_pin" placeholder="1234" maxlength="4" pattern="[0-9]{4}">
             </div>
@@ -480,32 +488,19 @@
     <script src="js/auth.js?v=50"></script>
     <script>
         let mode = 'login';
+        let signupRole = 'manager';
 
         function switchMode(newMode) {
             mode = newMode;
             document.getElementById('loginTab').classList.toggle('active', mode === 'login');
             document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
             
+            document.getElementById('roleToggleGroup').style.display = mode === 'signup' ? 'block' : 'none';
+            
             document.getElementById('nameGroup').style.display = mode === 'signup' ? 'block' : 'none';
             document.getElementById('full_name').required = mode === 'signup';
             
-            document.getElementById('phoneGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('phone').required = mode === 'signup';
-            
-            document.getElementById('capacityGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('max_capacity').required = mode === 'signup';
-
-            document.getElementById('businessNameGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('business_name').required = mode === 'signup';
-
-            document.getElementById('locationGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('location').required = mode === 'signup';
-
-            document.getElementById('priceGroup').style.display = mode === 'signup' ? 'block' : 'none';
-            document.getElementById('default_price').required = mode === 'signup';
-            
-            document.getElementById('pinGroup').style.display = 'none';
-            document.getElementById('manager_pin').required = false;
+            updateSignupFormFields();
             
             document.getElementById('rememberMeGroup').style.display = mode === 'login' ? 'flex' : 'none';
             document.getElementById('managerTermsGroup').style.display = mode === 'signup' ? 'block' : 'none';
@@ -533,6 +528,48 @@
                 'כבר יש לכם חשבון? <a href="#" onclick="switchMode(\'login\')">היכנסו כאן</a>';
             
             document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function setSignupRole(role) {
+            signupRole = role;
+            const managerBtn = document.getElementById('roleManagerBtn');
+            const staffBtn = document.getElementById('roleStaffBtn');
+            
+            if (role === 'manager') {
+                managerBtn.style.background = '#6366f1';
+                managerBtn.style.color = 'white';
+                managerBtn.style.borderColor = '#6366f1';
+                staffBtn.style.background = 'white';
+                staffBtn.style.color = '#64748b';
+                staffBtn.style.borderColor = '#e2e8f0';
+            } else {
+                staffBtn.style.background = '#6366f1';
+                staffBtn.style.color = 'white';
+                staffBtn.style.borderColor = '#6366f1';
+                managerBtn.style.background = 'white';
+                managerBtn.style.color = '#64748b';
+                managerBtn.style.borderColor = '#e2e8f0';
+            }
+            
+            updateSignupFormFields();
+        }
+
+        function updateSignupFormFields() {
+            const isManager = (mode === 'signup' && signupRole === 'manager');
+            const managerFields = ['phoneGroup', 'capacityGroup', 'businessNameGroup', 'locationGroup', 'priceGroup'];
+            
+            managerFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = isManager ? 'block' : 'none';
+                    const input = el.querySelector('input');
+                    if (input) input.required = isManager;
+                }
+            });
+            
+            // PIN is never strictly required anymore as we moved to passwords
+            document.getElementById('pinGroup').style.display = 'none';
+            document.getElementById('manager_pin').required = false;
         }
 
         document.getElementById('managerTermsCheck').addEventListener('change', function() {
@@ -589,16 +626,25 @@
                     result = await Auth.login(email, password);
                 } else {
                     const termsCheck = document.getElementById('managerTermsCheck');
-                    result = await Auth.signUp(email, password, { 
-                        full_name, 
-                        business_name, 
-                        location, 
-                        default_price, 
-                        phone, 
-                        max_capacity, 
-                        manager_pin,
-                        terms_accepted: termsCheck ? termsCheck.checked : false
-                    });
+                    const metadata = { full_name };
+                    
+                    if (signupRole === 'manager') {
+                        Object.assign(metadata, {
+                            business_name, 
+                            location, 
+                            default_price, 
+                            phone, 
+                            max_capacity, 
+                            manager_pin,
+                            role: 'manager'
+                        });
+                    } else {
+                        metadata.role = 'employee';
+                    }
+                    
+                    metadata.terms_accepted = termsCheck ? termsCheck.checked : false;
+
+                    result = await Auth.signUp(email, password, metadata);
                 }
 
                 if (result.error) {

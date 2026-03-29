@@ -2587,13 +2587,15 @@ async function switchTab(tabName) {
     }
   }
 
-  // If moving to settings or audit, verify PIN first
-  if (tabName === 'settings' || tabName === 'audit') {
+  // Audit tab still requires manager access
+  // Settings tab is now open to all users (limited by field-level permissions)
+  if (tabName === 'audit') {
     if (!(await verifyManagerAccess())) return;
   }
 
   document.querySelectorAll('.tab-content').forEach(tab => {
     tab.style.display = 'none';
+    tab.classList.remove('tab-active');
   });
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -2602,6 +2604,7 @@ async function switchTab(tabName) {
   const selectedTab = document.getElementById('tab-' + tabName);
   if (selectedTab) {
     selectedTab.style.display = 'block';
+    selectedTab.classList.add('tab-active');
   }
   
   const selectedBtn = document.querySelector(`.tab-btn[onclick*="${tabName}"]`);
@@ -2618,6 +2621,7 @@ async function switchTab(tabName) {
   // Handle data loading for specific tabs
   if (tabName === 'settings') {
     loadSettings();
+    applySettingsPermissions();
   } else if (tabName === 'audit') {
     loadAuditLogs();
   }
@@ -2834,7 +2838,7 @@ async function verifyManagerAccess(targetName = null, force = false) {
     const errorMsg = document.getElementById('pinError');
     const title = modal.querySelector('h3');
     
-    if (title) title.textContent = targetName ? `אימות PIN עבור: ${targetName}` : 'אימות PIN מנהל';
+    if (title) title.textContent = targetName ? `אימות סיסמה עבור: ${targetName}` : 'אימות סיסמה';
     
     input.value = '';
     errorMsg.textContent = '';
@@ -2854,26 +2858,26 @@ async function verifyManagerAccess(targetName = null, force = false) {
       let actualPin = "";
 
       if (isVerifyingStaff && staffObj) {
-        actualPin = String(staffObj.pin || '').trim();
+        actualPin = String(staffObj.password || staffObj.pin || '').trim();
       } else {
         // Manager verification
-        if (!window.managerPin) {
+        if (!window.managerPassword) {
           const session = window.currentUserSession || await Auth.getSession();
           if (session) {
-            const { data: profiles } = await pensionNetSupabase.from('profiles').select('manager_pin').eq('user_id', session.user.id);
-            if (profiles && profiles.length > 0) window.managerPin = profiles[0].manager_pin;
+            const { data: profiles } = await pensionNetSupabase.from('profiles').select('password').eq('user_id', session.user.id);
+            if (profiles && profiles.length > 0) window.managerPassword = profiles[0].password;
           }
         }
-        actualPin = String(window.managerPin || '').trim();
+        actualPin = String(window.managerPassword || window.managerPin || '').trim();
       }
 
       if (enteredPin === actualPin && actualPin !== "") {
         if (!isVerifyingStaff) {
             window.isAdminMode = true;
-            createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות PIN מוצלח)');
+            createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות סיסמה מוצלח)');
         } else {
             window.isAdminMode = false;
-            createAuditLog('UPDATE', `אימות PIN מוצלח עבור עובד: ${targetName}`);
+            createAuditLog('UPDATE', `אימות סיסמה מוצלח עבור עובד: ${targetName}`);
         }
         
         const now = Date.now();
@@ -2884,7 +2888,7 @@ async function verifyManagerAccess(targetName = null, force = false) {
         cleanup();
         resolve(true);
       } else {
-        errorMsg.textContent = 'קוד PIN שגוי';
+        errorMsg.textContent = 'סיסמה שגויה';
         input.value = '';
         input.focus();
       }
@@ -2942,6 +2946,28 @@ function requestRemoveStaff(index) {
 function cancelRemoveStaff() {
   window.staffDeleteConfirmIndex = -1;
   renderStaffList();
+}
+
+function getStaffNames() {
+  const myProfile = window.currentUserProfile;
+  const myName = myProfile?.full_name || window.managerName;
+  const myRole = myProfile?.role || 'employee';
+
+  // Employees see ONLY themselves - no switching between profiles
+  if (myRole === 'employee') {
+    return myName ? [myName] : ['עובד/ת'];
+  }
+
+  // Managers see all staff in the pension
+  const staffNames = (window.currentStaffMembers || []).map(s => {
+    if (typeof s === 'string') return s;
+    return s.full_name || s.name || 'עובד/ת';
+  });
+
+  let finalNames = myName ? [myName, ...staffNames] : staffNames;
+  if (finalNames.length === 0) finalNames = ['בחר פרופיל...'];
+
+  return [...new Set(finalNames)];
 }
 
 async function executeRemoveStaff(index) {
@@ -3002,14 +3028,6 @@ function updatePlanUI() {
   });
 }
 
-function getStaffNames() {
-  const staffNames = window.currentStaffMembers.map(s => typeof s === 'string' ? s : s.name);
-  if (window.managerName && !staffNames.includes(window.managerName)) {
-    return [window.managerName, ...staffNames];
-  }
-  return staffNames;
-}
-
 // --- Mode Toggle Logic ---
 window.isAdminMode = false; // Default to staff mode
 window.managerPin = '';
@@ -3021,6 +3039,17 @@ function updateModeUI() {
   const overlay = document.getElementById('login-overlay');
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (!badge) return;
+
+  // Employees cannot toggle admin mode - remove the clickability
+  const isEmployee = window.currentUserProfile?.role === 'employee';
+  if (isEmployee) {
+    badge.onclick = null;
+    badge.style.cursor = 'default';
+    badge.title = '';
+  } else {
+    badge.onclick = toggleAdminMode;
+    badge.style.cursor = 'pointer';
+  }
 
   const now = Date.now();
   const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
@@ -3052,26 +3081,50 @@ function updateModeUI() {
     if (staffSelectorContainer) staffSelectorContainer.style.display = 'flex';
     
     // Switch permissions based on selected active employee
-    const activeStaff = window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === activeStaffName);
+    // Priority: if logged-in user IS the employee, use their profile directly
+    let activeStaff = null;
+    const myProfile = window.currentUserProfile;
     
-    const perms = (activeStaff && typeof activeStaff === 'object') ? activeStaff.permissions : (window.globalStaffPermissions || {
-       edit_status: false,
-       edit_details: false
-    });
-
-    // Apply permissions
-    if (perms.edit_status) {
+    if (myProfile && myProfile.role === 'employee' && myProfile.full_name === activeStaffName) {
+      activeStaff = myProfile; // Use logged-in employee's own profile
+    } else {
+      activeStaff = (window.currentStaffMembers || []).find(s => {
+        const name = typeof s === 'string' ? s : (s.full_name || s.name);
+        return name === activeStaffName;
+      });
+    }
+    
+    // Permissions can be array (from DB) or object (old format)
+    const rawPerms = (activeStaff && typeof activeStaff === 'object') 
+      ? activeStaff.permissions 
+      : (window.globalStaffPermissions || []);
+    
+    // Normalize: support both array and object formats
+    const hasPermArray = Array.isArray(rawPerms);
+    const hasPerm = (key) => {
+      if (hasPermArray) return rawPerms.includes('all') || rawPerms.includes(key);
+      return rawPerms[key] === true;
+    };
+    
+    // Apply permissions as CSS classes
+    if (hasPerm('edit_status') || hasPerm('manage_orders')) {
       document.body.classList.add('perm-edit-status');
       allowSave = true;
     } else {
       document.body.classList.remove('perm-edit-status');
     }
     
-    if (perms.edit_details) {
+    if (hasPerm('edit_details')) {
       document.body.classList.add('perm-edit-details');
       allowSave = true;
     } else {
       document.body.classList.remove('perm-edit-details');
+    }
+
+    if (hasPerm('manage_clients')) {
+      document.body.classList.add('perm-manage-clients');
+    } else {
+      document.body.classList.remove('perm-manage-clients');
     }
 
     // LOCK ACTIONS: If no staff identity defined and not in admin mode
@@ -3081,9 +3134,10 @@ function updateModeUI() {
        document.body.classList.remove('no-identity');
     }
 
-    // If on protected tab while in staff mode AND PIN expired, switch to ongoing
+    // If on audit tab while in staff mode AND PIN expired, switch to ongoing
+    // (Settings is now open to all users – no PIN required)
     const activeTabBtn = document.querySelector('.tab-btn.active');
-    if (!pinValid && activeTabBtn && (activeTabBtn.textContent.includes('הגדרות') || activeTabBtn.textContent.includes('יומן פעולות'))) {
+    if (!pinValid && activeTabBtn && activeTabBtn.textContent.includes('יומן פעולות')) {
       switchTab('ongoing');
     }
   }
@@ -3120,12 +3174,15 @@ function updateModeUI() {
   // LOCK: If no valid profile selected OR PIN expired, show login overlay (FOR BOTH MODES)
   if (overlay) {
     const hasOnlyManager = (window.currentStaffMembers || []).length === 0 && window.managerName;
-    if (window.isDemoMode) {
-       overlay.style.setProperty('display', 'none', 'important');
-    } else if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager) {
-       overlay.style.setProperty('display', 'flex', 'important');
+    const isEmployee = window.currentUserProfile?.role === 'employee';
+    
+    if (window.isDemoMode || isEmployee) {
+      // Employees are already authenticated via Supabase - no overlay needed
+      overlay.style.setProperty('display', 'none', 'important');
+    } else if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager && !window.isSessionVerified) {
+      overlay.style.setProperty('display', 'flex', 'important');
     } else {
-       overlay.style.setProperty('display', 'none', 'important');
+      overlay.style.setProperty('display', 'none', 'important');
     }
   }
   
@@ -3137,6 +3194,75 @@ function updateModeUI() {
   if (window.currentlyEditingOrderId) {
     loadOrderNotes(window.currentlyEditingOrderId);
   }
+
+  // Apply settings tab field-level permissions
+  applySettingsPermissions();
+}
+
+/**
+ * applySettingsPermissions()
+ * Locks / unlocks sections and fields in the Settings tab
+ * based on whether the current session is a manager or employee.
+ *
+ * - Managers (isAdminMode OR role === 'manager'):  full edit access
+ * - Employees (role === 'employee' or staff mode): read-only
+ *   – All inputs / selects / buttons inside [data-manager-section] are disabled
+ *   – PIN field (data-manager-only-field) is hidden entirely
+ *   – The employee-notice banner is shown
+ *   – The main save / demo action buttons are hidden
+ */
+function applySettingsPermissions() {
+  const isManager = window.isAdminMode || window.currentUserProfile?.role === 'manager';
+  const isEmployee = !isManager;
+
+  // Employee notice banner
+  const notice = document.getElementById('settings-employee-notice');
+  if (notice) notice.style.display = isEmployee ? 'block' : 'none';
+
+  // Manager-only action buttons (Save, Fill Demo, Clear Demo)
+  const managerActions = document.getElementById('settingsManagerActions');
+  if (managerActions) managerActions.style.display = isEmployee ? 'none' : 'flex';
+
+  // Lock all manager sections
+  document.querySelectorAll('[data-manager-section]').forEach(section => {
+    const inputs   = section.querySelectorAll('input, select, textarea');
+    const buttons  = section.querySelectorAll('button');
+
+    if (isEmployee) {
+      // Style section to look read-only
+      section.style.opacity = '0.75';
+      section.style.pointerEvents = 'none';
+      inputs.forEach(el => {
+        el.disabled = true;
+        el.style.background = '#f8fafc';
+        el.style.cursor = 'not-allowed';
+      });
+      buttons.forEach(el => {
+        el.disabled = true;
+        el.style.opacity = '0.5';
+        el.style.cursor = 'not-allowed';
+      });
+    } else {
+      // Restore full interactivity for managers
+      section.style.opacity = '';
+      section.style.pointerEvents = '';
+      inputs.forEach(el => {
+        el.disabled = false;
+        el.style.background = '';
+        el.style.cursor = '';
+      });
+      buttons.forEach(el => {
+        el.disabled = false;
+        el.style.opacity = '';
+        el.style.cursor = '';
+      });
+    }
+  });
+
+  // Hide PIN field completely for non-managers (security)
+  document.querySelectorAll('[data-manager-only-field]').forEach(field => {
+    field.style.display = isEmployee ? 'none' : '';
+  });
 }
 
 async function handleInitialProfileChange() {
@@ -3187,9 +3313,6 @@ async function handleActiveStaffChange() {
   showToast(`המערכת הותאמה להרשאות של: ${name}`, 'info');
   updateModeUI();
 }
-
-// Ensure staff mode on start
-document.addEventListener('DOMContentLoaded', updateModeUI);
 
 async function toggleAdminMode() {
   if (window.isAdminMode) {
@@ -3421,226 +3544,152 @@ async function loadSettings() {
     window.businessName = 'פנסיון לדוגמה';
     const titleEl = document.getElementById('header-business-name');
     if (titleEl) titleEl.textContent = window.businessName;
-    
-    // Set holiday toggle to true by default in demo mode
     const holidayToggle = document.getElementById('settings-show-holidays');
-    if (holidayToggle) {
-        holidayToggle.checked = true;
-    }
-    
-    // Refresh features visibility now that plan is active
-    if (typeof Features !== 'undefined') {
-        Features.syncUI();
-    }
-    return;
-  }
-  console.log('Attempting to load settings...');
-  const session = window.currentUserSession || await Auth.getSession();
-  if (!session || !session.user) {
-    console.warn('No session found for loadSettings');
+    if (holidayToggle) holidayToggle.checked = true;
+    if (typeof Features !== 'undefined') Features.syncUI();
     return;
   }
 
-  window.managerName = session.user.user_metadata?.full_name || 'מנהל';
-  updateStaffSelectors();
-
-  // Ensure user has a plan assigned (Default to Starter for new users)
-  try {
-    const { data: planData } = await pensionNetSupabase
-      .from('user_plan')
-      .select('plan_id, founder_price_locked')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-
-    if (!planData) {
-      console.log('No plan found, assigning Starter plan...');
-      window.currentPlanId = 'starter';
-      window.isFounder = false;
-      const { error: planError } = await pensionNetSupabase
-        .from('user_plan')
-        .insert([{
-          user_id: session.user.id,
-          plan_id: 'starter',
-          updated_at: new Date().toISOString()
-        }]);
-      
-      if (!planError && typeof Features !== 'undefined') {
-        console.log('Starter plan assigned, re-initializing features...');
-        await Features.init();
-      }
-    } else {
-      window.currentPlanId = planData.plan_id;
-      window.isFounder = !!planData.founder_price_locked;
-    }
-    
-    // Proactively sync UI once plan info is available
-    if (typeof Features !== 'undefined') {
-      Features.syncUI();
-    }
-  } catch (planErr) {
-    console.warn('Plan assignment check failed:', planErr);
+  // Wait for auth.js to finish loading the profile/pension (fixes race condition)
+  if (window.authCheckPromise) {
+    await window.authCheckPromise;
   }
 
+  const profile = window.currentUserProfile;
+  const pension = window.currentPension;
+
+  if (!profile || !pension) {
+    console.warn('Profile or Pension not found in global state');
+    return;
+  }
+
+  // Set identity based on role (only on first load, never reset mid-session)
+  if (profile.role === 'manager') {
+    window.managerName = profile.full_name || 'מנהל';
+    // Do NOT reset isAdminMode here — it is controlled by verifyManagerAccess/toggleAdminMode
+    // Resetting it would kick the manager out of admin mode when settings tab is opened
+  } else {
+    // Employee: do NOT set managerName to their name - that bypasses the overlay
+    window.managerName = ''; // Will be populated from the actual manager profile
+    window.isAdminMode = false;
+    window.isSessionVerified = true; // Employee is already authenticated, no overlay needed
+  }
+
+  window.businessName = pension.name || '';
+  window.managerPin = pension.manager_pin || '1234';
+
+  const titleEl = document.getElementById('header-business-name');
+  if (titleEl) titleEl.textContent = window.businessName;
+
+  if (typeof Features !== 'undefined') Features.syncUI();
+
+  // Populate UI Fields
+  const fieldMapping = {
+    'settings-capacity': pension.max_capacity,
+    'settings-phone': pension.phone,
+    'settings-full-name': profile.full_name,
+    'settings-business-name': pension.name,
+    'settings-location': pension.location,
+    'settings-default-price': pension.default_price,
+    'settings-admin-pin': pension.manager_pin
+  };
+
+  Object.keys(fieldMapping).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = fieldMapping[id] ?? '';
+  });
+
+  // Load Staff List
   try {
-    let { data: profile, error } = await pensionNetSupabase
+    const { data: staffProfiles, error: staffError } = await pensionNetSupabase
       .from('profiles')
-      .select('max_capacity, phone, full_name, business_name, location, default_price, staff_members, manager_pin, clients_data, custom_events, addons_definitions')
-      .eq('user_id', session.user.id)
-      .single();
+      .select('*')
+      .eq('pension_id', pension.id);
 
-    if (error && error.code === 'PGRST116') {
-      console.log('Profile not found, creating default profile...');
-      const { data: newProfile, error: insertError } = await pensionNetSupabase
-        .from('profiles')
-        .insert([{ 
-          user_id: session.user.id,
-          full_name: session.user.user_metadata?.full_name || '',
-          business_name: session.user.user_metadata?.business_name || '',
-          location: session.user.user_metadata?.location || '',
-          phone: session.user.user_metadata?.phone || '',
-          max_capacity: parseInt(session.user.user_metadata?.max_capacity) || 10,
-          default_price: parseInt(session.user.user_metadata?.default_price) || 130,
-          staff_members: [],
-          manager_pin: session.user.user_metadata?.manager_pin || '1234'
-        }])
-        .select()
-        .single();
-      
-      if (insertError) throw insertError;
-      profile = newProfile;
-    } else if (error) {
-      throw error;
+    if (staffError) throw staffError;
+    window.currentStaffMembers = staffProfiles || [];
+
+    // Set actual manager name from the pension staff list
+    if (profile.role !== 'manager') {
+      const managerProfile = window.currentStaffMembers.find(s => s.role === 'manager');
+      if (managerProfile) window.managerName = managerProfile.full_name;
     }
 
-    if (profile) {
-      console.log('Setting field values from profile:', profile);
-      
-      // Fallback logic: Use profile value if exists, otherwise fallback to session metadata
-      const meta = session.user.user_metadata || {};
-      
-      const fieldMapping = {
-        'settings-capacity': profile.max_capacity || meta.max_capacity,
-        'settings-phone': profile.phone || meta.phone,
-        'settings-full-name': profile.full_name || meta.full_name,
-        'settings-business-name': profile.business_name || meta.business_name,
-        'settings-location': profile.location || meta.location,
-        'settings-default-price': profile.default_price || meta.default_price,
-        'settings-admin-pin': profile.manager_pin || meta.manager_pin
-      };
-      
-      window.managerName = profile.full_name || meta.full_name || window.managerName || 'מנהל';
-      window.businessName = profile.business_name || meta.business_name || '';
+    renderStaffList();
+    updateStaffSelectors();
 
-      // Apply field values to inputs
-      Object.keys(fieldMapping).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = fieldMapping[id] ?? '';
-      });
-      
-      // Ensure managerPin has a value: DB -> Metadata -> Default
-      window.managerPin = profile.manager_pin || session.user.user_metadata?.manager_pin || '1234';
-      
-      // Update the input field specifically if it was empty from DB
-      const pinInput = document.getElementById('settings-admin-pin');
-      if (pinInput && !pinInput.value) {
-        pinInput.value = window.managerPin;
-      }
-      
-      const showHolidaysInput = document.getElementById('settings-show-holidays');
-      
-      // Load Add-ons Definitions
-      window.addonsDefinitions = profile.addons_definitions || [];
-      renderAddonsManager();
-      if (showHolidaysInput) {
-        showHolidaysInput.checked = localStorage.getItem('pensionNet_showHolidays') !== 'false';
-      }
+    // Auto-select current user's profile
+    const storedStaff = localStorage.getItem('pensionNet_activeStaff');
+    const myName = profile.full_name;
+    const staffNames = getStaffNames();
 
-      window.currentStaffMembers = (profile.staff_members || []).map(s => {
-        // Migration: convert string staff to objects if needed
-        if (typeof s === 'string') {
-          return {
-            name: s,
-            permissions: { edit_status: false, edit_details: false }
-          };
-        }
-        return s;
-      });
-
-      window.clientsData = profile.clients_data || {};
-      window.pensionCustomEvents = profile.custom_events || [];
-      
-      const sessionData = window.currentUserSession;
-      if (sessionData && sessionData.user) {
-        let localFallback = localStorage.getItem('pensionNet_clientsData_fallback_' + sessionData.user.id);
-        if (localFallback) {
-          try {
-             window.clientsData = { ...JSON.parse(localFallback), ...window.clientsData };
-          } catch(e) {}
-        }
-      }
-
-      window.globalStaffPermissions = {
-        edit_status: false,
-        edit_details: false
-      };
-
-
-
-      renderStaffList();
-
-      // Update Header Subtitle
-      const headerSubtitle = document.getElementById('header-business-name');
-      if (headerSubtitle && window.businessName) {
-        headerSubtitle.textContent = window.businessName;
-      }
-      console.log('Settings fields populated successfully');
-      updatePlanUI();
-      updateModeUI();
-      initializeProfile();
+    if (staffNames.includes(myName) && (!storedStaff || storedStaff === 'צוות')) {
+      localStorage.setItem('pensionNet_activeStaff', myName);
+      const activeSelect = document.getElementById('activeStaffSelect');
+      if (activeSelect) activeSelect.value = myName;
     }
   } catch (err) {
-    console.error('Critical error in loadSettings:', err);
+    console.error('Error loading staff list:', err);
   }
-}
 
-document.getElementById('saveSettingsBtn')?.addEventListener('click', async function() {
-  const session = window.currentUserSession;
-  if (!session) return;
-
-  const saveBtn = this;
-  const originalText = saveBtn.innerHTML;
-  
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
-
-  const updateData = {
-    max_capacity: parseInt(document.getElementById('settings-capacity').value),
-    phone: document.getElementById('settings-phone').value,
-    full_name: document.getElementById('settings-full-name').value,
-    business_name: document.getElementById('settings-business-name').value,
-    location: document.getElementById('settings-location').value,
-    default_price: parseInt(document.getElementById('settings-default-price').value),
-    staff_members: window.currentStaffMembers,
-    manager_pin: document.getElementById('settings-admin-pin').value,
-    addons_definitions: getAddonsFromUI()
-  };
+  // Load Addons
+  if (pension.settings && pension.settings.addons_definitions) {
+    if (typeof renderAddonsManager === 'function') {
+        renderAddonsManager(pension.settings.addons_definitions);
+    }
+  }
 
   const showHolidaysInput = document.getElementById('settings-show-holidays');
   if (showHolidaysInput) {
-    localStorage.setItem('pensionNet_showHolidays', showHolidaysInput.checked);
+    showHolidaysInput.checked = localStorage.getItem('pensionNet_showHolidays') === 'true';
   }
+  updatePlanUI();
+  updateModeUI();
+}
+
+document.getElementById('saveSettingsBtn')?.addEventListener('click', async function() {
+  const profile = window.currentUserProfile;
+  const pension = window.currentPension;
+  if (!profile || !pension) return;
+
+  const saveBtn = this;
+  const originalText = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+
+  const pensionUpdate = {
+    name: document.getElementById('settings-business-name').value,
+    phone: document.getElementById('settings-phone').value,
+    location: document.getElementById('settings-location').value,
+    max_capacity: parseInt(document.getElementById('settings-capacity').value),
+    default_price: parseInt(document.getElementById('settings-default-price').value),
+    manager_pin: document.getElementById('settings-admin-pin').value,
+    settings: {
+        ...(pension.settings || {}),
+        addons_definitions: typeof getAddonsFromUI === 'function' ? getAddonsFromUI() : []
+    }
+  };
+
+  const profileUpdate = {
+    full_name: document.getElementById('settings-full-name').value
+  };
 
   try {
-    const { error } = await pensionNetSupabase
-      .from('profiles')
-      .upsert({ 
-        user_id: session.user.id,
-        ...updateData 
-      }, { onConflict: 'user_id' });
+    const { error: penError } = await pensionNetSupabase
+      .from('pensions')
+      .update(pensionUpdate)
+      .eq('id', pension.id);
+    if (penError) throw penError;
 
-    if (error) throw error;
+    const { error: profError } = await pensionNetSupabase
+      .from('profiles')
+      .update(profileUpdate)
+      .eq('user_id', profile.user_id);
+    if (profError) throw profError;
 
     showToast('ההגדרות נשמרו בהצלחה!', 'success');
+    window.currentPension = { ...pension, ...pensionUpdate };
+    window.currentUserProfile = { ...profile, ...profileUpdate };
     setTimeout(() => location.reload(), 1200); 
   } catch (err) {
     console.error('Error saving settings:', err);
@@ -3650,6 +3699,201 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     saveBtn.innerHTML = originalText;
   }
 });
+
+async function removeStaffMember(profileId) {
+  if (!(await verifyManagerAccess())) return;
+
+  showConfirm('<i class="fas fa-user-minus"></i> הסרת איש צוות', 'האם אתה בטוח שברצונך להסיר איש צוות זה מהמערכת?', async () => {
+    try {
+      const { error } = await pensionNetSupabase
+        .from('profiles')
+        .update({ pension_id: null, role: 'employee', permissions: [] })
+        .eq('id', profileId);
+
+      if (error) throw error;
+      showToast('איש הצוות הוסר בהצלחה', 'success');
+      await loadSettings();
+    } catch (err) {
+      showToast('שגיאה בהסרת איש צוות: ' + err.message, 'error');
+    }
+  });
+}
+
+async function addStaffMember() {
+  const pension = window.currentPension;
+  if (!pension) return;
+
+  const nameInput = document.getElementById('new-staff-name');
+  const emailInput = document.getElementById('new-staff-email');
+  const passwordInput = document.getElementById('new-staff-password');
+  const roleSelect = document.getElementById('new-staff-role');
+  
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value.trim() || 'Password';
+  const role = roleSelect.value;
+  
+  if (!name || !email) {
+    showToast('יש להזין שם ואימייל', 'error');
+    return;
+  }
+
+  const permissions = Array.from(document.querySelectorAll('.perm-check:checked')).map(cb => cb.value);
+
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .insert([{
+          pension_id: pension.id,
+          full_name: name,
+          email: email,
+          role: role,
+          password: password,
+          permissions: role === 'manager' ? ['all'] : permissions
+      }]);
+
+    if (error) throw error;
+
+    showToast(`${name} נוסף/ה לצוות בהצלחה`, 'success');
+    nameInput.value = '';
+    emailInput.value = '';
+    passwordInput.value = '';
+    await loadSettings(); // Refresh staff list
+  } catch (err) {
+    console.error('Error adding staff:', err);
+    showToast('שגיאה בהוספת איש צוות: ' + err.message, 'error');
+  }
+}
+
+function renderStaffList() {
+  const container = document.getElementById('staff-list');
+  if (!container) return;
+
+  const permissionLabels = {
+    'manage_orders': 'ניהול הזמנות ולידים',
+    'manage_clients': 'ניהול לקוחות',
+    'view_reports': 'צפייה בדוחות',
+    'all': 'הרשאות מלאות'
+  };
+
+  const allPermKeys = ['manage_orders', 'manage_clients', 'view_reports'];
+
+  if (!window.currentStaffMembers || window.currentStaffMembers.length === 0) {
+    container.innerHTML = '<div style="color: #94a3b8; font-size: 13px; font-style: italic; text-align: center; padding: 10px;">אין חברי צוות רשומים עדיין</div>';
+    return;
+  }
+
+  container.innerHTML = window.currentStaffMembers.map(staff => {
+    const isManager = staff.role === 'manager';
+    const permissions = Array.isArray(staff.permissions) ? staff.permissions : [];
+    const staffId = staff.id;
+
+    const permCheckboxes = allPermKeys.map(permKey => {
+      const checked = permissions.includes('all') || permissions.includes(permKey) ? 'checked' : '';
+      return `
+        <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; color: #334155;">
+          <input type="checkbox" ${checked} data-perm="${permKey}" data-staff-id="${staffId}"
+            onchange="updateStaffPermission('${staffId}', this)"
+            style="width: 14px; height: 14px; cursor: pointer;">
+          ${permissionLabels[permKey] || permKey}
+        </label>`;
+    }).join('');
+
+    return `
+      <div style="background: white; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong style="color: #1e293b;">${staff.full_name}</strong>
+              <button onclick="updateStaffRole('${staffId}', '${isManager ? 'employee' : 'manager'}')"
+                title="לחץ לשינוי תפקיד"
+                style="font-size: 11px; padding: 2px 8px; border-radius: 12px; border: 1px dashed ${isManager ? '#93c5fd' : '#cbd5e1'}; background: ${isManager ? '#eff6ff' : '#f1f5f9'}; color: ${isManager ? '#2563eb' : '#64748b'}; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                ${isManager ? 'מנהל/ת' : 'עובד/ת'} <i class="fas fa-sync-alt" style="font-size: 9px; margin-right: 3px;"></i>
+              </button>
+            </div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px;">
+              ${isManager ? '<span style="font-size: 10px; color: #94a3b8;">ניהול מלא</span>' : 
+                permissions.filter(p => p !== 'all').map(p => `<span style="font-size: 10px; background: #f8fafc; color: #64748b; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">${permissionLabels[p] || p}</span>`).join('')
+              }
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            ${!isManager ? `
+              <button onclick="toggleStaffPermEdit('perm-edit-${staffId}')"
+                style="background: #f1f5f9; border: none; color: #6366f1; cursor: pointer; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600;">
+                <i class="fas fa-sliders-h"></i> הרשאות
+              </button>` : ''}
+            <button onclick="removeStaffMember('${staff.id}')" 
+              style="background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s;" 
+              onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+        ${!isManager ? `
+        <div id="perm-edit-${staffId}" style="display: none; margin-top: 12px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px;">עריכת הרשאות:</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${permCheckboxes}
+          </div>
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleStaffPermEdit(panelId) {
+  const panel = document.getElementById(panelId);
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function updateStaffPermission(staffId, checkbox) {
+  const staff = window.currentStaffMembers.find(s => s.id === staffId);
+  if (!staff) return;
+
+  const container = checkbox.closest('[id^="perm-edit-"]');
+  const allChecks = container.querySelectorAll('[data-perm]');
+  const newPerms = [...allChecks].filter(cb => cb.checked).map(cb => cb.dataset.perm);
+
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update({ permissions: newPerms })
+      .eq('id', staffId);
+
+    if (error) throw error;
+    staff.permissions = newPerms;
+    renderStaffList();
+    showToast('ההרשאות עודכנו בהצלחה', 'success');
+  } catch (err) {
+    showToast('שגיאה בעדכון הרשאות: ' + err.message, 'error');
+  }
+}
+
+async function updateStaffRole(staffId, newRole) {
+  const staff = window.currentStaffMembers.find(s => s.id === staffId);
+  if (!staff) return;
+
+  const roleName = newRole === 'manager' ? 'מנהל/ת' : 'עובד/ת';
+  const newPerms = newRole === 'manager' ? ['all'] : [];
+
+  try {
+    const { error } = await pensionNetSupabase
+      .from('profiles')
+      .update({ role: newRole, permissions: newPerms })
+      .eq('id', staffId);
+
+    if (error) throw error;
+    staff.role = newRole;
+    staff.permissions = newPerms;
+    renderStaffList();
+    showToast(`${staff.full_name} עודכן/ה ל-${roleName}`, 'success');
+  } catch (err) {
+    showToast('שגיאה בעדכון תפקיד: ' + err.message, 'error');
+  }
+}
+
 
 document.getElementById('fillDemoDataBtn')?.addEventListener('click', fillWithDemoData);
 

@@ -280,15 +280,27 @@
     <script src="js/auth.js?v=50"></script>
     <script>
         async function checkSession() {
+            // Wait a moment for auth.js to finish its check and set the global profile
+            // or just use Auth.getSession() directly if preferred, but we need the profile
+            let retryCount = 0;
+            const waitForProfile = async () => {
+                if (window.currentUserProfile) return window.currentUserProfile;
+                if (retryCount > 10) return null;
+                retryCount++;
+                await new Promise(res => setTimeout(res, 200));
+                return waitForProfile();
+            };
+
+            const profile = await waitForProfile();
             const session = await Auth.getSession();
+
             if (!session) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // If user already has metadata, redirect to admin
-            const user = session.user;
-            if (user.user_metadata && user.user_metadata.business_name) {
+            // If user already has a pension assigned, they don't need setup
+            if (profile && profile.pension_id) {
                 window.location.href = 'admin.html';
             }
         }
@@ -332,20 +344,34 @@
                 });
                 if (authError) throw authError;
 
-                // 2. Upsert into profiles table to ensure persistence
-                const { error: profileError } = await supabaseClient
-                    .from('profiles')
-                    .upsert({
-                        user_id: authData.user.id,
-                        full_name: formData.full_name,
-                        business_name: formData.business_name,
+                // 2. Create Pension Record
+                const { data: pensionData, error: pensionError } = await supabaseClient
+                    .from('pensions')
+                    .insert({
+                        name: formData.business_name,
+                        owner_id: authData.user.id,
                         location: formData.location,
                         phone: formData.phone,
                         max_capacity: parseInt(formData.max_capacity) || 10,
                         default_price: parseInt(formData.default_price) || 130,
-                        manager_pin: formData.manager_pin || '1234',
+                        manager_pin: formData.manager_pin || '1234'
+                    })
+                    .select()
+                    .single();
+
+                if (pensionError) throw pensionError;
+
+                // 3. Update profile to link to pension
+                const { error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        pension_id: pensionData.id,
+                        full_name: formData.full_name,
+                        role: 'manager',
+                        permissions: ['all'],
                         updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id' });
+                    })
+                    .eq('user_id', authData.user.id);
 
                 if (profileError) {
                     console.warn('Profile sync failed, but metadata updated:', profileError);

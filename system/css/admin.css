@@ -2696,6 +2696,32 @@ body.staff-mode .manager-only {
   display: none !important;
 }
 
+/* Show clients tab BUTTON for staff with manage_clients permission */
+body.staff-mode.perm-manage-clients button.tab-btn[onclick*="clients"] {
+  display: inline-flex !important;
+}
+
+/* Show clients tab CONTENT when it is the active tab and employee has permission */
+body.staff-mode.perm-manage-clients #tab-clients.tab-active {
+  display: block !important;
+}
+
+/* Settings tab – read-only visual cues for locked sections */
+[data-manager-section] {
+  transition: opacity 0.25s ease;
+}
+
+/* Subtle lock badge on section titles when not a manager */
+body.staff-mode [data-manager-section] h4::after {
+  content: '\a0\f023';   /* non-breaking space + lock icon (FontAwesome glyph) */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 /* Toggle Switch Styles */
 .switch {
   position: relative;

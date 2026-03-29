@@ -45,18 +45,13 @@ const Auth = {
       return null;
     }
 
-    // Check if we are in the middle of an OAuth redirect (e.g. Google login)
-    // If there is an access_token in the URL hash, Supabase needs time to process it.
-    // We should NOT redirect to login.html in this case.
     if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
       console.log('⏳ קולט נתוני התחברות חיצונית, ממתין לסיום עיבוד...');
-      // Wait a bit to allow getSession to potentially catch it after internal processing
       await new Promise(res => setTimeout(res, 500));
     }
 
     const session = await this.getSession();
     if (!session) {
-      // If we are on a protected page and not logged in, redirect to login
       const protectedPages = ["admin.html", "admin_panel.html", "growth.html", "insights.html", "features_guide.html"];
       const currentPage = window.location.pathname.split("/").pop();
       if (protectedPages.includes(currentPage)) {
@@ -66,9 +61,42 @@ const Auth = {
       return null;
     }
 
-    // New check: if logged in but metadata (setup) missing
+    // --- New Multi-User Logic (Fetch Profile & Pension) ---
     const user = session.user;
-    if (user && (!user.user_metadata || !user.user_metadata.business_name)) {
+    
+    // Fetch profile to get role and pension_id
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.warn('Profile not found for user:', user.id, profileError);
+      const currentPage = window.location.pathname.split("/").pop();
+      if (currentPage !== "setup.html") {
+         window.location.href = "setup.html";
+      }
+      return session;
+    }
+
+    // Fetch the pension separately (avoids RLS join issues)
+    let pension = null;
+    if (profile.pension_id) {
+      const { data: pensionData } = await supabaseClient
+        .from('pensions')
+        .select('*')
+        .eq('id', profile.pension_id)
+        .single();
+      pension = pensionData;
+    }
+
+    // Store in global state
+    window.currentUserProfile = profile;
+    window.currentPension = pension;
+
+    // Redirect managers without a pension to setup
+    if (!profile.pension_id && profile.role === 'manager') {
         const currentPage = window.location.pathname.split("/").pop();
         if (currentPage !== "setup.html") {
             window.location.href = "setup.html";
@@ -92,11 +120,17 @@ const Auth = {
   isAdmin(session) {
     const ADMIN_EMAIL = 'shaharsolutions@gmail.com';
     return session && session.user && session.user.email === ADMIN_EMAIL;
+  },
+
+  hasPermission(permission) {
+    if (!window.currentUserProfile) return false;
+    const permissions = window.currentUserProfile.permissions || [];
+    return permissions.includes('all') || permissions.includes(permission);
   }
 };
 
 
-// Initialize auth check
+// Initialize auth check and store the promise so other scripts can await it
 if (typeof SUPABASE_CONFIG !== 'undefined') {
-    Auth.checkAuth();
+    window.authCheckPromise = Auth.checkAuth();
 }
