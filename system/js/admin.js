@@ -1,3 +1,26 @@
+window.PensionDiagnostics = {
+  history: [],
+  log: function(msg, data) {
+    const timestamp = new Date().toLocaleTimeString();
+    const formattedData = data ? (typeof data === 'string' ? data : JSON.stringify(data, null, 2)) : '';
+    const entry = `[${timestamp}] 🚀 ${msg} ${formattedData}`;
+    this.history.push(entry);
+    if (this.history.length > 50) this.history.shift(); // Keep last 50
+    console.log(entry);
+  },
+  getReport: function() {
+    let report = `=== PENSION-NET SYSTEM REPORT (${new Date().toLocaleString()}) ===\n\n`;
+    report += `User Role: ${window.currentUserProfile?.role || 'None'}\n`;
+    report += `User Full Name: ${window.currentUserProfile?.full_name || 'None'}\n`;
+    report += `Admin Mode: ${window.isAdminMode}\n`;
+    report += `Demo Mode: ${window.isDemoMode || false}\n`;
+    report += `Active Identity in Header: ${document.getElementById('activeStaffSelect')?.value || 'None'}\n`;
+    report += `\n--- LOG HISTORY ---\n`;
+    report += this.history.join('\n');
+    return report;
+  }
+};
+
 window.isSessionVerified = false;
 window.businessName = '';
 window.lastPinVerificationTime = parseInt(localStorage.getItem('pensionet_last_pin_verified') || '0');
@@ -302,6 +325,51 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Check for announcements after data is loaded
     setTimeout(() => checkForAnnouncements(), 1500); 
+
+    // --- Handle "My Profile" save (available to ALL users) ---
+    document.getElementById('saveMyProfileBtn')?.addEventListener('click', async function() {
+      const profile = window.currentUserProfile;
+      if (!profile) { showToast('פרופיל לא נטען', 'error'); return; }
+
+      const newName = document.getElementById('settings-my-full-name')?.value?.trim();
+      if (!newName) { showToast('יש להזין שם מלא', 'error'); return; }
+
+      const btn = this;
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+
+      try {
+        const { error } = await pensionNetSupabase
+          .from('profiles')
+          .update({ full_name: newName })
+          .eq('user_id', profile.user_id);
+
+        if (error) throw error;
+
+        // Update in-memory profile
+        window.currentUserProfile = { ...profile, full_name: newName };
+
+        // Refresh active staff selector so the name change is reflected immediately
+        if (typeof updateStaffSelectors === 'function') updateStaffSelectors();
+        const activeSelect = document.getElementById('activeStaffSelect');
+        if (activeSelect && activeSelect.value === profile.full_name) {
+          // Re-select using new name
+          localStorage.setItem('pensionNet_activeStaff', newName);
+          updateStaffSelectors();
+          const freshSelect = document.getElementById('activeStaffSelect');
+          if (freshSelect) freshSelect.value = newName;
+        }
+
+        showToast('הפרטים האישיים עודכנו בהצלחה!', 'success');
+      } catch (err) {
+        console.error('Profile update error:', err);
+        showToast('שגיאה בשמירת הפרופיל: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+    });
   }
 
   
@@ -2728,76 +2796,39 @@ async function toggleStaffPermission(index, permKey) {
 }
 
 function updateStaffSelectors() {
-  const staffNames = getStaffNames();
-  
-  // 0. Update initial login overlay select
-  const initialSelect = document.getElementById('initialProfileSelect');
-  if (initialSelect) {
-    initialSelect.innerHTML = '<option value="">בחר פרופיל...</option>';
-    staffNames.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      initialSelect.appendChild(opt);
-    });
-  }
-  
-  // 1. Update notes modal select
-  const select = document.getElementById('noteAuthorSelect');
-  if (select) {
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">בחר עובד/ת...</option>';
-    staffNames.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
-    });
-    select.value = currentVal;
-    
-    // Protect manager selection in notes
-    if (!select.hasAttribute('listener-added')) {
-      select.setAttribute('listener-added', 'true');
-      let prevAuthor = select.value;
-      
-      select.addEventListener('focus', function() {
-        prevAuthor = this.value;
-      });
+  const myProfile = window.currentUserProfile;
+  const myName = myProfile?.full_name || '';
 
-      select.addEventListener('change', async function() {
-        if (this.value === window.managerName && !window.isAdminMode) {
-          const success = await verifyManagerAccess();
-          if (!success) {
-            this.value = prevAuthor;
-            return;
-          }
-        }
-        prevAuthor = this.value;
-      });
-    }
-  }
+  // Identity Lockdown Log
+  window.PensionDiagnostics.log('Locking identity selectors to:', myName || 'Not available');
 
-  // 2. Update active staff select (for staff mode)
-  const activeSelect = document.getElementById('activeStaffSelect');
-  if (activeSelect) {
-    let currentVal = activeSelect.value;
-    
-    // If current value is default, try to load from localStorage
-    if (currentVal === 'צוות') {
-      const savedAuth = localStorage.getItem('pensionNet_activeStaff');
-      if (savedAuth && staffNames.includes(savedAuth)) {
-        currentVal = savedAuth;
-      }
+  // Lock all identity selectors to the logged-in user
+  if (myName) {
+    // 0. Initial overlay select
+    const initialSelect = document.getElementById('initialProfileSelect');
+    if (initialSelect) {
+      initialSelect.innerHTML = `<option value="${myName}">${myName}</option>`;
+      initialSelect.value = myName;
+      initialSelect.disabled = false; // Make clickable again
     }
 
-    activeSelect.innerHTML = '<option value="צוות">זהות עובד/ת...</option>';
-    staffNames.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      activeSelect.appendChild(opt);
-    });
-    activeSelect.value = currentVal;
+    // 1. Notes modal select (author)
+    const noteSelect = document.getElementById('noteAuthorSelect');
+    if (noteSelect) {
+      noteSelect.innerHTML = `<option value="${myName}">${myName}</option>`;
+      noteSelect.value = myName;
+      noteSelect.disabled = false; // Make clickable again
+    }
+
+    // 2. Head active staff select
+    const activeSelect = document.getElementById('activeStaffSelect');
+    if (activeSelect) {
+      activeSelect.innerHTML = `<option value="${myName}">${myName}</option>`;
+      activeSelect.value = myName;
+      activeSelect.disabled = false; // Make clickable again
+      activeSelect.style.pointerEvents = '';
+      activeSelect.style.opacity = '1';
+    }
   }
 }
 
@@ -2951,23 +2982,7 @@ function cancelRemoveStaff() {
 function getStaffNames() {
   const myProfile = window.currentUserProfile;
   const myName = myProfile?.full_name || window.managerName;
-  const myRole = myProfile?.role || 'employee';
-
-  // Employees see ONLY themselves - no switching between profiles
-  if (myRole === 'employee') {
-    return myName ? [myName] : ['עובד/ת'];
-  }
-
-  // Managers see all staff in the pension
-  const staffNames = (window.currentStaffMembers || []).map(s => {
-    if (typeof s === 'string') return s;
-    return s.full_name || s.name || 'עובד/ת';
-  });
-
-  let finalNames = myName ? [myName, ...staffNames] : staffNames;
-  if (finalNames.length === 0) finalNames = ['בחר פרופיל...'];
-
-  return [...new Set(finalNames)];
+  return myName ? [myName] : ['עובד/ת'];
 }
 
 async function executeRemoveStaff(index) {
@@ -3074,6 +3089,32 @@ function updateModeUI() {
     if (select && window.managerName) {
       select.value = window.managerName;
     }
+  } else if (isEmployee) {
+    // ── EMPLOYEE: fixed identity, no selector ──────────────────────────────
+    const myName = window.currentUserProfile.full_name || 'עובד/ת';
+    badge.innerHTML = `<i class="fas fa-user"></i> ${myName}`;
+    badge.className = 'mode-badge staff';
+    document.body.classList.add('staff-mode');
+    document.body.classList.remove('no-identity');
+
+    // Hide the switchable staff dropdown entirely for employees
+    if (staffSelectorContainer) staffSelectorContainer.style.display = 'none';
+
+    // Apply the employee's own permissions from their profile
+    const rawPerms = window.currentUserProfile.permissions || [];
+    const hasPerm = (key) => Array.isArray(rawPerms)
+      ? (rawPerms.includes('all') || rawPerms.includes(key))
+      : rawPerms[key] === true;
+
+    if (hasPerm('manage_orders')) { document.body.classList.add('perm-edit-status'); allowSave = true; }
+    else document.body.classList.remove('perm-edit-status');
+
+    if (hasPerm('edit_details')) { document.body.classList.add('perm-edit-details'); allowSave = true; }
+    else document.body.classList.remove('perm-edit-details');
+
+    if (hasPerm('manage_clients')) document.body.classList.add('perm-manage-clients');
+    else document.body.classList.remove('perm-manage-clients');
+
   } else {
     badge.innerHTML = '<i class="fas fa-lock"></i> מצב עובד';
     badge.className = 'mode-badge staff';
@@ -3175,9 +3216,11 @@ function updateModeUI() {
   if (overlay) {
     const hasOnlyManager = (window.currentStaffMembers || []).length === 0 && window.managerName;
     const isEmployee = window.currentUserProfile?.role === 'employee';
+    const isManager = window.currentUserProfile?.role === 'manager';
     
-    if (window.isDemoMode || isEmployee) {
-      // Employees are already authenticated via Supabase - no overlay needed
+    // Authenticated users (both employees and managers) are already verified 
+    // by their unique Supabase login, so they don't need the identity selection overlay.
+    if (window.isDemoMode || isEmployee || isManager) {
       overlay.style.setProperty('display', 'none', 'important');
     } else if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager && !window.isSessionVerified) {
       overlay.style.setProperty('display', 'flex', 'important');
@@ -3566,13 +3609,13 @@ async function loadSettings() {
   // Set identity based on role (only on first load, never reset mid-session)
   if (profile.role === 'manager') {
     window.managerName = profile.full_name || 'מנהל';
-    // Do NOT reset isAdminMode here — it is controlled by verifyManagerAccess/toggleAdminMode
-    // Resetting it would kick the manager out of admin mode when settings tab is opened
+    window.isAdminMode = true;     // Manager starts in Admin Mode by default
+    window.isSessionVerified = true; // Authenticated by Supabase
   } else {
-    // Employee: do NOT set managerName to their name - that bypasses the overlay
+    // Employee: authenticated by Supabase but not in Admin Mode
     window.managerName = ''; // Will be populated from the actual manager profile
     window.isAdminMode = false;
-    window.isSessionVerified = true; // Employee is already authenticated, no overlay needed
+    window.isSessionVerified = true;
   }
 
   window.businessName = pension.name || '';
@@ -3583,7 +3626,7 @@ async function loadSettings() {
 
   if (typeof Features !== 'undefined') Features.syncUI();
 
-  // Populate UI Fields
+  // Populate UI Fields (business / pension data)
   const fieldMapping = {
     'settings-capacity': pension.max_capacity,
     'settings-phone': pension.phone,
@@ -3598,6 +3641,20 @@ async function loadSettings() {
     const el = document.getElementById(id);
     if (el) el.value = fieldMapping[id] ?? '';
   });
+
+  // Populate "My Profile" section – always reflects the logged-in user's own data
+  const myNameEl    = document.getElementById('settings-my-full-name');
+  const myEmailEl   = document.getElementById('settings-my-email');
+  const myAvatarEl  = document.getElementById('my-profile-avatar');
+  
+  const fullName = profile.full_name || '';
+  if (myNameEl)  myNameEl.value  = fullName;
+  if (myEmailEl) myEmailEl.value = window.currentUserSession?.user?.email || '';
+  
+  if (myAvatarEl && fullName) {
+    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    myAvatarEl.textContent = initials || fullName[0]?.toUpperCase() || 'PN';
+  }
 
   // Load Staff List
   try {
@@ -3645,6 +3702,12 @@ async function loadSettings() {
   }
   updatePlanUI();
   updateModeUI();
+  
+  window.PensionDiagnostics.log('loadSettings completed.', {
+    role: profile.role,
+    name: profile.full_name,
+    pension: pension.name
+  });
 }
 
 document.getElementById('saveSettingsBtn')?.addEventListener('click', async function() {
