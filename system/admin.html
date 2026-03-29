@@ -455,9 +455,15 @@
               <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #6366f1, #a855f7);"></div>
               
               <div style="display: flex; align-items: flex-start; gap: 20px; margin-bottom: 24px;">
-                <div id="my-profile-avatar" style="width: 64px; height: 64px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 800; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
-                  <!-- Initials injected via JS -->
-                  <i class="fas fa-user"></i>
+                <div id="my-profile-avatar-container" style="position: relative; cursor: pointer;" onclick="document.getElementById('avatar-upload-input').click()">
+                  <div id="my-profile-avatar" style="width: 64px; height: 64px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 800; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); overflow: hidden; background-size: cover; background-position: center;">
+                    <!-- Initials or Image injected via JS -->
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div style="position: absolute; bottom: 0; right: 0; width: 22px; height: 22px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6366f1; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 2px solid #fff;">
+                    <i class="fas fa-camera"></i>
+                  </div>
+                  <input type="file" id="avatar-upload-input" style="display: none;" accept="image/*" onchange="handleAvatarUpload(event)">
                 </div>
                 <div style="flex: 1;">
                   <h4 style="margin: 0 0 4px; color: #1e293b; font-size: 18px; font-weight: 800;">הפרופיל האישי שלי</h4>
@@ -510,16 +516,8 @@
                   <label for="settings-location"><i class="fas fa-map-marker-alt"></i> מיקום הפנסיון:</label>
                   <input type="text" id="settings-location" placeholder="למשל: תל אביב / מושב בשרון">
                 </div>
-                <div class="form-group" data-manager-only-field>
-                  <label for="settings-admin-pin"><i class="fas fa-key"></i> קוד PIN לניהול (4 ספרות):</label>
-                  <div class="password-input-wrapper" style="position: relative; display: flex; align-items: center;">
-                    <input type="password" id="settings-admin-pin" maxlength="4" placeholder="למשל: 1234" style="flex: 1; padding-left: 40px;">
-                    <button type="button" id="togglePinVisibility" 
-                            style="position: absolute; left: 10px; background: none; border: none; cursor: pointer; color: #64748b; padding: 5px; display: flex; align-items: center; justify-content: center; height: 100%;">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </div>
-                  <div class="helper-text">קוד זה יידרש רק להוספת עובדים חדשים למערכת</div>
+                <div class="form-group" data-manager-only-field style="display:none;">
+                  <!-- Admin PIN field deprecated -->
                 </div>
               </div>
 
@@ -969,27 +967,44 @@
           link.style.display = Auth.isAdmin(session) ? 'inline-flex' : 'none';
         }
 
-        // Create user session for tracking
+        // Create user session for tracking (Optimized: Re-use session in same tab)
         try {
-          const { data, error } = await supabaseClient
-            .from('user_sessions')
-            .insert([{ 
-                user_id: session.user.id, 
-                user_email: session.user.email, 
-                login_time: new Date().toISOString(), 
-                last_active: new Date().toISOString(), 
-                duration_minutes: 0 
-            }])
-            .select().single();
+          const storedId = sessionStorage.getItem('pensionet_session_id');
+          const storedStart = sessionStorage.getItem('pensionet_session_start');
 
-          if (!error && data) {
-            _sessionId = data.id;
-            _sessionStart = new Date();
+          if (storedId && storedStart) {
+            // Resume existing session for this tab
+            _sessionId = storedId;
+            _sessionStart = new Date(storedStart);
+          } else {
+            // Start brand new session
+            const { data, error } = await supabaseClient
+              .from('user_sessions')
+              .insert([{ 
+                  user_id: session.user.id, 
+                  user_email: session.user.email, 
+                  login_time: new Date().toISOString(), 
+                  last_active: new Date().toISOString(), 
+                  duration_minutes: 0 
+              }])
+              .select().single();
+
+            if (!error && data) {
+              _sessionId = data.id;
+              _sessionStart = new Date();
+              sessionStorage.setItem('pensionet_session_id', _sessionId);
+              sessionStorage.setItem('pensionet_session_start', _sessionStart.toISOString());
+            }
+          }
+
+          if (_sessionId) {
             _sessionTimer = setInterval(_updateSession, SESSION_UPDATE_INTERVAL);
             window.addEventListener('beforeunload', _updateSession);
             document.addEventListener('visibilitychange', () => { 
                 if (document.visibilityState === 'hidden') _updateSession(); 
             });
+            // Initial heartbeat
+            _updateSession();
           }
         } catch(e) { console.warn('Session tracking unavailable:', e.message); }
       }

@@ -3,7 +3,8 @@
  * פאנל ניהול מתקדם - גישה למנהל בלבד (shaharsolutions@gmail.com)
  */
 
-const ADMIN_EMAIL = 'shaharsolutions@gmail.com';
+const ADMIN_EMAILS = ['shaharsolutions@gmail.com'];
+const ADMIN_EMAIL = 'shaharsolutions@gmail.com'; // Primary for fallback
 const SESSION_UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes in ms
 let currentSessionId = null;
 let sessionUpdateTimer = null;
@@ -18,29 +19,43 @@ async function createUserSession() {
         const session = await Auth.getSession();
         if (!session || !session.user) return;
 
-        const { data, error } = await supabaseClient
-            .from('user_sessions')
-            .insert([{
-                user_id: session.user.id,
-                user_email: session.user.email,
-                login_time: new Date().toISOString(),
-                last_active: new Date().toISOString(),
-                duration_minutes: 0
-            }])
-            .select()
-            .single();
+        // Check for existing session in this tab to avoid duplicates on refresh
+        const storedId = sessionStorage.getItem('pensionet_session_id');
+        const storedStart = sessionStorage.getItem('pensionet_session_start');
 
-        if (error) {
-            console.warn('Could not create user session:', error.message);
-            return;
+        if (storedId && storedStart) {
+            currentSessionId = storedId;
+            sessionStartTime = new Date(storedStart);
+            console.log('User session resumed from storage:', currentSessionId);
+        } else {
+            const { data, error } = await supabaseClient
+                .from('user_sessions')
+                .insert([{
+                    user_id: session.user.id,
+                    user_email: session.user.email,
+                    login_time: new Date().toISOString(),
+                    last_active: new Date().toISOString(),
+                    duration_minutes: 0
+                }])
+                .select()
+                .single();
+
+            if (error) {
+                console.warn('Could not create user session:', error.message);
+                return;
+            }
+
+            currentSessionId = data.id;
+            sessionStartTime = new Date();
+            sessionStorage.setItem('pensionet_session_id', currentSessionId);
+            sessionStorage.setItem('pensionet_session_start', sessionStartTime.toISOString());
+            console.log('New user session created:', currentSessionId);
         }
-
-        currentSessionId = data.id;
-        sessionStartTime = new Date();
-        console.log('User session created:', currentSessionId);
 
         // Start periodic updates
         startSessionTracking();
+        // Initial update
+        await updateSessionActivity();
     } catch (err) {
         console.warn('Session tracking error:', err);
     }
@@ -91,7 +106,7 @@ async function updateSessionActivity() {
 // ============================================
 
 function isAdminUser(session) {
-    return session && session.user && session.user.email === ADMIN_EMAIL;
+    return session && session.user && ADMIN_EMAILS.includes(session.user.email);
 }
 
 async function checkAdminAccess() {
@@ -757,7 +772,7 @@ function renderUsersTable(sessions, orders, profiles, userPlans = []) {
     }, {});
 
     const renderPlanBadge = (planData, userEmail = null) => {
-        const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com';
+        const isSystemAdmin = ADMIN_EMAILS.includes(userEmail);
         if (isSystemAdmin) {
             return `<span class="admin-badge" style="background: #fefce8; color: #854d0e; border: 1px solid #facc15;"><i class="fas fa-shield-alt"></i> Admin</span>`;
         }

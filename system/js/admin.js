@@ -21,10 +21,9 @@ window.PensionDiagnostics = {
   }
 };
 
-window.isSessionVerified = false;
+window.isSessionVerified = true; // No longer needed for PIN
 window.businessName = '';
-window.lastPinVerificationTime = parseInt(localStorage.getItem('pensionet_last_pin_verified') || '0');
-const PIN_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 Hours in MS
+window.isAdminMode = false;
 
 
 // --- Supabase Auth Integration ---
@@ -156,9 +155,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     
     // --- Impersonation Mode ---
     const impersonateUserName = sessionStorage.getItem('pensionet_impersonate_user_name');
-    const ADMIN_EMAIL_CHECK = 'shaharsolutions@gmail.com';
+    const ADMIN_EMAILS = ['shaharsolutions@gmail.com'];
+    const isSystemAdmin = ADMIN_EMAILS.includes(session.user.email);
     
-    if (impersonateUserId && session.user.email === ADMIN_EMAIL_CHECK) {
+    if (impersonateUserId && isSystemAdmin) {
       // Override the user.id in the session to load impersonated user's data
       window.isImpersonating = true;
       window.impersonateOriginalSession = { ...session, user: { ...session.user } };
@@ -1048,7 +1048,9 @@ function formatOrderNotes(notes) {
 window.jewishHolidaysCache = {};
 
 async function getJewishHolidays(year, month) {
-  if (localStorage.getItem('pensionNet_showHolidays') === 'false') return {};
+  // Use pension-wide setting if available, otherwise default to true/localStorage for backward compatibility during transition
+  const showHolidays = window.currentPension?.settings?.show_holidays ?? (localStorage.getItem('pensionNet_showHolidays') !== 'false');
+  if (!showHolidays) return {};
   
   if (!year || isNaN(year) || isNaN(month)) return {};
   
@@ -2743,12 +2745,6 @@ function renderStaffList() {
           <span>עריכת פרטי הזמנה</span>
           <input type="checkbox" ${staff.permissions.edit_details ? 'checked' : ''} onchange="toggleStaffPermission(${index}, 'edit_details')">
         </label>
-        <div style="margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
-          <label style="font-size: 11px; color: #64748b;">קוד PIN (4 ספרות):</label>
-          <input type="password" value="${staff.pin || ''}" maxlength="4" 
-                 onchange="updateStaffPin(${index}, this.value)" 
-                 style="width: 100%; padding: 4px 8px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 4px;">
-        </div>
       </div>
     `;
     list.appendChild(card);
@@ -2776,17 +2772,7 @@ async function saveStaffToDB() {
   }
 }
 
-async function updateStaffPin(index, newPin) {
-  if (window.currentStaffMembers[index]) {
-    if (newPin && newPin.length === 4) {
-      window.currentStaffMembers[index].pin = newPin;
-      await saveStaffToDB();
-    } else {
-      showToast('קוד PIN חייב להכיל 4 ספרות', 'error');
-      renderStaffList();
-    }
-  }
-}
+// PIN-based staff switching is deprecated
 
 async function toggleStaffPermission(index, permKey) {
   if (window.currentStaffMembers[index]) {
@@ -2833,109 +2819,13 @@ function updateStaffSelectors() {
 }
 
 window.isVerifyingManager = false;
-async function verifyManagerAccess(targetName = null, force = false) {
-  // If targetName is provided, we verify that specific person (manager or staff)
-  // If no targetName, we verify manager
-  
-  const isVerifyingStaff = targetName && targetName !== window.managerName;
-  const staffObj = isVerifyingStaff ? window.currentStaffMembers.find(s => (typeof s === 'string' ? s : s.name) === targetName) : null;
-  
-  // NEW: Cancel PIN in the entire system, unless forced (e.g. for adding employees)
-  if (!force) {
-    window.isAdminMode = !isVerifyingStaff;
-    window.isSessionVerified = true;
-    localStorage.setItem('pensionet_last_pin_verified', Date.now().toString());
-    window.lastPinVerificationTime = Date.now();
-    return true;
+async function verifyManagerAccess() {
+  const isManager = window.currentUserProfile?.role === 'manager' || window.isDemoMode;
+  if (!isManager) {
+    showToast('פעולה זו שמורה למנהל המערכת בלבד', 'error');
+    return false;
   }
-
-  // Check for 5-minute cooldown (only relevant if forced or staff verify)
-  const now = Date.now();
-  if (window.lastPinVerificationTime && (now - window.lastPinVerificationTime < PIN_EXPIRATION_MS)) {
-    if (targetName) {
-      window.isAdminMode = !isVerifyingStaff;
-    }
-    return true;
-  }
-
-  if (window.isVerifyingManager) return false;
-  
-  window.isVerifyingManager = true;
-  return new Promise((resolve) => {
-    const modal = document.getElementById('pinModal');
-    const input = document.getElementById('pinInput');
-    const confirmBtn = document.getElementById('pinConfirmBtn');
-    const cancelBtn = document.getElementById('pinCancelBtn');
-    const errorMsg = document.getElementById('pinError');
-    const title = modal.querySelector('h3');
-    
-    if (title) title.textContent = targetName ? `אימות סיסמה עבור: ${targetName}` : 'אימות סיסמה';
-    
-    input.value = '';
-    errorMsg.textContent = '';
-    modal.style.display = 'block';
-    input.focus();
-    
-    const cleanup = () => {
-      confirmBtn.onclick = null;
-      cancelBtn.onclick = null;
-      input.onkeydown = null;
-      modal.style.display = 'none';
-      window.isVerifyingManager = false;
-    };
-    
-    const handleConfirm = async () => {
-      const enteredPin = String(input.value).trim();
-      let actualPin = "";
-
-      if (isVerifyingStaff && staffObj) {
-        actualPin = String(staffObj.password || staffObj.pin || '').trim();
-      } else {
-        // Manager verification
-        if (!window.managerPassword) {
-          const session = window.currentUserSession || await Auth.getSession();
-          if (session) {
-            const { data: profiles } = await pensionNetSupabase.from('profiles').select('password').eq('user_id', session.user.id);
-            if (profiles && profiles.length > 0) window.managerPassword = profiles[0].password;
-          }
-        }
-        actualPin = String(window.managerPassword || window.managerPin || '').trim();
-      }
-
-      if (enteredPin === actualPin && actualPin !== "") {
-        if (!isVerifyingStaff) {
-            window.isAdminMode = true;
-            createAuditLog('UPDATE', 'מנהל נכנס למערכת (אימות סיסמה מוצלח)');
-        } else {
-            window.isAdminMode = false;
-            createAuditLog('UPDATE', `אימות סיסמה מוצלח עבור עובד: ${targetName}`);
-        }
-        
-        const now = Date.now();
-        window.lastPinVerificationTime = now;
-        localStorage.setItem('pensionet_last_pin_verified', now.toString());
-        window.isSessionVerified = true;
-        updateModeUI();
-        cleanup();
-        resolve(true);
-      } else {
-        errorMsg.textContent = 'סיסמה שגויה';
-        input.value = '';
-        input.focus();
-      }
-    };
-    
-    confirmBtn.onclick = handleConfirm;
-    cancelBtn.onclick = () => {
-      cleanup();
-      resolve(false);
-    };
-    
-    input.onkeydown = (e) => {
-      if (e.key === 'Enter') handleConfirm();
-      if (e.key === 'Escape') { cleanup(); resolve(false); }
-    };
-  });
+  return true;
 }
 
 async function addStaffMember() {
@@ -3008,7 +2898,8 @@ function updatePlanUI() {
   const userEmail = window.currentUserSession?.user?.email || 
                     window.currentUserSession?.email || 
                     (typeof Auth !== 'undefined' && Auth.getSession()?.user?.email);
-  const isSystemAdmin = userEmail === 'shaharsolutions@gmail.com' && !window.isImpersonating;
+  const ADMIN_EMAILS = ['shaharsolutions@gmail.com', 'elina1324@gmail.com'];
+  const isSystemAdmin = ADMIN_EMAILS.includes(userEmail) && !window.isImpersonating;
   
   if (!planId && !isSystemAdmin) return;
 
@@ -3212,21 +3103,9 @@ function updateModeUI() {
     }
   }
 
-  // LOCK: If no valid profile selected OR PIN expired, show login overlay (FOR BOTH MODES)
+  // LOCK: PIN Overlay is now deprecated
   if (overlay) {
-    const hasOnlyManager = (window.currentStaffMembers || []).length === 0 && window.managerName;
-    const isEmployee = window.currentUserProfile?.role === 'employee';
-    const isManager = window.currentUserProfile?.role === 'manager';
-    
-    // Authenticated users (both employees and managers) are already verified 
-    // by their unique Supabase login, so they don't need the identity selection overlay.
-    if (window.isDemoMode || isEmployee || isManager) {
-      overlay.style.setProperty('display', 'none', 'important');
-    } else if (!window.isAdminMode && (!pinValid || activeStaffName === 'צוות') && !window.overlayManuallyClosed && !hasOnlyManager && !window.isSessionVerified) {
-      overlay.style.setProperty('display', 'flex', 'important');
-    } else {
-      overlay.style.setProperty('display', 'none', 'important');
-    }
+    overlay.style.setProperty('display', 'none', 'important');
   }
   
   // Re-render tables to apply disabled/enabled status to fields
@@ -3649,11 +3528,18 @@ async function loadSettings() {
   
   const fullName = profile.full_name || '';
   if (myNameEl)  myNameEl.value  = fullName;
-  if (myEmailEl) myEmailEl.value = window.currentUserSession?.user?.email || '';
-  
   if (myAvatarEl && fullName) {
-    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    myAvatarEl.textContent = initials || fullName[0]?.toUpperCase() || 'PN';
+    // Check both profile and user metadata
+    const avatarUrl = profile.avatar_url || window.currentUserSession?.user?.user_metadata?.avatar_url;
+    if (avatarUrl) {
+        myAvatarEl.style.backgroundImage = `url('${avatarUrl}')`;
+        myAvatarEl.textContent = '';
+    } else {
+        const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        myAvatarEl.textContent = initials || fullName[0]?.toUpperCase() || 'PN';
+        myAvatarEl.style.backgroundImage = 'none';
+        myAvatarEl.style.background = 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)';
+    }
   }
 
   // Load Staff List
@@ -3689,16 +3575,16 @@ async function loadSettings() {
     console.error('Error loading staff list:', err);
   }
 
-  // Load Addons
-  if (pension.settings && pension.settings.addons_definitions) {
-    if (typeof renderAddonsManager === 'function') {
-        renderAddonsManager(pension.settings.addons_definitions);
-    }
+  // Load Addons into global window variable for other components to use
+  window.addonsDefinitions = pension.settings?.addons_definitions || [];
+  if (typeof renderAddonsManager === 'function') {
+      renderAddonsManager(window.addonsDefinitions);
   }
 
   const showHolidaysInput = document.getElementById('settings-show-holidays');
   if (showHolidaysInput) {
-    showHolidaysInput.checked = localStorage.getItem('pensionNet_showHolidays') === 'true';
+    const showHolidaysDefault = (localStorage.getItem('pensionNet_showHolidays') !== 'false');
+    showHolidaysInput.checked = (pension.settings?.show_holidays ?? showHolidaysDefault);
   }
   updatePlanUI();
   updateModeUI();
@@ -3726,10 +3612,10 @@ document.getElementById('saveSettingsBtn')?.addEventListener('click', async func
     location: document.getElementById('settings-location').value,
     max_capacity: parseInt(document.getElementById('settings-capacity').value),
     default_price: parseInt(document.getElementById('settings-default-price').value),
-    manager_pin: document.getElementById('settings-admin-pin').value,
     settings: {
         ...(pension.settings || {}),
-        addons_definitions: typeof getAddonsFromUI === 'function' ? getAddonsFromUI() : []
+        addons_definitions: typeof getAddonsFromUI === 'function' ? getAddonsFromUI() : [],
+        show_holidays: document.getElementById('settings-show-holidays')?.checked
     }
   };
 
@@ -5575,6 +5461,87 @@ function promptDeleteCustomEvent(eventId) {
         }
     );
 }
+// --- Avatar Upload Handling ---
+async function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const avatarEl = document.getElementById('my-profile-avatar');
+  if (!avatarEl) return;
+  
+  const originalHTML = avatarEl.innerHTML;
+  const originalBg = avatarEl.style.backgroundImage;
+  
+  avatarEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  avatarEl.style.backgroundImage = 'none';
+
+  try {
+    const session = window.currentUserSession;
+    if (!session?.user) throw new Error('צריך להיות מחובר כדי להחליף תמונה');
+
+    const publicUrl = await uploadAvatar(file, session.user.id);
+    if (!publicUrl) throw new Error('העלאה נכשלה');
+
+    // Update profile in DB (Try first)
+    try {
+        await pensionNetSupabase
+            .from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('user_id', session.user.id);
+    } catch(e) {}
+    
+    // Update Auth Metadata (Reliable fallback)
+    const { error: metaError } = await pensionNetSupabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+    });
+    
+    if (metaError && !window.currentUserProfile?.avatar_url) throw metaError;
+
+    // Update local state and UI
+    if (window.currentUserProfile) {
+        window.currentUserProfile.avatar_url = publicUrl;
+    }
+    avatarEl.style.backgroundImage = `url('${publicUrl}')`;
+    avatarEl.innerHTML = '';
+    showToast('תמונת הפרופיל עודכנה בהצלחה!', 'success');
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    avatarEl.innerHTML = originalHTML;
+    avatarEl.style.backgroundImage = originalBg;
+    showToast('שגיאה בהעלאת התמונה: ' + err.message, 'error');
+  }
+}
+
+async function uploadAvatar(file, userId) {
+  if (!file) return null;
+  const client = pensionNetSupabase;
+  if (!client) return null;
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `avatar-${Date.now()}.${fileExt}`;
+  const filePath = `${userId}/${fileName}`;
+
+  try {
+    // Standard bucket for assets in this project
+    let bucket = 'dog-photos';
+    
+    const { error } = await client.storage
+      .from(bucket)
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = client.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (err) {
+    console.error('Photo upload exception:', err);
+    return null;
+  }
+}
+
 // --- Photo Upload Handling ---
 async function uploadDogPhoto(file, userId) {
   if (!file) return null;
@@ -5971,12 +5938,12 @@ window.addNewAddonRow = function(addonData = null) {
   list.appendChild(div);
 };
 
-function renderAddonsManager() {
+function renderAddonsManager(passedAddons) {
   const list = document.getElementById('settings-addons-list');
   if (!list) return;
   list.innerHTML = '';
   
-  const addons = window.addonsDefinitions || [];
+  const addons = passedAddons || window.addonsDefinitions || [];
   if (addons.length === 0) {
     // Show some default suggestions if empty
     const defaults = [

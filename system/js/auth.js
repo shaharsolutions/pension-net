@@ -118,8 +118,8 @@ const Auth = {
   },
 
   isAdmin(session) {
-    const ADMIN_EMAIL = 'shaharsolutions@gmail.com';
-    return session && session.user && session.user.email === ADMIN_EMAIL;
+    const ADMIN_EMAILS = ['shaharsolutions@gmail.com'];
+    return session && session.user && ADMIN_EMAILS.includes(session.user.email);
   },
 
   hasPermission(permission) {

@@ -51,27 +51,35 @@ async function loadOwnerInfo() {
 
   console.log('Fetching profile for owner:', PENSION_OWNER_ID);
   try {
-    const { data: profiles, error } = await client
+    const { data: profiles, error: profileError } = await client
       .from('profiles')
-      .select('phone, business_name, location, default_price, clients_data, addons_definitions')
+      .select('phone, pension_id, clients_data')
       .eq('user_id', PENSION_OWNER_ID);
     
-    if (error) {
-      console.error('Profile fetch error:', error);
-      throw error;
-    }
-    
+    if (profileError) throw profileError;
     const profile = profiles && profiles.length > 0 ? profiles[0] : null;
-    window.pensionProfile = profile;
-    console.log('Profile data found:', profile);
-    console.log('clients_data from DB:', profile?.clients_data);
-    console.log('default_price from DB:', profile?.default_price);
     
-    if (profile) {
-      if (profile.phone) ADMIN_PHONE = profile.phone;
-      if (profile.business_name && profile.business_name.trim()) {
-        BUSINESS_NAME = profile.business_name;
-        // Make the main title dynamic as requested: Emoji + Text + Business Name
+    // Fetch pension settings explicitly
+    let pension = null;
+    if (profile && profile.pension_id) {
+      const { data: pensionData, error: pensionError } = await client
+        .from('pensions')
+        .select('*')
+        .eq('id', profile.pension_id)
+        .single();
+      if (!pensionError) pension = pensionData;
+    }
+
+    window.pensionProfile = { ...profile, ...(pension || {}) }; 
+    // Merge for backward compatibility in the rest of the script (using profile properties)
+    
+    if (pension || profile) {
+      const finalPhone = pension?.phone || profile?.phone;
+      if (finalPhone) ADMIN_PHONE = finalPhone;
+
+      const businessName = pension?.name || profile?.business_name;
+      if (businessName && businessName.trim()) {
+        BUSINESS_NAME = businessName;
         const h1 = document.querySelector('.header h1');
         if (h1) h1.innerHTML = `<i class="fas fa-paw"></i> הזמנת מקום בפנסיון כלבים - ${BUSINESS_NAME}`;
       }
@@ -80,17 +88,18 @@ async function loadOwnerInfo() {
       
       const headerSub = document.getElementById('header-business-name');
       if (headerSub) {
-        // If we have a location, show it. Otherwise show nothing or a clean separator.
-        headerSub.textContent = profile.location ? `📍 ${profile.location}` : (profile.business_name || 'פנסיון לכלבים');
+        const location = pension?.location || profile?.location;
+        headerSub.textContent = location ? `📍 ${location}` : (BUSINESS_NAME || 'פנסיון לכלבים');
         headerSub.style.fontWeight = '800';
       }
       
       const successPhoneEl = document.getElementById('displayAdminPhone');
       if (successPhoneEl) successPhoneEl.textContent = ADMIN_PHONE;
 
-      // Render Add-ons if available
-      if (profile.addons_definitions && profile.addons_definitions.length > 0) {
-        renderAddonsList(profile.addons_definitions);
+      // Render Add-ons from pension settings
+      const addons = pension?.settings?.addons_definitions || profile?.addons_definitions;
+      if (addons && addons.length > 0) {
+        renderAddonsList(addons);
       }
     } else {
       // Profile NOT found at all
@@ -123,15 +132,19 @@ async function loadMonthlyCapacity() {
   
   let MAX_CAPACITY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.MAX_CAPACITY : 15;
   
-  const { data: profiles } = await client
-    .from('profiles')
-    .select('max_capacity')
-    .eq('user_id', PENSION_OWNER_ID);
-  
-  const profile = profiles && profiles.length > 0 ? profiles[0] : null;
-  
-  if (profile && profile.max_capacity) {
-    MAX_CAPACITY = profile.max_capacity;
+  if (window.pensionProfile) {
+    MAX_CAPACITY = window.pensionProfile.max_capacity || MAX_CAPACITY;
+  } else {
+    const { data: profiles } = await client
+      .from('profiles')
+      .select('pension_id')
+      .eq('user_id', PENSION_OWNER_ID);
+    
+    const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+    if (profile && profile.pension_id) {
+       const { data: pen } = await client.from('pensions').select('max_capacity').eq('id', profile.pension_id).single();
+       if (pen) MAX_CAPACITY = pen.max_capacity;
+    }
   }
 
   const year = currentCapacityDate.getFullYear();

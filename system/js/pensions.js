@@ -400,8 +400,9 @@ async function saveAdminChanges() {
         const { data: { session } } = await pensionsSupabase.auth.getSession();
         console.log("Persistence Log - Admin Session:", session ? session.user.email : "No Session");
 
-        if (!session || session.user.email !== 'shaharsolutions@gmail.com') {
-            alert('שגיאת הרשאה: לצורך שמירה לצמיתות, עליך להיות מחובר למערכת המנהל (admin.html) באותו הדפדפן (כמשתמש shaharsolutions@gmail.com).');
+        const ADMIN_EMAILS = ['shaharsolutions@gmail.com'];
+        if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
+            alert('שגיאת הרשאה: לצורך שמירה לצמיתות, עליך להיות מחובר למערכת המנהל (admin.html) באותו הדפדפן.');
             btn.classList.remove('loading');
             btn.querySelector('span').textContent = 'שמור שינויים';
             return;

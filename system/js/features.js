@@ -70,7 +70,8 @@ const Features = {
         // 1. System administrators have full access
         const userEmail = window.currentUserSession?.user?.email || 
                           window.currentUserSession?.email;
-        if (userEmail === 'shaharsolutions@gmail.com') return true;
+        const ADMIN_EMAILS = ['shaharsolutions@gmail.com'];
+        if (ADMIN_EMAILS.includes(userEmail)) return true;
 
         // 2. Resolve the effective plan (accounting for the Founder שדרוג)
         const rawPlanId = window.currentPlanId || 'starter';
