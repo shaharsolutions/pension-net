@@ -3604,8 +3604,8 @@ async function loadSettings() {
   if (myNameEl)  myNameEl.value  = fullName;
   if (myEmailEl) myEmailEl.value = profile.email || window.currentUserSession?.user?.email || '';
   if (myAvatarEl && fullName) {
-    // Check both profile and user metadata
-    const avatarUrl = profile.avatar_url || window.currentUserSession?.user?.user_metadata?.avatar_url;
+    // Check both profile and user metadata (only use session metadata if not impersonating)
+    const avatarUrl = profile.avatar_url || (!window.isImpersonating ? window.currentUserSession?.user?.user_metadata?.avatar_url : null);
     if (avatarUrl) {
         myAvatarEl.style.backgroundImage = `url('${avatarUrl}')`;
         myAvatarEl.textContent = '';
@@ -6100,4 +6100,26 @@ window.showAddonsDemoModal = function() {
       * כך ייראו התוספות עבור הלקוחות בעת ביצוע הזמנה
     </div>
   `;
+};
+
+/* Password visibility toggle function */
+window.togglePasswordVisibility = function(inputId, button) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const icon = button.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+    button.title = 'הסתר סיסמה';
+  } else {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+    button.title = 'הצג סיסמה';
+  }
 };
