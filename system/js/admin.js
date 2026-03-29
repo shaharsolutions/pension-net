@@ -3009,16 +3009,10 @@ function updateModeUI() {
   const globalSaveBtn = document.getElementById('saveButtonContainer');
   if (!badge) return;
 
-  // Employees cannot toggle admin mode - remove the clickability
-  const isEmployee = window.currentUserProfile?.role === 'employee';
-  if (isEmployee) {
-    badge.onclick = null;
-    badge.style.cursor = 'default';
-    badge.title = '';
-  } else {
-    badge.onclick = toggleAdminMode;
-    badge.style.cursor = 'pointer';
-  }
+  // Mode toggle is now disabled for everyone as requested (Identity Lockdown)
+  badge.onclick = null;
+  badge.style.cursor = 'default';
+  badge.title = '';
 
   const now = Date.now();
   const pinValid = window.lastPinVerificationTime && (now - window.lastPinVerificationTime < 5 * 60 * 1000);
