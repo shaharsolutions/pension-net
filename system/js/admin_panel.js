@@ -38,32 +38,47 @@ async function createUserSession() {
         if (shouldResume) {
             currentSessionId = storedId;
             sessionStartTime = new Date(storedStart);
-            console.log('User session resumed from storage:', currentSessionId);
         } else {
-            const { data, error } = await supabaseClient
+            // Check database for a session with very recent activity (last 5 mins) to merge
+            const { data: recent } = await supabaseClient
                 .from('user_sessions')
-                .insert([{
-                    user_id: session.user.id,
-                    user_email: session.user.email,
-                    login_time: new Date().toISOString(),
-                    last_active: new Date().toISOString(),
-                    duration_minutes: 0
-                }])
-                .select()
-                .single();
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('last_active', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-            if (error) {
-                console.warn('Could not create user session:', error.message);
-                return;
+            if (recent && (new Date() - new Date(recent.last_active)) < 5 * 60 * 1000) {
+                currentSessionId = recent.id;
+                sessionStartTime = new Date(recent.login_time);
+                console.log('Session resumed from database (merged):', currentSessionId);
+            } else {
+                const { data, error } = await supabaseClient
+                    .from('user_sessions')
+                    .insert([{
+                        user_id: session.user.id,
+                        user_email: session.user.email,
+                        login_time: new Date().toISOString(),
+                        last_active: new Date().toISOString(),
+                        duration_minutes: 0
+                    }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.warn('Could not create user session:', error.message);
+                    return;
+                }
+                currentSessionId = data.id;
+                sessionStartTime = new Date();
             }
 
-            currentSessionId = data.id;
-            sessionStartTime = new Date();
+            // Persistence
             localStorage.setItem('pensionet_session_id', currentSessionId);
             localStorage.setItem('pensionet_session_start', sessionStartTime.toISOString());
             localStorage.setItem('pensionet_session_user_id', session.user.id);
             localStorage.setItem('pensionet_session_last_active', new Date().toISOString());
-            console.log('New user session created:', currentSessionId);
+            if (!recent) console.log('New user session created:', currentSessionId);
         }
 
         // Start periodic updates

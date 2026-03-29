@@ -988,28 +988,46 @@
             // Resume existing session
             _sessionId = storedId;
             _sessionStart = new Date(storedStart);
-            console.log('Admin session resumed from storage:', _sessionId);
           } else {
-            // Start brand new session
-            const { data, error } = await supabaseClient
+            // Check database for a session with very recent activity (last 5 mins) to merge
+            const { data: recent } = await supabaseClient
               .from('user_sessions')
-              .insert([{ 
-                  user_id: session.user.id, 
-                  user_email: session.user.email, 
-                  login_time: new Date().toISOString(), 
-                  last_active: new Date().toISOString(), 
-                  duration_minutes: 0 
-              }])
-              .select().single();
+              .select('*')
+              .eq('user_id', session.user.id)
+              .order('last_active', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            if (recent && (new Date() - new Date(recent.last_active)) < 5 * 60 * 1000) {
+              _sessionId = recent.id;
+              _sessionStart = new Date(recent.login_time);
+              console.log('Session resumed from database (merged):', _sessionId);
+            } else {
+              // Start brand new session
+              const { data, error } = await supabaseClient
+                .from('user_sessions')
+                .insert([{ 
+                    user_id: session.user.id, 
+                    user_email: session.user.email, 
+                    login_time: new Date().toISOString(), 
+                    last_active: new Date().toISOString(), 
+                    duration_minutes: 0 
+                }])
+                .select().single();
 
-            if (!error && data) {
-              _sessionId = data.id;
-              _sessionStart = new Date();
+              if (!error && data) {
+                _sessionId = data.id;
+                _sessionStart = new Date();
+              }
+            }
+
+            // Always update storage if we successfully found/created a session
+            if (_sessionId) {
               localStorage.setItem('pensionet_session_id', _sessionId);
               localStorage.setItem('pensionet_session_start', _sessionStart.toISOString());
               localStorage.setItem('pensionet_session_user_id', session.user.id);
               localStorage.setItem('pensionet_session_last_active', new Date().toISOString());
-              console.log('New admin session created:', _sessionId);
+              if (!recent) console.log('New session created:', _sessionId);
             }
           }
 

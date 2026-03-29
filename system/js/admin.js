@@ -155,6 +155,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const session = await checkAuthStatus();
   if (session) {
+    // Wait for auth.js to finish loading the profile/pension for the admin themselves first
+    if (window.authCheckPromise) await window.authCheckPromise;
+    
     window.currentUserSession = session; // Cache session
 
     // --- Feature Gating Initialization ---
@@ -189,6 +192,47 @@ document.addEventListener("DOMContentLoaded", async function () {
           // Keep the admin's email for auth checks but override ID for data
         }
       };
+
+      try {
+        // Fetch impersonated user's profile
+        const { data: profile, error: profileError } = await pensionNetSupabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', impersonateUserId)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+        if (!profile) throw new Error('Profile not found for ID: ' + impersonateUserId);
+        
+        window.currentUserProfile = profile;
+        console.log('👤 Loaded impersonated profile:', profile);
+
+        // Fetch impersonated user's pension
+        if (profile.pension_id) {
+          const { data: pensionData, error: pensionError } = await pensionNetSupabase
+            .from('pensions')
+            .select('*')
+            .eq('id', profile.pension_id);
+          
+          if (pensionError) {
+            console.warn('Failed to load impersonated pension via direct query:', pensionError);
+          } else if (pensionData && pensionData.length > 0) {
+            window.currentPension = pensionData[0];
+            console.log('📂 Loaded impersonated pension:', window.currentPension);
+          } else {
+            console.warn('Pension record not found or inaccessible for pension_id:', profile.pension_id);
+            // Minimal fallback for pension object so current app doesn't break
+            window.currentPension = { 
+                id: profile.pension_id, 
+                name: profile.business_name || impersonateUserName || 'פנסיון',
+                max_capacity: 50
+            };
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load impersonated profile:', err);
+        showToast('שגיאה בטעינת נתוני המשתמש לצפייה', 'error');
+      }
       
       // Inject impersonation banner
       const banner = document.createElement('div');
@@ -3454,15 +3498,26 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', async function
   notes.push(newNote);
   
   try {
-    const { error } = await pensionNetSupabase
+    const { data: updateResult, error } = await pensionNetSupabase
       .from('orders')
       .update({ admin_note: JSON.stringify(notes) })
-      .eq('id', orderId);
+      .eq('id', orderId)
+      .select();
       
     if (error) throw error;
     
+    // Check if the update actually affected any rows (RLS check)
+    if (!window.isDemoMode && (!updateResult || updateResult.length === 0)) {
+       throw new Error('ניתן לערוך הערות רק להזמנות ששייכות לפנסיון שלך. בדוק את הרשאות הצוות.');
+    }
+    
     // Update local cache
     order.admin_note = JSON.stringify(notes);
+    
+    // Create Audit Log
+    if (typeof createAuditLog === 'function') {
+      createAuditLog('ADD_NOTE', `הערה נוספה ל${order.dog_name}: ${content.substring(0, 30)}...`, orderId);
+    }
     
     // Refresh UI
     loadOrderNotes(orderId);
@@ -4166,14 +4221,17 @@ function togglePasswordVisibility() {
 // --- Audit Logs ---
 async function createAuditLog(actionType, description, orderId = null) {
     const session = window.currentUserSession || await Auth.getSession();
-    if (!session) return;
+    if (!session || window.isImpersonating) return;
 
-    const activeStaffName = document.getElementById('activeStaffSelect')?.value;
-    const staffName = window.isAdminMode ? "מנהל" : (activeStaffName || "צוות עובדים");
+    const profile = window.currentUserProfile;
+    // Use the actual name from the authenticated profile
+    const staffName = profile ? (profile.full_name || profile.name) : (session.user.user_metadata?.full_name || "צוות");
+    const pensionId = profile?.pension_id || null;
 
     try {
         await pensionNetSupabase.from('audit_logs').insert([{
             user_id: session.user.id,
+            pension_id: pensionId, // Multi-tenant log tracking
             action_type: actionType,
             description: description,
             order_id: orderId ? String(orderId) : null,
@@ -4220,11 +4278,20 @@ async function loadAuditLogs() {
     }
 
     try {
-        const { data: logs, error } = await pensionNetSupabase
-            .from('audit_logs')
-            .select('*')
+        const profile = window.currentUserProfile;
+        let query = pensionNetSupabase.from('audit_logs').select('*');
+        
+        // Filter by pension if available, otherwise fallback to user_id
+        if (profile && profile.pension_id) {
+            query = query.eq('pension_id', profile.pension_id);
+        } else {
+            const session = await Auth.getSession();
+            if (session) query = query.eq('user_id', session.user.id);
+        }
+
+        const { data: logs, error } = await query
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(100);
 
         if (error) throw error;
 

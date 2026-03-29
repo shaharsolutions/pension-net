@@ -1035,6 +1035,7 @@ async function submitForm() {
     neutered: formData.neutered || 'לא צוין',
     notes: (formData.notes ? formData.notes + '\n\n' : '') + '✅ הלקוח/ה אישר/ה תנאי שימוש',
     user_id: PENSION_OWNER_ID,
+    pension_id: window.pensionProfile?.pension_id || null, // Link order to pension
     price_per_day: priceToSave,
     dog_photo: photoUrl,
     addons: formData.selectedAddons || []
