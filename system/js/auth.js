@@ -28,6 +28,12 @@ const Auth = {
   async logout() {
     const { error } = await supabaseClient.auth.signOut();
     localStorage.removeItem("adminAuth"); // Clear old auth if exists
+    // Clear session tracking
+    localStorage.removeItem('pensionet_session_id');
+    localStorage.removeItem('pensionet_session_start');
+    localStorage.removeItem('pensionet_session_user_id');
+    localStorage.removeItem('pensionet_session_last_active');
+    
     window.location.href = "login.html";
     return { error };
   },

@@ -19,11 +19,23 @@ async function createUserSession() {
         const session = await Auth.getSession();
         if (!session || !session.user) return;
 
-        // Check for existing session in this tab to avoid duplicates on refresh
-        const storedId = sessionStorage.getItem('pensionet_session_id');
-        const storedStart = sessionStorage.getItem('pensionet_session_start');
+        // Check for existing session in localStorage to avoid duplicates
+        const storedId = localStorage.getItem('pensionet_session_id');
+        const storedStart = localStorage.getItem('pensionet_session_start');
+        const storedUser = localStorage.getItem('pensionet_session_user_id');
+        const lastActiveStr = localStorage.getItem('pensionet_session_last_active');
 
-        if (storedId && storedStart) {
+        let shouldResume = false;
+        if (storedId && storedStart && storedUser === session.user.id) {
+            // Check for inactivity expiration (2 hours)
+            const lastActive = lastActiveStr ? new Date(lastActiveStr) : new Date(storedStart);
+            const inactivityMs = new Date() - lastActive;
+            if (inactivityMs < 2 * 60 * 60 * 1000) {
+                shouldResume = true;
+            }
+        }
+
+        if (shouldResume) {
             currentSessionId = storedId;
             sessionStartTime = new Date(storedStart);
             console.log('User session resumed from storage:', currentSessionId);
@@ -47,8 +59,10 @@ async function createUserSession() {
 
             currentSessionId = data.id;
             sessionStartTime = new Date();
-            sessionStorage.setItem('pensionet_session_id', currentSessionId);
-            sessionStorage.setItem('pensionet_session_start', sessionStartTime.toISOString());
+            localStorage.setItem('pensionet_session_id', currentSessionId);
+            localStorage.setItem('pensionet_session_start', sessionStartTime.toISOString());
+            localStorage.setItem('pensionet_session_user_id', session.user.id);
+            localStorage.setItem('pensionet_session_last_active', new Date().toISOString());
             console.log('New user session created:', currentSessionId);
         }
 
@@ -86,16 +100,18 @@ async function updateSessionActivity() {
 
     try {
         const now = new Date();
-        const durationMs = now - sessionStartTime;
-        const durationMinutes = Math.round(durationMs / 60000);
+        const nowStr = now.toISOString();
+        const durationMinutes = Math.round((now - sessionStartTime) / 60000);
 
         await supabaseClient
             .from('user_sessions')
             .update({
-                last_active: now.toISOString(),
+                last_active: nowStr,
                 duration_minutes: durationMinutes
             })
             .eq('id', currentSessionId);
+        
+        localStorage.setItem('pensionet_session_last_active', nowStr);
     } catch (err) {
         console.warn('Session update error:', err);
     }

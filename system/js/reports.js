@@ -191,15 +191,42 @@ async function loadAnalytics() {
                 { dog_name: "צ'ארלי", check_in: "2026-02-10", check_out: "2026-02-18", status: "מאושר", phone: "0505555555", price_per_day: 130, owner_name: "יוסי כהן", dog_breed: "בינוני" }
             ];
         } else {
-            const { data, error } = await pNetSupabase
-                .from("orders")
-                .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed, owner_name")
-                .eq("user_id", session.user.id)
-                .eq("status", "מאושר")
-                .order("check_in", { ascending: true });
+            // 1. Ensure Auth is ready
+            if (window.authCheckPromise) await window.authCheckPromise;
+            
+            const profile = window.currentUserProfile;
+            const pension = window.currentPension;
 
-            if (error) throw error;
-            allOrders = data;
+            if (!profile || !profile.pension_id) {
+                console.warn("No pension profile found, falling back to individual user filter");
+                const { data, error } = await pNetSupabase
+                    .from("orders")
+                    .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed, owner_name")
+                    .eq("user_id", session.user.id)
+                    .eq("status", "מאושר")
+                    .order("check_in", { ascending: true });
+                if (error) throw error;
+                allOrders = data;
+            } else {
+                // 2. Fetch all staff members for this pension
+                const { data: staffList } = await pNetSupabase
+                    .from("profiles")
+                    .select("user_id")
+                    .eq("pension_id", profile.pension_id);
+                
+                const staffIds = staffList ? staffList.map(s => s.user_id) : [session.user.id];
+                console.log("Analytics: Fetching for staff IDs:", staffIds);
+
+                const { data, error } = await pNetSupabase
+                    .from("orders")
+                    .select("id, dog_name, check_in, check_out, status, created_at, phone, price_per_day, dog_breed, owner_name")
+                    .in("user_id", staffIds)
+                    .eq("status", "מאושר")
+                    .order("check_in", { ascending: true });
+
+                if (error) throw error;
+                allOrders = data;
+            }
         }
 
 

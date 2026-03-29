@@ -16,6 +16,7 @@ let currentCapacityDate = new Date();
 let selectionPhase = 1; // 1: Selecting check-in, 2: Selecting check-out
 let arrivedFromExistingDog = false;
 let existingDogPhotoUrl = null;
+let pensionStaffIds = []; // All staff members in this pension
 
 // Get owner ID from URL (e.g. order.html?owner=UUID)
 const urlParams = new URLSearchParams(window.location.search);
@@ -68,6 +69,21 @@ async function loadOwnerInfo() {
         .eq('id', profile.pension_id)
         .single();
       if (!pensionError) pension = pensionData;
+
+      // 1.5 Fetch all staff members in this pension
+      const { data: staffList, error: staffError } = await client
+        .from('profiles')
+        .select('user_id')
+        .eq('pension_id', profile.pension_id);
+      
+      if (!staffError && staffList) {
+        pensionStaffIds = staffList.map(s => s.user_id);
+        console.log('Pension staff IDs found:', pensionStaffIds);
+      } else {
+        pensionStaffIds = [PENSION_OWNER_ID];
+      }
+    } else {
+      pensionStaffIds = [PENSION_OWNER_ID];
     }
 
     window.pensionProfile = { ...profile, ...(pension || {}) }; 
@@ -173,11 +189,12 @@ async function loadMonthlyCapacity() {
   const lastDay = new Date(year, month + 1, 0);
   
   try {
+    const searchIds = (pensionStaffIds && pensionStaffIds.length > 0) ? pensionStaffIds : [PENSION_OWNER_ID];
     const { data: orders, error } = await pensionNetSupabase
       .from('orders')
       .select('id, check_in, check_out')
       .eq('status', 'מאושר')
-      .eq('user_id', PENSION_OWNER_ID)
+      .in('user_id', searchIds)
       .gte('check_out', firstDay.toISOString().split('T')[0])
       .lte('check_in', lastDay.toISOString().split('T')[0]);
 
@@ -790,12 +807,15 @@ async function identifyCustomer() {
     return;
   }
 
+  // Use staff IDs for search if available, otherwise fallback to the URL owner ID
+  const searchIds = (pensionStaffIds && pensionStaffIds.length > 0) ? pensionStaffIds : [PENSION_OWNER_ID];
+  
   try {
     const { data, error } = await client
       .from('orders')
       .select('id, dog_name, dog_breed, dog_age, neutered, owner_name, created_at, phone, dog_photo')
       .eq('phone', phone) // חיפוש עם מספר נקי
-      .eq('user_id', PENSION_OWNER_ID)
+      .in('user_id', searchIds) // Search across all staff members in the same pension
       .order('created_at', { ascending: false });
     
     if (error) throw error;

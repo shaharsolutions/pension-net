@@ -967,15 +967,28 @@
           link.style.display = Auth.isAdmin(session) ? 'inline-flex' : 'none';
         }
 
-        // Create user session for tracking (Optimized: Re-use session in same tab)
+        // Create user session for tracking (Optimized: Re-use session across refreshes/tabs)
         try {
-          const storedId = sessionStorage.getItem('pensionet_session_id');
-          const storedStart = sessionStorage.getItem('pensionet_session_start');
+          const storedId = localStorage.getItem('pensionet_session_id');
+          const storedStart = localStorage.getItem('pensionet_session_start');
+          const storedUser = localStorage.getItem('pensionet_session_user_id');
+          const lastActiveStr = localStorage.getItem('pensionet_session_last_active');
+          
+          let shouldResume = false;
+          if (storedId && storedStart && storedUser === session.user.id) {
+            // Check for inactivity expiration (2 hours)
+            const lastActive = lastActiveStr ? new Date(lastActiveStr) : new Date(storedStart);
+            const inactivityMs = new Date() - lastActive;
+            if (inactivityMs < 2 * 60 * 60 * 1000) {
+              shouldResume = true;
+            }
+          }
 
-          if (storedId && storedStart) {
-            // Resume existing session for this tab
+          if (shouldResume) {
+            // Resume existing session
             _sessionId = storedId;
             _sessionStart = new Date(storedStart);
+            console.log('Admin session resumed from storage:', _sessionId);
           } else {
             // Start brand new session
             const { data, error } = await supabaseClient
@@ -992,8 +1005,11 @@
             if (!error && data) {
               _sessionId = data.id;
               _sessionStart = new Date();
-              sessionStorage.setItem('pensionet_session_id', _sessionId);
-              sessionStorage.setItem('pensionet_session_start', _sessionStart.toISOString());
+              localStorage.setItem('pensionet_session_id', _sessionId);
+              localStorage.setItem('pensionet_session_start', _sessionStart.toISOString());
+              localStorage.setItem('pensionet_session_user_id', session.user.id);
+              localStorage.setItem('pensionet_session_last_active', new Date().toISOString());
+              console.log('New admin session created:', _sessionId);
             }
           }
 
@@ -1012,10 +1028,12 @@
       async function _updateSession() {
         if (!_sessionId || !_sessionStart) return;
         try {
+          const now = new Date().toISOString();
           const mins = Math.round((new Date() - _sessionStart) / 60000);
           await supabaseClient.from('user_sessions')
-            .update({ last_active: new Date().toISOString(), duration_minutes: mins })
+            .update({ last_active: now, duration_minutes: mins })
             .eq('id', _sessionId);
+          localStorage.setItem('pensionet_session_last_active', now);
         } catch(e) {}
       }
 
